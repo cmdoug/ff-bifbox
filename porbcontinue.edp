@@ -224,6 +224,10 @@ else if (contorder > 0) {
   yqP0(J.n:3*J.n-1) = temp;
 }
 else {
+  for (int nh = 0; nh < Nh; nh++){
+    ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], temp);
+    qa0((1+2*nh)*J.n:(3+2*nh)*J.n-1) = temp;
+  }
   matrix<PetscScalar> tempPms = [[yqP]];
   ChangeOperator(JlPMa, tempPms, parent = JHBaa); // send to Mat
   ChangeOperator(yqPMa, tempPms, parent = JHBaa); // send to Mat
