@@ -4,16 +4,16 @@
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/cmd8/ff-bifbox">
+  <a href="https://github.com/cmdoug/ff-bifbox">
     <img src="logo.svg" alt="Logo" width="400" height="100">
   </a>
 
   <p align="center">
     A bifurcation analysis toolbox built for FreeFEM.
     <br />
-    <a href="https://github.com/cmd8/ff-bifbox/issues">Report Bug</a>
+    <a href="https://github.com/cmdoug/ff-bifbox/issues">Report Bug</a>
     ·
-    <a href="https://github.com/cmd8/ff-bifbox/issues">Request Feature</a>
+    <a href="https://github.com/cmdoug/ff-bifbox/issues">Request Feature</a>
   </p>
 </div>
 
@@ -62,7 +62,7 @@ Make sure you have access to the current [FreeFEM](https://freefem.org/) build, 
 
 1. Clone the repo
    ```bash
-   git clone https://github.com/cmd8/ff-bifbox.git
+   git clone https://github.com/cmdoug/ff-bifbox.git
    ```
 2. Add `ff-bifbox` to FreeFEM's filepath
 
@@ -73,7 +73,7 @@ Make sure you have access to the current [FreeFEM](https://freefem.org/) build, 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-See the [examples](https://github.com/cmd8/ff-bifbox/tree/main/examples) folder.
+See the [examples](https://github.com/cmdoug/ff-bifbox/tree/main/examples) folder.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -94,7 +94,7 @@ See the [examples](https://github.com/cmd8/ff-bifbox/tree/main/examples) folder.
 - [ ] Release first stable version
 
 
-See the [open issues](https://github.com/cmd8/ff-bifbox/issues) for a full list of proposed features (and known issues).
+See the [open issues](https://github.com/cmdoug/ff-bifbox/issues) for a full list of proposed features (and known issues).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -132,7 +132,7 @@ Distributed under the GPL-3.0 License. See `LICENSE` for more information.
 
 Chris Douglas - christopher.douglas@duke.edu
 
-Project Link: [https://github.com/cmd8/ff-bifbox](https://github.com/cmd8/ff-bifbox)
+Project Link: [https://github.com/cmdoug/ff-bifbox](https://github.com/cmdoug/ff-bifbox)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
