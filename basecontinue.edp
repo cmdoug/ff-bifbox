@@ -186,8 +186,11 @@ qa0.resize(Ja.n);
 if(mpirank == 0) qa0(Ja.n-1) = paramval;
 if (contorder > 0) {
   R = vR(0, XMh, tgv = TGV);
-  funcJa(qa0);
-  if (branchfilein != "") ChangeNumbering(J, um[], yqP);
+  if (branchfilein == "") funcJa(qa0);
+  else {
+    ChangeNumbering(J, um[], yqP);
+    if (contorder > 1) J = vJ(XMh, XMh, tgv = TGV);
+  }
 }
 else {
   matrix<PetscScalar> tempPms = [[yqP]];
