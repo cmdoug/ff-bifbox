@@ -1,0 +1,215 @@
+//
+// basedeflate.edp
+// Chris Douglas
+// christopher.douglas@duke.edu
+//
+// EXAMPLE USAGE:
+//  Initialize without file:
+// ff-mpirun -np 4 basedeflate.edp -mi <FILEIN> -fo <FILEOUT>
+//
+//  Initialize with guess from file, solve on same mesh
+// ff-mpirun -np 4 basedeflate.edp -fi <FILEIN> -fo <FILEOUT>
+//
+//  Initialize with guess from file, solve on different mesh
+// ff-mpirun -np 4 basedeflate.edp -mi <MESHIN> -fi <FILEIN> -fo <FILEOUT>
+//
+//  Initialize with guess from file, adapt mesh/solution
+// ff-mpirun -np 4 basedeflate.edp -fi <FILEIN> -fo <FILEOUT> -mo <MESHOUT>
+//
+// NOTE: This file should not be changed unless you know what you're doing.
+//
+load "iovtk"
+load "PETSc"
+include "settings.idp"
+include "macros_bifbox.idp"
+// arguments
+string meshin = getARGV("-mi", ""); // input meshfile with extension
+string meshout = getARGV("-mo", ""); // output mesh without extension
+string filein = getARGV("-fi", ""); // input file with extension
+string deflatefilein = getARGV("-fi2", ""); // input file with extension
+string fileout = getARGV("-fo", ""); // output file without extension
+string sneslinesearchtype = getARGV("-snes_linesearch_type", "basic");
+real TGV = getARGV("-tgv", -1.);
+real defp = getARGV("-defp", 1.0); // deflation root order
+real defa = getARGV("-defa", 1.0); // deflation zero bias
+int ndeflate = getARGV("-ndeflate", 3);
+real noiseamp = getARGV("-noise", 0.01);
+
+string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension
+string deflatefileroot, deflatefileext = parsefilename(deflatefilein, deflatefileroot); //extract file name and extension
+parsefilename(fileout, fileout); // trim extension from output file, if given
+if(fileext == "mode" || fileext == "resp" || fileext == "rslv" || fileext == "tdls" || fileext == "floq"){
+  filein = readbasename(workdir + filein);
+  fileext = parsefilename(filein, fileroot);
+}
+if(filein != "" && meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
+string meshroot, meshext = parsefilename(meshin, meshroot);
+parsefilename(meshout, meshout); // trim extension from output mesh, if given
+// Load mesh
+Th = readmeshN(workdir + meshin);
+Thg = Th;
+// Partition mesh across processors
+DmeshCreate(Th);
+restu = restrict(XMh, XMhg, n2o);
+// Make finite element basis
+XMh defu(ub), defu(um), defu(um2), defu(um3);
+if(fileext == "base") {
+  ub[] = loadbase(fileroot, meshin);
+}
+else if(fileext == "fold") {
+  real[string] alpha;
+  real beta;
+  real[int] qm, qma;
+  ub[] = loadfold(fileroot, meshin, qm, qma, alpha, beta);
+}
+else if(fileext == "hopf") {
+  real omega;
+  complex[string] alpha;
+  complex beta;
+  complex[int] qm, qma;
+  ub[] = loadhopf(fileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(fileext == "foho") {
+  real omega;
+  complex[string] alpha1;
+  real[string] alpha2;
+  complex beta1, gamma12, gamma13;
+  real beta22, beta23, gamma22, gamma23;
+  complex[int] q1m, q1ma;
+  real[int] q2m, q2ma;
+  ub[] = loadfoho(fileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+}
+else if(fileext == "hoho") {
+  real[int] sym1(sym.n), sym2(sym.n);
+  real omega1, omega2;
+  complex[string] alpha1, alpha2;
+  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex[int] q1m, q1ma, q2m, q2ma;
+  ub[] = loadhoho(fileroot, meshin, q1m, q1ma, q2m, q2ma, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+}
+else if(fileext == "tdns") {
+  real time;
+  ub[] = loadtdns(fileroot, meshin, time);
+}
+else if(fileext == "porb") {
+  int Nh=1;
+  real omega;
+  complex[int, int] qh(ub[].n, Nh);
+  ub[] = loadporb(fileroot, meshin, qh, sym, omega, Nh);
+}
+else {
+  setparams(paramnames,params);
+  defu(ub) = InitialConditions;
+}
+if(deflatefileext == "base") {
+  um[] = loadbase(deflatefileroot, meshin);
+}
+// Create distributed Mat
+Mat J;
+createMatu(Th, J, Pk);
+// MESH ADAPTATION
+bool adapt = false;
+if(meshout == "") meshout = meshin; // if no adaptation
+else { // if output meshfile is given, adapt mesh
+  adapt = true;
+  meshout = meshout + "." + meshext;
+  real[int] q;
+  ChangeNumbering(J, ub[], q);
+  ChangeNumbering(J, ub[], q, inverse = true);
+  ChangeNumbering(J, um[], q);
+  ChangeNumbering(J, um[], q, inverse = true);
+  XMhg defu(ubG), defu(umG), defu(tempu); // create private global FE functions
+  tempu[](restu) = ub[]; // populate local portion of global soln
+  mpiAllReduce(tempu[], ubG[], mpiCommWorld, mpiSUM); //aggregate local solns into global soln
+  tempu[](restu) = um[]; // populate local portion of global soln
+  mpiAllReduce(tempu[], umG[], mpiCommWorld, mpiSUM); //aggregate local solns into global soln
+  if(mpirank == 0) { // Perform mesh adaptation (serially) on processor 0
+    IFMACRO(dimension,2)
+      Thg = adaptmesh(Thg, adaptu(ubG), adaptmeshoptions);
+    ENDIFMACRO
+    IFMACRO(dimension,3)
+      //NOTE: 3D mesh adaptation is still under development.
+      load "mshmet"
+      load "mmg"
+      real anisomax = getARGV("-anisomax",1.0);
+      real[int] met = mshmet(Thg, adaptu(ubG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0), hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      if(anisomax > 1.0) {
+        load "aniso"
+        boundaniso(6, met, anisomax);
+      }
+      Thg = mmg3d(Thg, metric = met, hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), hgrad = -1, verbose = verbosity-(verbosity==0));
+    ENDIFMACRO
+  }
+  broadcast(processor(0), Thg); // broadcast global mesh to all processors
+  defu(ubG) = defu(ubG); //interpolate global solution from old mesh to new mesh
+  defu(umG) = defu(umG); //interpolate global solution from old mesh to new mesh
+  Th = Thg; //Reinitialize local mesh with global mesh
+  Mat Adapt;
+  createMatu(Th, Adapt, Pk); // Partition new mesh and update the PETSc numbering
+  J = Adapt;
+  defu(ub) = initu(0.0); // set local values to zero
+  defu(um) = initu(0.0); // set local values to zero
+  restu.resize(ub[].n); // Change size of restriction operator
+  restu = restrict(XMh, XMhg, n2o); // Compute new restriction from global mesh to local mesh
+  ub[] = ubG[](restu); //restrict global solution to each local mesh
+  um[] = umG[](restu); //restrict global solution to each local mesh
+}
+sym = 0;
+real[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
+real iomega = 0.0, iomega2 = 0.0, iomega3 = 0.0;
+include "eqns.idp" // load equations
+
+// Initialize
+real[int] q, q0(J.n);
+real[int, int] qdeflate(J.n, (deflatefilein != ""));
+if (deflatefilein != ""){
+  ChangeNumbering(J, um[], q);
+  qdeflate(:, 0) = q;
+}
+ChangeNumbering(J, ub[], q);
+for [i, ai : q] ai += noiseamp*randreal1();
+q0 = q;
+int ret;
+// Function to build residual operator in PETSc numbering
+real[int] RPETSc(J.n), R(ub[].n);
+func real[int] funcR(real[int]& qPETSc) {
+    ChangeNumbering(J, ub[], qPETSc, inverse = true, exchange = true);
+    R = vR(0, XMh, tgv = TGV);
+    ChangeNumbering(J, R, RPETSc);
+    return RPETSc;
+}
+// Function to build Jacobian operator in PETSc numbering
+func int funcJ(real[int]& qPETSc) {
+    ChangeNumbering(J, ub[], qPETSc, inverse = true, exchange = true);
+    J = vJ(XMh, XMh, tgv = TGV);
+    for (int deflatej = 0; deflatej < qdeflate.m; deflatej++) {
+      real[int] qdel(J.n), qdiff = qPETSc - qdeflate(:, deflatej);
+      KSPSolve(J, RPETSc, qdel);
+      real dM, dot, loc = (qdiff'*qdiff);
+      mpiAllReduce(loc, dot, mpiCommWorld, mpiSUM); //aggregate local solns into global soln
+      loc = -defp*(qdiff'*qdel)/(dot*(1.0 + defa*dot^(0.5*defp)));
+      mpiAllReduce(loc, dM, mpiCommWorld, mpiSUM); //aggregate local solns into global soln
+      J *= (1.0 + dM);
+    }
+    return 0;
+}
+for (int deflatei = 0; deflatei < ndeflate; deflatei++) {
+  // set up Mat parameters
+  IFMACRO(Jprecon) Jprecon(0); ENDIFMACRO
+  set(J, IFMACRO(Jsetargs) Jsetargs, ENDIFMACRO sparams = KSPparams);
+  // solve nonlinear problem with SNES
+  q = q0;
+  SNESSolve(J, funcJ, funcR, q, reason = ret,
+            sparams = "-snes_linesearch_type " + sneslinesearchtype + " -snes_monitor -snes_converged_reason -options_left no");
+  if(ret > 0) { // Save solution if solver converged and output file is given
+    if(deflatei == 0 && mpirank == 0 && adapt) { // Save adapted mesh
+      cout << "  Saving adapted mesh '" + meshout + "' in '" + workdir + "'." << endl;
+      savemesh(Thg, workdir + meshout);
+    }
+    qdeflate.resize(J.n, qdeflate.m + 1);
+    qdeflate(:, deflatei + (deflatefilein != "")) = q;
+    ChangeNumbering(J, ub[], q, inverse = true);
+    savebase(fileout + "-" + (deflatei+(deflatefilein != "")), "", meshout, true, true);
+  }
+  else break;
+}

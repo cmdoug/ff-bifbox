@@ -225,8 +225,8 @@ if (contorder > 0 && fileext == "porb") {
     qa0((1+2*nh)*J.n:(3+2*nh)*J.n-1) = temp;
   }
   ResidualHB(RHB, J, ub, uh, sym0, omega);
-  if (branchfilein == "") funcJa(qa0);
-  else {
+  funcJa(qa0);
+  if (branchfilein != "") {
     ChangeNumbering(J, um2[].re, temp);
     yqP(0:J.n-1) = temp;
     for (int nh = 0; nh < Nh; nh++){
