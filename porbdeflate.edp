@@ -36,7 +36,7 @@ int blocks = getARGV("-blocks", 1); //if blocks = 1, use monolithic LU; if block
 real defp = getARGV("-defp", 1.0); // deflation root order
 real defa = getARGV("-defa", 1.0); // deflation zero bias
 int ndeflate = getARGV("-ndeflate", 3);
-real noiseamp = getARGV("-noise", 0.01);
+real noiseamp = getARGV("-noise", 0.0);
 real[int] sym0(sym.n);
 real omega;
 
@@ -234,7 +234,7 @@ for (int nh = 0; nh < Nh; nh++){
   qHB((1+2*nh)*J.n:(3+2*nh)*J.n-1) = RHB;
 }
 if(mpirank == 0 && !zerofreq) qHB(JHBa.n-1) = omega;
-for [i, ai : qHB] ai += noiseamp*randreal1();
+if (noiseamp > 0.0) for [i, ai : qHB] ai += noiseamp*randreal1();
 qHB0 = qHB;
 // set up Mat parameters
 real[int] fieldlabels(JHB.n);
@@ -251,7 +251,6 @@ else {
   set(JHB, prefix = "fieldsplit_0_", fields = fieldlabels, parent = JHBa);
 }
 RHB.resize(JHB.n);
-PetscScalar[int] RPETSc(JHBa.n);
 // Function to build residual operator in PETSc numbering
 real dot;
   func real[int] funcRHB(PetscScalar[int]& qPETSc) {
@@ -260,6 +259,7 @@ real dot;
         ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], qPETSc((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true, exchange = true);
       if(mpirank == 0 && !zerofreq) omega = qPETSc(qPETSc.n-1); 
       broadcast(processor(0), omega);
+      PetscScalar[int] RPETSc(JHBa.n);
       ResidualHB(RHB, J, ub, uh, sym0, omega);
       RPETSc(0:JHB.n-1) = RHB;
       if(mpirank == 0 && !zerofreq) RPETSc(JHBa.n-1) = 0.0;
@@ -268,6 +268,7 @@ real dot;
 
 // Function to build Jacobian operator in PETSc numbering
 func int funcJHB(PetscScalar[int]& qPETSc) {
+    qHB = qPETSc;
     ChangeNumbering(J, ub[], qPETSc(0:J.n-1), inverse = true, exchange = true);
     for (int nh = 0; nh < Nh; nh++)
       ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], qPETSc((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true, exchange = true);
@@ -280,37 +281,47 @@ func int funcJHB(PetscScalar[int]& qPETSc) {
       matrix<PetscScalar> tempPms = [[RHB]];
       ChangeOperator(dwHB, tempPms, parent = JHBa); // send to Mat
     }
-    for (int deflatej = 0; deflatej < qdeflate.m; deflatej++) {
-      PetscScalar[int] qdel(JHBa.n), qdiff = qPETSc - qdeflate(:, deflatej);
-      KSPSolve(JHBa, RPETSc, qdel);
-      real dM, dot, loc = (qdiff'*qdiff);
-      mpiAllReduce(loc, dot, mpiCommWorld, mpiSUM); //aggregate local solns into global soln
-      loc = -defp*(qdiff'*qdel)/(dot*(1.0 + defa*dot^(0.5*defp)));
-      mpiAllReduce(loc, dM, mpiCommWorld, mpiSUM); //aggregate local solns into global soln
-      JHB *= (1.0 + dM);
-      if (!zerofreq) dwHB *= (1.0 + dM);
-    }
     return 0;
 }
+
+func real[int] funcshell(PetscScalar[int]& RPETSc) {
+    PetscScalar[int] dq(RPETSc.n);
+    KSPSolve(JHBa, RPETSc, dq);
+    real factor = 1.0;
+    for (int deflatej = 0; deflatej < qdeflate.m; deflatej++) {
+      PetscScalar[int] qdiff = qHB - qdeflate(:, deflatej);
+      real innerprod, normsq, loc = (qdiff'*qdiff);
+      mpiAllReduce(loc, normsq, mpiCommWorld, mpiSUM); //aggregate local solns into global soln
+      loc = (qdiff'*dq);
+      mpiAllReduce(loc, innerprod, mpiCommWorld, mpiSUM); //aggregate local solns into global soln
+      factor *= (1.0 + defa*normsq^(0.5*defp))/(1.0 + defa*normsq^(0.5*defp) - defp/normsq*innerprod);
+    }
+    return dq *= factor;
+}
+
+Mat deflatedJHBa = [[JHBa]];
+set(deflatedJHBa, precon = funcshell, sparams = "-pc_type shell");
 int ret;
-for (int deflatei = 0; deflatei < ndeflate; deflatei++) {
+ndeflate += (deflatefilein != "");
+for (int deflatei = (deflatefilein != ""); deflatei < ndeflate; deflatei++) {
   // solve nonlinear problem with SNES
   qHB = qHB0;
-  SNESSolve(JHBa, funcJHB, funcRHB, qHB, reason = ret,
+  SNESSolve(deflatedJHBa, funcJHB, funcRHB, qHB, reason = ret,
             sparams = "-snes_linesearch_type " + sneslinesearchtype + " -snes_monitor -snes_converged_reason -options_left no");
   if(ret > 0) { // Save solution if solver converged and output file is given
-    if(deflatei == 0 && mpirank==0 && adapt) { // Save adapted mesh
-    cout << "  Saving adapted mesh '" + meshout + "' in '" + workdir + "'." << endl;
-    savemesh(Thg, workdir + meshout);
+    if(mpirank==0 && adapt) { // Save adapted mesh
+      cout << "  Saving adapted mesh '" + meshout + "' in '" + workdir + "'." << endl;
+      savemesh(Thg, workdir + meshout);
     }
     qdeflate.resize(JHBa.n, qdeflate.m + 1);
-    qdeflate(:, deflatei + (deflatefilein != "")) = qHB;
+    qdeflate(:, deflatei) = qHB;
     ChangeNumbering(J, ub[], qHB(0:J.n-1), inverse = true);
     for (int nh = 0; nh < Nh; nh++)
       ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], qHB((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true);
     if(mpirank == 0 && !zerofreq) omega = qHB(JHBa.n-1); 
     broadcast(processor(0), omega);
-    saveporb(fileout + "-" + (deflatei+(deflatefilein != "")), "", meshout, sym0, omega, Nh, true, true);
+    saveporb(fileout + "-" + deflatei, "", meshout, sym0, omega, Nh, true, true);
+    adapt = false;
   }
   else break;
 }
