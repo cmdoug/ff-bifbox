@@ -77,7 +77,22 @@ See the [examples](https://github.com/cmdoug/ff-bifbox/tree/main/examples) folde
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+<!-- CITATION -->
+## Citation
 
+If you use `ff-bifbox` for research, please cite the following:
+
+```bibtex
+@article{douglas_ff-bifbox_2025,
+author = {Douglas, Christopher M. and Jolivet, Pierre},
+title = {ff-bifbox: A scalable, open-source toolbox for bifurcation analysis of nonlinear PDEs}
+year = {2025},
+doi = {10.48550/arXiv.2509.18429},
+url = {https://arxiv.org/abs/2509.18429},
+}
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- ROADMAP -->
 ## Roadmap
@@ -88,6 +103,7 @@ See the [examples](https://github.com/cmdoug/ff-bifbox/tree/main/examples) folde
 - [x] Add harmonic balance framework for computation/continuation of periodic orbits
 - [x] Add time-domain linear simulation framework
 - [x] Add Floquet analysis for periodic orbits
+- [x] Add deflation framework for steady states and periodic orbits
 - [ ] Add fold/Neimark-Sacker bifurcation computation/continuation for periodic orbits
 - [ ] Add resolvent analysis for periodic orbits
 - [ ] Improve documentation and tutorials/examples
