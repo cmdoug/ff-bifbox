@@ -47,7 +47,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-ff-bifbox is a package of scalable and cross-compatible FreeFEM scripts designed for numerical continuation, bifurcation analysis, resolvent analysis, and time-integration of large-scale time-dependent nonlinear PDEs on adaptively refined meshes. The project is built on top of [FreeFEM](https://freefem.org/), a free, open-source finite-element software, and [PETSc](https://petsc.org/), a scalable scientific computing library.
+`ff-bifbox` is a package of scalable and cross-compatible FreeFEM scripts designed for numerical continuation, bifurcation analysis, resolvent analysis, and time-integration of large-scale time-dependent nonlinear PDEs on adaptively refined meshes. The project is built on top of [FreeFEM](https://freefem.org/), a free, open-source finite-element software, and [PETSc](https://petsc.org/), a scalable scientific computing library. Further details about `ff-bifbox` are available here: [arXiv:2509.18429](https://arxiv.org/abs/2509.18429).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
