@@ -85,7 +85,7 @@ If you use `ff-bifbox` for research, please cite the following:
 ```bibtex
 @article{douglas_ff-bifbox_2025,
 author = {Douglas, Christopher M. and Jolivet, Pierre},
-title = {ff-bifbox: A scalable, open-source toolbox for bifurcation analysis of nonlinear PDEs}
+title = {ff-bifbox: A scalable, open-source toolbox for bifurcation analysis of nonlinear PDEs},
 year = {2025},
 doi = {10.48550/arXiv.2509.18429},
 url = {https://arxiv.org/abs/2509.18429},
