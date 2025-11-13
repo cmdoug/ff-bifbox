@@ -299,28 +299,25 @@ while (!stopflag){
       real yomega;
       if(mpirank == 0 && !zerofreq) yomega = yqP(JHBa.n-1);
       XMhg defu(uG), defu(yG), defu(u1rG), defu(u1iG), defu(u2rG), defu(u2iG), defu(tempu), defu(tempu2);
-      real[int, int] yhrG(uG[].n, Nh), yhiG(uG[].n, Nh), uhrG(uG[].n, Nh), uhiG(uG[].n, Nh); // create private global FE functions
-      tempu[](restu) = ub[]; // populate local portion of global soln
-      mpiAllReduce(tempu[], uG[], mpiCommWorld, mpiSUM);
-      tempu[](restu) = um2[].re; // populate local portion of global tangent vector
-      mpiAllReduce(tempu[], yG[], mpiCommWorld, mpiSUM);
+      XMhg<complex> defu(cplxu), defu(cplxu2);
+      complex[int, int] yhG(uG[].n, Nh), uhG(uG[].n, Nh); // create private global FE functions
+      u2iG[](restu) = ub[]; // populate local portion of global soln
+      mpiAllReduce(u2iG[], uG[], mpiCommWorld, mpiSUM);
+      u2iG[](restu) = um2[].re; // populate local portion of global tangent vector
+      mpiAllReduce(u2iG[], yG[], mpiCommWorld, mpiSUM);
       for (int nh = 0; nh < Nh; nh++){
-        tempu[](restu) = uh(:, nh).re;
-        mpiAllReduce(tempu[], uhrG(:, nh), mpiCommWorld, mpiSUM);
-        tempu[](restu) = uh(:, nh).im;
-        mpiAllReduce(tempu[], uhiG(:, nh), mpiCommWorld, mpiSUM);
+        cplxu[](restu) = uh(:, nh);
+        mpiAllReduce(cplxu[], uhG(:, nh), mpiCommWorld, mpiSUM);
         complex[int] temp(ub[].n);
         ChangeNumbering([J, J], [temp.re, temp.im], yqP((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true);
-        tempu[](restu) = temp.re;
-        mpiAllReduce(tempu[], yhrG(:, nh), mpiCommWorld, mpiSUM);
-        tempu[](restu) = temp.im;
-        mpiAllReduce(tempu[], yhiG(:, nh), mpiCommWorld, mpiSUM);
+        cplxu[](restu) = temp;
+        mpiAllReduce(cplxu[], yhG(:, nh), mpiCommWorld, mpiSUM);
       }
-      u1rG[] = uhrG(:, 0);
-      u1iG[] = uhiG(:, 0);
+      u1rG[] = uhG(:, 0).re;
+      u1iG[] = uhG(:, 0).im;
       if (Nh > 1){
-        u2rG[] = uhrG(:, 1);
-        u2iG[] = uhiG(:, 1);
+        u2rG[] = uhG(:, 1).re;
+        u2iG[] = uhG(:, 1).im;
       }
       if(mpirank == 0) {
         IFMACRO(dimension,2)
@@ -351,20 +348,14 @@ while (!stopflag){
       broadcast(processor(0), Thg);
       defu(uG) = defu(uG);
       defu(yG) = defu(yG);
-      real[int, int] yhrG2(uG[].n, Nh), yhiG2(uG[].n, Nh), uhrG2(uG[].n, Nh), uhiG2(uG[].n, Nh); // create private global FE functions
+      complex[int, int] yhG2(uG[].n, Nh), uhG2(uG[].n, Nh); // create private global FE functions
       for (int nh = 0; nh < Nh; nh++){
-        tempu[] = uhrG(:, nh);
-        defu(tempu2) = defu(tempu);
-        uhrG2(:, nh) = tempu2[];
-        tempu[] = uhiG(:, nh);
-        defu(tempu2) = defu(tempu);
-        uhiG2(:, nh) = tempu2[];
-        tempu[] = yhrG(:, nh);
-        defu(tempu2) = defu(tempu);
-        yhrG2(:, nh) = tempu2[];
-        tempu[] = yhiG(:, nh);
-        defu(tempu2) = defu(tempu);
-        yhiG2(:, nh) = tempu2[];
+        cplxu[] = uhG(:, nh);
+        defu(cplxu2) = defu(cplxu);
+        uhG2(:, nh) = cplxu2[];
+        cplxu[] = yhG(:, nh);
+        defu(cplxu2) = defu(cplxu);
+        yhG2(:, nh) = cplxu2[];
       }
       Th = Thg;
       Mat Adapt;
@@ -385,15 +376,11 @@ while (!stopflag){
       fieldlabels.resize((1+2*Nh)*J.n);
       fieldlabels = 1.0;
       for (int nh = 0; nh < Nh; nh++) {
-        tempu2[] = uhrG2(:, nh);
-        um[].re = tempu2[](restu);
-        tempu2[] = uhiG2(:, nh);
-        um[].im = tempu2[](restu);
+        cplxu2[] = uhG2(:, nh);
+        um[] = cplxu2[](restu);
         uh(:, nh) = um[];
-        tempu2[] = yhrG2(:, nh);
-        um2[].re = tempu2[](restu);
-        tempu2[] = yhiG2(:, nh);
-        um2[].im = tempu2[](restu);
+        cplxu2[] = yhG2(:, nh);
+        um2[] = cplxu2[](restu);
         ChangeNumbering([J, J], [um2[].re, um2[].im], temp);
         yqP((1+2*nh)*J.n:(3+2*nh)*J.n-1) = temp;
         fieldlabels((1+2*nh)*J.n:(3+2*nh)*J.n-1) = 1.0 + max(0, blocks + nh - Nh);

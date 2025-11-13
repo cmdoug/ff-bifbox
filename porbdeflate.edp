@@ -133,21 +133,20 @@ else { // if output meshfile is given, adapt mesh
     ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], q);
     ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], q, inverse = true);
   }
-  XMhg defu(uG), defu(u1rG), defu(u1iG), defu(u2rG), defu(u2iG), defu(tempu), defu(tempu2);
-  real[int, int] uhrG(uG[].n, Nh), uhiG(uG[].n, Nh); // create private global FE functions
-  tempu[](restu) = ub[]; // populate local portion of global soln
-  mpiAllReduce(tempu[], uG[], mpiCommWorld, mpiSUM);
+  XMhg defu(uG), defu(u1rG), defu(u1iG), defu(u2rG), defu(u2iG);
+  XMhg<complex> defu(cplxu), defu(cplxu2);
+  complex[int, int] uhG(uG[].n, Nh); // create private global FE functions
+  u2iG[](restu) = ub[]; // populate local portion of global soln
+  mpiAllReduce(u2iG[], uG[], mpiCommWorld, mpiSUM);
   for (int nh = 0; nh < Nh; nh++){
-    tempu[](restu) = uh(:, nh).re;
-    mpiAllReduce(tempu[], uhrG(:, nh), mpiCommWorld, mpiSUM);
-    tempu[](restu) = uh(:, nh).im;
-    mpiAllReduce(tempu[], uhiG(:, nh), mpiCommWorld, mpiSUM);
+    cplxu[](restu) = uh(:, nh);
+    mpiAllReduce(cplxu[], uhG(:, nh), mpiCommWorld, mpiSUM);
   }
-  u1rG[] = uhrG(:, 0);
-  u1iG[] = uhiG(:, 0);
+  u1rG[] = uhG(:, 0).re;
+  u1iG[] = uhG(:, 0).im;
   if (Nh > 1){
-    u2rG[] = uhrG(:, 1);
-    u2iG[] = uhiG(:, 1);
+    u2rG[] = uhG(:, 1).re;
+    u2iG[] = uhG(:, 1).im;
   }
   if(mpirank == 0) { // Perform mesh adaptation (serially) on processor 0
     IFMACRO(dimension,2)
@@ -175,14 +174,11 @@ else { // if output meshfile is given, adapt mesh
   }
   broadcast(processor(0), Thg);
   defu(uG) = defu(uG);
-  real[int, int] uhrG2(uG[].n, Nh), uhiG2(uG[].n, Nh); // create private global FE functions
+  complex[int, int] uhG2(uG[].n, Nh); // create private global FE functions
   for (int nh = 0; nh < Nh; nh++){
-    tempu[] = uhrG(:, nh);
-    defu(tempu2) = defu(tempu);
-    uhrG2(:, nh) = tempu2[];
-    tempu[] = uhiG(:, nh);
-    defu(tempu2) = defu(tempu);
-    uhiG2(:, nh) = tempu2[];
+    cplxu[] = uhG(:, nh);
+    defu(cplxu2) = defu(cplxu);
+    uhG2(:, nh) = cplxu2[];
   }
   Th = Thg; //Reinitialize local mesh with global mesh
   Mat Adapt;
@@ -197,10 +193,8 @@ else { // if output meshfile is given, adapt mesh
   restu = restrict(XMh, XMhg, n2o); // Compute new restriction from global mesh to local mesh
   ub[] = uG[](restu); //restrict global solution to each local mesh
   for (int nh = 0; nh < Nh; nh++) {
-    tempu2[] = uhrG2(:, nh);
-    um[].re = tempu2[](restu);
-    tempu2[] = uhiG2(:, nh);
-    um[].im = tempu2[](restu);
+    cplxu2[] = uhG2(:, nh);
+    um[] = cplxu2[](restu);
     uh(:, nh) = um[];
   }
 }
