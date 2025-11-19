@@ -394,10 +394,11 @@ while (!stopflag){
       JlPMa = Adapt3;
       yqPMa = Adapt4;
       JHBaa = [[JHBa, JlPMa],[yqPMa', -1.0]]; // make dummy Jacobian
+      set(JHBaa, sparams = ssparams, setup = 1);
       if (zerofreq) set(JHBa, prefix = "fieldsplit_0_", fields = fieldlabels, parent = JHBaa);
       else {
+        set(JHBa, prefix = "fieldsplit_0_", parent = JHBaa, setup = 1);
         set(JHB, prefix = "fieldsplit_0_fieldsplit_0_", fields = fieldlabels, parent = JHBa);
-        set(JHBa, prefix = "fieldsplit_0_", parent = JHBaa);
       }
       qa.resize(JHBaa.n);
       ChangeNumbering(J, ub[], temp);
