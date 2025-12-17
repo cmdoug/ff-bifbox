@@ -146,9 +146,13 @@ if (count == 0){
   else if(fileext == "porb") {
     int Nh;
     real omega;
+    complex[int] qm(um[].n);
     complex[int, int] qh(um[].n, Nh);
     ub[] = loadporb(fileroot, meshin, qh, sym, omega, Nh);
-    for (int nh = 0; nh < Nh; nh++) um[] += (2.0*qh(:,nh).re);
+    for (int nh = 0; nh < Nh; nh++) {
+      qm = exp(1i*(nh+1)*phase)*qh(:,nh);
+      um[] += (2.0*qm.re);
+    }
   }
   else if(fileext == "floq") {
   int Nh=1;
@@ -335,10 +339,8 @@ while (count < maxcount){
                                                        + " -ts_type " + tstype
                                                        + " -ts_max_snes_failures " + tsmaxsnesfailures
                                                        + " -ts_dt " + tsdt
-                                                       + " -ts_max_steps 1 "
-                                                       + " -ts_adapt_type " + tsadapttype
                                                        + " -snes_linesearch_type " + sneslinesearchtype
-                                                       + " -options_left no "
+                                                       + " -ts_max_steps 1 -ts_adapt_type none -options_left no "
                                                        );
     assert(ret > 0);
     if(mpirank == 0) { // Save adapted mesh
