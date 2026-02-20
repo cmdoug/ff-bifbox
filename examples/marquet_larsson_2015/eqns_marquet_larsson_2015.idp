@@ -99,7 +99,3 @@
       )
     )
     + HomBoundaryConditions(dum);
-
-// TRESSIAN OPERATOR
-  varf vT(defu(dum), defu(v))
-    = HomBoundaryConditions(dum);

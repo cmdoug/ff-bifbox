@@ -104,7 +104,3 @@
       gradvdotf(-ik(0)-ik2(0), vphi, um, dum) + gradvdotf(-ik(0)-ik2(0), vphi, dum, um)
     )
     + HomBoundaryConditions(dum);
-
-// TRESSIAN OPERATOR
-  varf vT(defu(dum), defu(v))
-    = HomBoundaryConditions(dum);

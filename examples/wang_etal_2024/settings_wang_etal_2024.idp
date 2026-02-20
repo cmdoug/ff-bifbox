@@ -6,10 +6,12 @@
 // NOTE: When starting a project this is one of the main files that should be edited
 //
 // Set dimension macro for 'macro_ddm.idp' (2)
-macro dimension()2//EOM
+  macro dimension()2//EOM
+// Declare that a cubic nonlinear term exists and its "Tressian" operator is defined
+  macro cubic()//EOM
 // Load hpddm macros
-include "macro_ddm.idp"
-verbosity = getARGV("-v", 0);
+  include "macro_ddm.idp"
+  verbosity = getARGV("-v", 0);
 // Define parameter and monitor names
   string[int] paramnames = ["U0","Tr","As","Ts","Pr","Sc","p0","Rs","Cp","YCH4","WCH4","YO2","WO2","nCH4","nO2","Ar","Ta","Dh0f","alpha","xsg","rsg"]; // set parameter names
   string[int] monitornames = ["Re","ux(2.7D,1.2D)","omegadotT"]; // set monitor names
