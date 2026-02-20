@@ -135,7 +135,7 @@
     )
     + HomBoundaryConditions(dum);
 
-// TRESSIAN OPERATOR (FOR WEAKLY NONLINEAR ANALYSIS)
+// TRESSIAN OPERATOR
   varf vT(defu(dum), defu(v))
     = int2d(Th)(
       iomega*(2.*gdotf(vp, umT)*um2T*um3T/ubT^3. + d2ubrhodT2*um2T*um3T*(gdotf(vT, umT) + gdotf(vY, umY) + vdotu(v, um))) + iomega2*(2.*gdotf(vp, um2T)*umT*um3T/ubT^3. + d2ubrhodT2*umT*um3T*(gdotf(vT, um2T) + gdotf(vY, um2Y) + vdotu(v, um2))) + iomega3*(2.*gdotf(vp, um3T)*umT*um2T/ubT^3. + d2ubrhodT2*umT*um2T*(gdotf(vT, um3T) + gdotf(vY, um3Y) + vdotu(v, um3)))

@@ -111,7 +111,3 @@
       - 2.0*vpo*dumz*umz*N.x*(int(sym(0)) == 0)
     )
     + HomBoundaryConditions(dum);
-
-// TRESSIAN OPERATOR
-  varf vT(defu(dum), defu(v))
-    = HomBoundaryConditions(dum);

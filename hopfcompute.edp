@@ -531,6 +531,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
         alpha[paramnames[k]] = -J(uma[], um3[]);
       }
     }
+    IFMACRO(cubic)
     //  B: fundamental modification due to cubic self-interaction of fundamental
     ik2.im = sym1;
     ik3.im = -sym1;
@@ -539,12 +540,18 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     um2[] = 0.5*um[];
     um3[] = conj(um[]);
     R = vT(0, XMh, tgv = -10);
+    ENDIFMACRO
     //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
     ik2 = 0.0;
     iomega2 = 0.0;
     ChangeNumbering(J, um2[], qP, inverse = true, exchange = true);
+    IFMACRO(cubic)
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
+    ENDIFMACRO
+    IFMACRO(!cubic)
+    R = vH(0, XMh, tgv = -10);
+    ENDIFMACRO
     //  D: fundamental modification due to quadratic interaction of fundamental with 2nd order modification C
     ik.im = -sym1;
     ik2.im = 2*sym1;
