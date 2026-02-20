@@ -80,7 +80,3 @@
       ugradu(v, um, ik2, dum) + ugradu(v, dum, ik, um)
     )
     + HomBoundaryConditions(dum);
-
-// TRESSIAN OPERATOR
-  varf vT(defu(dum), defu(v))
-    = HomBoundaryConditions(dum);

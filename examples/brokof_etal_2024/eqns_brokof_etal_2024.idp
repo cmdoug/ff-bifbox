@@ -181,7 +181,7 @@ varf vH(defu(dum), defu(v))
       )
       + HomBoundaryConditions(dum);
 
-// TRESSIAN OPERATOR (FOR WEAKLY NONLINEAR ANALYSIS)
+// TRESSIAN OPERATOR
 varf vT(defu(dum), defu(v))
       = int2d(Th)(
         Jinv*(

@@ -235,9 +235,11 @@ while (!stopflag){
           NLq += (2.0*hn(i-j)/eps)*um3[];
           for (int k = 0; k < i-j; k++){
             ChangeNumbering(J, um2[], yqnP(:, k), inverse = true, exchange = true);
+            IFMACRO(cubic)
             ChangeNumbering(J, um3[], yqnP(:, i-j-k-1), inverse = true, exchange = true);
             temp = vT(0, XMh, tgv = -10);
             NLq += temp/3.0;
+            ENDIFMACRO
             updateparam(param, paramval + eps);
             um3[] = vH(0, XMh, tgv = -10);
             updateparam(param, paramval);

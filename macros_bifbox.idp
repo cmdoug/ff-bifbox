@@ -194,6 +194,7 @@ macro ResidualHB(RHB, J, ub, uh, sym0, omega) {
     iomega2 = -iomega;
     Rc = vH(0, XMh, tgv = -10);
     R += Rc.re;
+    IFMACRO(cubic)
     for (int k = 0; k < Nh-j-1; k++){
       um2[] = uh(:, k);
       um3[] = conj(uh(:, 1+j+k));
@@ -204,6 +205,7 @@ macro ResidualHB(RHB, J, ub, uh, sym0, omega) {
       Rc = vT(0, XMh, tgv = -10);
       R += Rc.re;
     }
+    ENDIFMACRO
   }
   ChangeNumbering(J, R, Rtemp);
   RHB(0:J.n-1) = Rtemp;
@@ -223,6 +225,7 @@ macro ResidualHB(RHB, J, ub, uh, sym0, omega) {
         Rctemp = vH(0, XMh, tgv = -10);
       }
       Rc += Rctemp;
+      IFMACRO(cubic)
       for (int k = 0; k < Nh; k++) {
         if (k != nh-j-1 && k < Nh+nh-j) {
           um2[] = 0.5*uh(:, k);
@@ -247,6 +250,7 @@ macro ResidualHB(RHB, J, ub, uh, sym0, omega) {
           Rc += Rctemp;
         }
       }
+      ENDIFMACRO
     }
     ChangeNumbering([J, J], [Rc.re, Rc.im], Rtemp);
     RHB((1+2*nh)*J.n:(3+2*nh)*J.n-1) = Rtemp;
@@ -304,6 +308,7 @@ macro JacobianHB(JHB, J, ub, uh, sym0, omega) {
     Mat[int, int] JHBtemp(1+2*Nh, 1+2*Nh);
     matrix<complex> Cmat = vJ(XMh, XMh, tgv = -1);
     matrix An2r = Cmat.re, An3r, An2i, An3i;
+    IFMACRO(cubic)
     ik3 = 0;
     iomega3 = 0;
     for (int j = 0; j < Nh; j++){
@@ -316,6 +321,7 @@ macro JacobianHB(JHB, J, ub, uh, sym0, omega) {
       Cmat = vT(XMh, XMh, tgv = -10);
       An2r += Cmat.re;
     }
+    ENDIFMACRO
     constructor(JHBtemp(0, 0), J, An2r);
     for (int j = 0; j < Nh; j++){
       um[] = 2.0*uh(:, j);
@@ -326,6 +332,7 @@ macro JacobianHB(JHB, J, ub, uh, sym0, omega) {
       Cmat = vH(XMh, XMh, tgv = -10);
       An2r = Cmat.re;
       An2i = Cmat.im;
+      IFMACRO(cubic)
       ik3.im = -(1+j)*(sym0);
       iomega3 = -1i*(1+j)*(omega);
       for (int k = 0; k < Nh; k++){
@@ -352,6 +359,7 @@ macro JacobianHB(JHB, J, ub, uh, sym0, omega) {
           An2i += Cmat.im;
         }
       }
+      ENDIFMACRO
       constructor(JHBtemp(0, 1+2*j), J, An2r);
       constructor(JHBtemp(0, 2+2*j), J, An2i);
     }
@@ -365,6 +373,7 @@ macro JacobianHB(JHB, J, ub, uh, sym0, omega) {
       Cmat = vH(XMh, XMh, tgv = -10);
       An2r = Cmat.re;
       An2i = Cmat.im;
+      IFMACRO(cubic)
       ik3 = 0;
       iomega3 = 0;
       for (int j = 0; j < Nh; j++) {
@@ -381,6 +390,7 @@ macro JacobianHB(JHB, J, ub, uh, sym0, omega) {
           An2i += Cmat.im;
         }
       }
+      ENDIFMACRO
       constructor(JHBtemp(1+2*nh, 0), J, An2r);
       constructor(JHBtemp(2+2*nh, 0), J, An2i);
       for (int j = 0; j < Nh; j++) {
@@ -414,6 +424,7 @@ macro JacobianHB(JHB, J, ub, uh, sym0, omega) {
           An3r += Cmat.im;
           An3i -= Cmat.re;
         }
+        IFMACRO(cubic)
         for (int k = 0; k < Nh; k++) {
           if (k != nh-j-1 && k < Nh+nh-j) {
             if (k < nh-j-1) um[] = 0.5*uh(:, nh-j-k-2);
@@ -478,6 +489,7 @@ macro JacobianHB(JHB, J, ub, uh, sym0, omega) {
             An3i -= Cmat.re;
           }
         }
+        ENDIFMACRO
         constructor(JHBtemp(1+2*nh, 1+2*j), J, An2r);
         constructor(JHBtemp(1+2*nh, 2+2*j), J, An3r);
         constructor(JHBtemp(2+2*nh, 1+2*j), J, An2i);
@@ -495,6 +507,7 @@ macro JacobianHBcplx(JHB, J, ub, uh, sym0, sym1, omega, shift) {
     iomega = (shift);
     Mat<complex>[int, int] JHBtemp(1+2*Nh, 1+2*Nh);
     matrix<complex> Cmat, An3i, An2r = vJ(XMh, XMh, tgv = -2);
+    IFMACRO(cubic)
     ik3.im = (sym1);
     iomega3 = (shift);
     for (int j = 0; j < Nh; j++){
@@ -507,6 +520,7 @@ macro JacobianHBcplx(JHB, J, ub, uh, sym0, sym1, omega, shift) {
       Cmat = vT(XMh, XMh, tgv = -20);
       An2r += Cmat;
     }
+    ENDIFMACRO
     constructor(JHBtemp(0, 0), J, An2r);
     for (int j = 0; j < Nh; j++){
       um[] = uh(:, j);
@@ -521,6 +535,7 @@ macro JacobianHBcplx(JHB, J, ub, uh, sym0, sym1, omega, shift) {
       iomega *= -1.0;
       iomega2 = -iomega + (shift);
       An2r = vH(XMh, XMh, tgv = -20);
+      IFMACRO(cubic)
       for (int k = 0; k < Nh; k++){
         if (k < Nh-j-1) {
           um[] = uh(:, 1+j+k);
@@ -567,6 +582,7 @@ macro JacobianHBcplx(JHB, J, ub, uh, sym0, sym1, omega, shift) {
           An2r += Cmat;
         }
       }
+      ENDIFMACRO
       constructor(JHBtemp(0, 1+2*j), J, An2r);
       constructor(JHBtemp(0, 2+2*j), J, An3i);
     }
@@ -583,6 +599,7 @@ macro JacobianHBcplx(JHB, J, ub, uh, sym0, sym1, omega, shift) {
       ik.im *= -1.0;
       iomega *= -1.0;
       An3i = vH(XMh, XMh, tgv = -20);
+      IFMACRO(cubic)
       ik3.im = (sym1);
       iomega3 = (shift);
       for (int j = 0; j < Nh; j++) {
@@ -608,6 +625,7 @@ macro JacobianHBcplx(JHB, J, ub, uh, sym0, sym1, omega, shift) {
           An3i += Cmat;
         }
       }
+      ENDIFMACRO
       constructor(JHBtemp(1+2*nh, 0), J, An2r);
       constructor(JHBtemp(2+2*nh, 0), J, An3i);
       for (int j = 0; j < Nh; j++) {
@@ -670,6 +688,7 @@ macro JacobianHBcplx(JHB, J, ub, uh, sym0, sym1, omega, shift) {
           iomega2 = 1i*(1+j)*(omega) + (shift);
           An2i = vH(XMh, XMh, tgv = -20);
         }
+        IFMACRO(cubic)
         for (int k = 0; k < Nh; k++) {
           if (k != nh-j-1 && k < Nh+nh-j) {
             sym = (1+nh)*(sym0) + (sym1);
@@ -770,6 +789,7 @@ macro JacobianHBcplx(JHB, J, ub, uh, sym0, sym1, omega, shift) {
             An2i += Cmat;
           }
         }
+        ENDIFMACRO
         constructor(JHBtemp(1+2*nh, 1+2*j), J, An2r);
         constructor(JHBtemp(1+2*nh, 2+2*j), J, An3r);
         constructor(JHBtemp(2+2*nh, 1+2*j), J, An2i);

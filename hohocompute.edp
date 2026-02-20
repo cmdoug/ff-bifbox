@@ -789,23 +789,30 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     // A|A|^2
     //  B: fundamental modification due to cubic self-interaction of fundamental
     ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
-    um2[] = 0.5*um[];
-    um3[] = conj(um[]);
     ChangeNumbering(J, uma[], q1ma, inverse = true);
     sym = sym1;
     ik.im = sym1;
+    iomega = 1i*omega1;
+    IFMACRO(cubic)
+    um2[] = 0.5*um[];
+    um3[] = conj(um[]);
     ik2.im = sym1;
     ik3.im = -sym1;
-    iomega = 1i*omega1;
     iomega2 = iomega;
     iomega3 = -iomega;
     R = vT(0, XMh, tgv = -10);
+    ENDIFMACRO
     //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
     ik2 = 0.0;
     iomega2 = 0.0;
     ChangeNumbering(J, um2[], q1P, inverse = true, exchange = true); // FreeFEM to PETSc
+    IFMACRO(cubic)
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
+    ENDIFMACRO
+    IFMACRO(!cubic)
+    R = vH(0, XMh, tgv = -10);
+    ENDIFMACRO
     //  D: fundamental modification due to quadratic interaction of fundamental with 2nd order modification C
     ik.im = -sym1;
     ik2.im = 2.0*sym1;
@@ -820,23 +827,30 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     // B|B|^2
     //  B: fundamental modification due to cubic self-interaction of fundamental
     ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
-    um2[] = 0.5*um[];
-    um3[] = conj(um[]);
     ChangeNumbering(J, uma[], q2ma, inverse = true);
     sym = sym2;
     ik.im = sym2;
+    iomega = 1i*omega2;
+    IFMACRO(cubic)
+    um2[] = 0.5*um[];
+    um3[] = conj(um[]);
     ik2.im = sym2;
     ik3.im = -sym2;
-    iomega = 1i*omega2;
     iomega2 = 1i*omega2;
     iomega3 = -iomega2;
     R = vT(0, XMh, tgv = -10);
+    ENDIFMACRO
     //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
     ik2 = 0.0;
     iomega2 = 0.0;
     ChangeNumbering(J, um2[], p2P, inverse = true, exchange = true); // FreeFEM to PETSc
+    IFMACRO(cubic)
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
+    ENDIFMACRO
+    IFMACRO(!cubic)
+    R = vH(0, XMh, tgv = -10);
+    ENDIFMACRO
     //  D: fundamental modification due to quadratic interaction of fundamental with 2nd order modification C
     ik.im = -sym2;
     ik2.im = 2.0*sym2;
@@ -851,24 +865,30 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     // A|B|^2
     //  B: fundamental modification due to cubic self-interaction of fundamental
     ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
-    ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
-    um3[] = conj(um2[]);
     ChangeNumbering(J, uma[], q1ma, inverse = true);
     sym = sym1;
     ik.im = sym1;
+    iomega = 1i*omega1;
+    IFMACRO(cubic)
+    ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
+    um3[] = conj(um2[]);
     ik2.im = sym2;
     ik3.im = -sym2;
-    iomega = 1i*omega1;
     iomega2 = 1i*omega2;
     iomega3 = -iomega2;
     R = vT(0, XMh, tgv = -10);
+    ENDIFMACRO
     //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
     ik2 = 0.0;
     iomega2 = 0.0;
     ChangeNumbering(J, um2[], p2P, inverse = true, exchange = true); // FreeFEM to PETSc
+    IFMACRO(cubic)
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
-
+    ENDIFMACRO
+    IFMACRO(!cubic)
+    R = vH(0, XMh, tgv = -10);
+    ENDIFMACRO
     ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
     ik.im = sym2;
     ik2.im = sym1 - sym2;
@@ -892,24 +912,30 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     // B|A|^2
     //  B: fundamental modification due to cubic self-interaction of fundamental
     ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
-    ChangeNumbering(J, um2[], q1m, inverse = true, exchange = true);
-    um3[] = conj(um2[]);
     ChangeNumbering(J, uma[], q2ma, inverse = true);
     sym = sym2;
     ik.im = sym2;
+    iomega = 1i*omega2;
+    IFMACRO(cubic)
+    ChangeNumbering(J, um2[], q1m, inverse = true, exchange = true);
+    um3[] = conj(um2[]);
     ik2.im = sym1;
     ik3.im = -sym1;
-    iomega = 1i*omega2;
     iomega2 = 1i*omega1;
     iomega3 = -iomega2;
     R = vT(0, XMh, tgv = -10);
+    ENDIFMACRO
     //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
     ik2 = 0.0;
     iomega2 = 0.0;
     ChangeNumbering(J, um2[], q1P, inverse = true, exchange = true); // FreeFEM to PETSc
+    IFMACRO(cubic)
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
-
+    ENDIFMACRO
+    IFMACRO(!cubic)
+    R = vH(0, XMh, tgv = -10);
+    ENDIFMACRO
     ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
     ik.im = sym1;
     ik2.im = sym2 - sym1;
@@ -934,50 +960,63 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       // B^3
       //  B: fundamental modification due to cubic self-interaction of fundamental
       ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
-      um2[] = um[]/6.0;
-      um3[] = um[];
       ChangeNumbering(J, uma[], q1ma, inverse = true);
       sym = sym1;
       ik.im = sym2;
+      iomega = 1i*omega2;
+      IFMACRO(cubic)
+      um2[] = um[]/6.0;
+      um3[] = um[];
       ik2.im = sym2;
       ik3.im = sym2;
-      iomega = 1i*omega2;
       iomega2 = iomega;
       iomega3 = iomega;
       R = vT(0, XMh, tgv = -10);
+      ENDIFMACRO
       //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
       ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
       ik2.im = 2.0*sym2;
       iomega2 = 2i*omega2;
       ChangeNumbering(J, um2[], qBB, inverse = true, exchange = true); // FreeFEM to PETSc
+      IFMACRO(cubic)
       um3[] = vH(0, XMh, tgv = -10);
       R += um3[];
-
+      ENDIFMACRO
+      IFMACRO(!cubic)
+      R = vH(0, XMh, tgv = -10);
+      ENDIFMACRO
       gamma13 = -J(uma[], R);
 
       // A*(B^*)^2
       //  B: fundamental modification due to cubic self-interaction of fundamental
       ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
-      ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
-      um2[] = conj(um2[]);
-      um3[] = 0.5*um2[];
       ChangeNumbering(J, uma[], q2ma, inverse = true);
       sym = sym1 - 2.0*sym2;
       ik.im = sym1;
+      iomega = 1i*omega1;
+      IFMACRO(cubic)
+      ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
+      um2[] = conj(um2[]);
+      um3[] = 0.5*um2[];
       ik2.im = -sym2;
       ik3.im = -sym2;
-      iomega = 1i*omega1;
       iomega2 = -1i*omega2;
       iomega3 = iomega2;
       R = vT(0, XMh, tgv = -10);
+      ENDIFMACRO
       //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
       ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
       ik2.im = -2.0*sym2;
       iomega2 = -2i*omega2;
       ChangeNumbering(J, um2[], qBB, inverse = true, exchange = true); // FreeFEM to PETSc
       um2[] = conj(um2[]);
+      IFMACRO(cubic)
       um3[] = vH(0, XMh, tgv = -10);
       R += um3[];
+      ENDIFMACRO
+      IFMACRO(!cubic)
+      R = vH(0, XMh, tgv = -10);
+      ENDIFMACRO
 
       ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
       um[] = conj(um[]);
