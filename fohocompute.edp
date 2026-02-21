@@ -366,7 +366,7 @@ complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), p1P(J.n), q1P(J.n), q2m(J.n), q2ma(
       ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
       um2[] = vJ(0, XMh, tgv = -10);
       updateparam(param2, paramvals(2-zerofreq));
-      R = J*um[];
+      R = vJ(0, XMh, tgv = -10);
       um3[] -= R;
       um2[] -= R;
       ChangeNumbering(J, uma[], q2ma, inverse = true);
