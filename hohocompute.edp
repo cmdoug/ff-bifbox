@@ -160,6 +160,15 @@ else if(fileext1 == "porb") {
   ub[].re = loadporb(fileroot1, meshin, qh, sym1, omega, Nh);
   um[] = qh(:, 0);
 }
+else if(fileext1 == "floq") {
+  int Nh=1;
+  complex[int, int] qh(um[].n, 2);
+  complex eigenvalue;
+  real omegatemp;
+  real[int] symtemp(sym.n);
+  um[] = loadfloq(fileroot1, meshin, qh, sym1, eigenvalue, symtemp, omegatemp, Nh);
+  omega1 = imag(eigenvalue);
+}
 else assert(false); // invalid input filetype
 if (basefileext == "base") {
   ub[].re = loadbase(basefileroot, meshin);
@@ -324,10 +333,10 @@ else { // if output meshfile is given, adapt mesh
   um3[].re = um3rG[](restu);
   um3[].im = um3iG[](restu);
 }
+// Build bordered block matrix from only Mat components
 complex[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
 complex iomega, iomega2 = 0.0, iomega3 = 0.0;
 include "eqns.idp"
-// Build bordered block matrix from only Mat components
 Mat<complex> JlPM(J.n, mpirank == 0 ? (4-zerofreq-zerofreq2) : 0), gqPM(J.n, mpirank == 0 ? (4-zerofreq-zerofreq2) : 0), glPM(mpirank == 0 ? (4-zerofreq-zerofreq2) : 0, mpirank == 0 ? (4-zerofreq-zerofreq2) : 0); // Initialize Mat objects for bordered matrix
 Mat<complex> Ja = [[J, JlPM], [gqPM', glPM]]; // make dummy Jacobian
 complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), p1P(J.n), q1P(J.n), q2m(J.n), q2ma(J.n), p2P(J.n), q2P(J.n);
@@ -416,7 +425,7 @@ complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), p1P(J.n), q1P(J.n), q2m(J.n), q2ma(
       ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
       um2[] = vJ(0, XMh, tgv = -10);
       updateparam(param2, paramvals(2-zerofreq));
-      R = J*um[];
+      R = vJ(0, XMh, tgv = -10);
       um3[] -= R;
       um2[] -= R;
       ChangeNumbering(J, uma[], q2ma, inverse = true);
