@@ -320,6 +320,20 @@ macro JacobianHB(JHB, J, ub, uh, sym0, omega) {
       iomega2 = -iomega;
       Cmat = vT(XMh, XMh, tgv = -10);
       An2r += Cmat.re;
+      IFMACRO(quartic)
+      for (int k = 0; k < Nh-j-1; k++){
+        um2[] = uh(:, k);
+        um3[] = conj(uh(:, 1+j+k));
+        ik2.im = (1+k)*(sym0);
+        ik3.im = -(2+j+k)*(sym0);
+        iomega2 = 1i*(1+k)*(omega);
+        iomega3 = -1i*(2+j+k)*(omega);
+        Cmat = vQ(XMh, XMh, tgv = -10);
+        An2r += Cmat.re;
+      }
+      ik3 = 0;
+      iomega3 = 0;
+      ENDIFMACRO
     }
     ENDIFMACRO
     constructor(JHBtemp(0, 0), J, An2r);
@@ -389,6 +403,41 @@ macro JacobianHB(JHB, J, ub, uh, sym0, omega) {
           An2r += Cmat.re;
           An2i += Cmat.im;
         }
+        IFMACRO(quartic)
+        else {
+          um[] = uh(:, j);
+          ik.im = (1+j)*(sym0);
+          iomega = 1i*(1+j)*(omega);
+        }
+        for (int k = 0; k < Nh; k++) {
+          if (k != nh-j-1 && k < Nh+nh-j) {
+            um2[] = 0.5*uh(:, k);
+            if (k < nh-j-1) um3[] = uh(:, nh-j-k-2)/3.0;
+            else um3[] = conj(uh(:, j+k-nh));
+            ik2.im = (1+k)*(sym0);
+            ik3.im = (nh-j-k-1)*(sym0);
+            iomega2 = 1i*(1+k)*(omega);
+            iomega3 = 1i*(nh-j-k-1)*(omega);
+            Cmat = vQ(XMh, XMh, tgv = -10);
+            An2r += Cmat.re;
+            An2i += Cmat.im;
+          }
+          if (k < j-nh-1) {
+            um2[] = conj(uh(:, k));
+            um3[] = conj(uh(:, j-k-nh-2));
+            um3[] *= 0.5;
+            ik2.im = -(1+k)*(sym0);
+            ik3.im = -(j-k-nh-1)*(sym0);
+            iomega2 = -1i*(1+k)*(omega);
+            iomega3 = -1i*(j-k-nh-1)*(omega);
+            Cmat = vQ(XMh, XMh, tgv = -10);
+            An2r += Cmat.re;
+            An2i += Cmat.im;
+          }
+        }
+        ik3 = 0;
+        iomega3 = 0;
+        ENDIFMACRO
       }
       ENDIFMACRO
       constructor(JHBtemp(1+2*nh, 0), J, An2r);
@@ -519,6 +568,20 @@ macro JacobianHBcplx(JHB, J, ub, uh, sym0, sym1, omega, shift) {
       iomega2 = -iomega;
       Cmat = vT(XMh, XMh, tgv = -20);
       An2r += Cmat;
+      IFMACRO(quartic)
+      for (int k = 0; k < Nh-j-1; k++){
+        um2[] = uh(:, k);
+        um3[] = conj(uh(:, 1+j+k));
+        ik2.im = (1+k)*(sym0);
+        ik3.im = -(2+j+k)*(sym0);
+        iomega2 = 1i*(1+k)*(omega);
+        iomega3 = -1i*(2+j+k)*(omega);
+        Cmat = vQ(XMh, XMh, tgv = -10);
+        An2r += Cmat;
+      }
+      ik3.im = (sym1);
+      iomega3 = (shift);
+      ENDIFMACRO
     }
     ENDIFMACRO
     constructor(JHBtemp(0, 0), J, An2r);
@@ -624,6 +687,66 @@ macro JacobianHBcplx(JHB, J, ub, uh, sym0, sym1, omega, shift) {
           Cmat = vT(XMh, XMh, tgv = -20);
           An3i += Cmat;
         }
+        IFMACRO(quartic)
+        for (int k = 0; k < Nh; k++) {
+          sym = (1+nh)*(sym0) + (sym1);
+          um[] = uh(:, j);
+          ik.im = (1+j)*(sym0);
+          iomega = 1i*(1+j)*(omega);
+          if (k != nh-j-1 && k < Nh+nh-j) {
+            um2[] = 0.5*uh(:, k);
+            if (k < nh-j-1) um3[] = uh(:, nh-j-k-2)/3.0;
+            else um3[] = conj(uh(:, j+k-nh));
+            ik2.im = (1+k)*(sym0);
+            ik3.im = (nh-j-k-1)*(sym0);
+            iomega2 = 1i*(1+k)*(omega);
+            iomega3 = 1i*(nh-j-k-1)*(omega);
+            Cmat = vQ(XMh, XMh, tgv = -10);
+            An2r += Cmat;
+          }
+          if (k < j-nh-1) {
+            um2[] = conj(uh(:, k));
+            um3[] = conj(uh(:, j-k-nh-2));
+            um3[] *= 0.5;
+            ik2.im = -(1+k)*(sym0);
+            ik3.im = -(j-k-nh-1)*(sym0);
+            iomega2 = -1i*(1+k)*(omega);
+            iomega3 = -1i*(j-k-nh-1)*(omega);
+            Cmat = vQ(XMh, XMh, tgv = -10);
+            An2r += Cmat;
+          }
+          sym = -(1+nh)*(sym0) + (sym1);
+          um[] = conj(uh(:, j));
+          ik.im = -(1+j)*(sym0);
+          iomega = -1i*(1+j)*(omega);
+          if (k != nh-j-1 && k < Nh+nh-j) {
+            um2[] = conj(uh(:, k));
+            if (k < nh-j-1) {
+              um3[] = conj(uh(:, nh-j-k-2));
+              um3[] /= 6.0;
+            }
+            else um3[] = 0.5*uh(:, j+k-nh);
+            ik2.im = -(1+k)*(sym0);
+            ik3.im = -(nh-j-k-1)*(sym0);
+            iomega2 = -1i*(1+k)*(omega);
+            iomega3 = -1i*(nh-j-k-1)*(omega);
+            Cmat = vQ(XMh, XMh, tgv = -10);
+            An3i += Cmat;
+          }
+          if (k < j-nh-1) {
+            um2[] = uh(:, k);
+            um3[] = 0.5*uh(:, j-k-nh-2);
+            ik2.im = (1+k)*(sym0);
+            ik3.im = (j-k-nh-1)*(sym0);
+            iomega2 = 1i*(1+k)*(omega);
+            iomega3 = 1i*(j-k-nh-1)*(omega);
+            Cmat = vQ(XMh, XMh, tgv = -10);
+            An3i += Cmat;
+          }
+        }
+        ik3.im = (sym1);
+        iomega3 = (shift);
+        ENDIFMACRO
       }
       ENDIFMACRO
       constructor(JHBtemp(1+2*nh, 0), J, An2r);
