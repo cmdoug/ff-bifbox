@@ -49,18 +49,18 @@ jobs:
 
       - name: Run ff-bifbox test
         run: |
-        export PATH=${PATH}:${PWD}/FreeFem-sources/src/mpi:${PWD}/FreeFem-sources/src/nw
-        export FF_INCLUDEPATH="${PWD}/FreeFem-sources/idp"
-        export FF_LOADPATH="${PWD}/FreeFem-sources/plugin/mpi;;${PWD}/FreeFem-sources/plugin/seq"
-        mkdir -p test-results
-        export workdir=test-results
-        export nproc=4
-        ln -sf examples/sipp_lebedev_2007/eqns_sipp_lebedev_2007.idp eqns.idp
-        ln -sf examples/sipp_lebedev_2007/settings_sipp_lebedev_2007.idp settings.idp
-        FreeFem++-mpi -v 0 examples/sipp_lebedev_2007/cylinder.edp -mo $workdir/cylinder
-        FreeFem++-mpi -v 0 examples/sipp_lebedev_2007/cavity.edp -mo $workdir/cavity
-        ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cylinder.msh -fo cylinder -1/Re 0.1
-        ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cavity.msh -fo cavity -1/Re 0.1
+          export PATH="${PATH}:${PWD}/FreeFem-sources/src/mpi:${PWD}/FreeFem-sources/src/nw"
+          export FF_INCLUDEPATH="${PWD}/FreeFem-sources/idp"
+          export FF_LOADPATH="${PWD}/FreeFem-sources/plugin/mpi;;${PWD}/FreeFem-sources/plugin/seq"
+          mkdir -p test-results
+          export workdir=test-results
+          export nproc=4
+          ln -sf examples/sipp_lebedev_2007/eqns_sipp_lebedev_2007.idp eqns.idp
+          ln -sf examples/sipp_lebedev_2007/settings_sipp_lebedev_2007.idp settings.idp
+          FreeFem++-mpi -v 0 examples/sipp_lebedev_2007/cylinder.edp -mo $workdir/cylinder
+          FreeFem++-mpi -v 0 examples/sipp_lebedev_2007/cavity.edp -mo $workdir/cavity
+          ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cylinder.msh -fo cylinder -1/Re 0.1
+          ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cavity.msh -fo cavity -1/Re 0.1
 
       - name: Upload test artifacts (logs)
         if: failure()
