@@ -49,7 +49,7 @@ jobs:
 
       - name: Run ff-bifbox test
         run: |
-        export PATH="${PATH}:${PWD}/FreeFem-sources/src/mpi:${PWD}/FreeFem-sources/src/nw"
+        export PATH=${PATH}:${PWD}/FreeFem-sources/src/mpi:${PWD}/FreeFem-sources/src/nw
         export FF_INCLUDEPATH="${PWD}/FreeFem-sources/idp"
         export FF_LOADPATH="${PWD}/FreeFem-sources/plugin/mpi;;${PWD}/FreeFem-sources/plugin/seq"
         mkdir -p test-results
