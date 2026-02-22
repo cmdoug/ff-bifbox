@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up cache for apt and build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.ccache
+          key: ${{ runner.os }}-build-${{ hashFiles('ci/**','package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-
+
+      - name: Make CI scripts executable
+        run: chmod +x ci/*.sh || true
+
+      - name: Install dependencies (system + FreeFEM w/ PETSc)
+        run: ci/install_deps.sh
+
+      - name: Run unit tests and examples
+        run: ci/run_tests.sh
+
+      - name: Upload test artifacts (logs)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: test-results/**/*
