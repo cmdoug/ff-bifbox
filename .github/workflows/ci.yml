@@ -1,0 +1,70 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install basic system dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y gcc g++ gfortran m4 patch git wget cmake libhdf5-dev libopenblas-dev liblapack-dev flex bison autoconf automake autotools-dev
+
+      - name: Build PETSc for real scalars
+        id: petsc-real
+        run: |
+          git clone https://gitlab.com/cmdoug/petsc
+          cd petsc
+          ./configure PETSC_ARCH=real --with-fortran-bindings=0 --with-debugging=0 --with-scalar-type=real --download-mpich --download-mumps --download-parmetis --download-metis --download-hypre --download-superlu --download-slepc --download-hpddm --download-ptscotch --download-suitesparse --download-scalapack --download-tetgen --download-mmg --download-parmmg --download-gsl=https://mirrors.kernel.org/gnu/gsl/gsl-2.8.tar.gz --download-bison=https://mirrors.kernel.org/gnu/bison/bison-3.8.2.tar.gz --download-slepc-configure-arguments="--download-arpack"
+          make PETSC_ARCH=real
+
+      - name: Build PETSc for complex scalars
+        id: petsc-complex
+        run: |
+          cd petsc
+          ./configure PETSC_ARCH=complex --with-fortran-bindings=0 --with-debugging=0 --with-scalar-type=complex --with-mpich-dir=real --with-mumps-dir=real --with-parmetis-dir=real --with-metis-dir=real --with-superlu-dir=real --download-slepc --download-hpddm --download-htool --with-ptscotch-dir=real --with-suitesparse-dir=real --with-scalapack-dir=real --with-tetgen-dir=real --with-gsl-dir=real --with-bison-dir=real
+          make PETSC_ARCH=complex
+          
+      - name: Build FreeFEM
+        id: freefem
+        run: |
+          git clone https://github.com/cmdoug/FreeFem-sources
+          cd FreeFem-sources
+          git checkout develop
+          autoreconf -i
+          ./configure --enable-download --enable-optim --with-petsc="../petsc/real" --with-petsc_complex="../petsc/complex" --prefix="."
+          ./3rdparty/getall -a
+          ./reconfigure
+          make -j 4
+
+      - name: Run ff-bifbox test
+        run: |
+        export PATH="${PATH}:${PWD}/FreeFem-sources/src/mpi:${PWD}/FreeFem-sources/src/nw"
+        export FF_INCLUDEPATH="${PWD}/FreeFem-sources/idp"
+        export FF_LOADPATH="${PWD}/FreeFem-sources/plugin/mpi;;${PWD}/FreeFem-sources/plugin/seq"
+        mkdir -p test-results
+        export workdir=test-results
+        export nproc=4
+        ln -sf examples/sipp_lebedev_2007/eqns_sipp_lebedev_2007.idp eqns.idp
+        ln -sf examples/sipp_lebedev_2007/settings_sipp_lebedev_2007.idp settings.idp
+        FreeFem++-mpi -v 0 examples/sipp_lebedev_2007/cylinder.edp -mo $workdir/cylinder
+        FreeFem++-mpi -v 0 examples/sipp_lebedev_2007/cavity.edp -mo $workdir/cavity
+        ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cylinder.msh -fo cylinder -1/Re 0.1
+        ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cavity.msh -fo cavity -1/Re 0.1
+
+      - name: Upload test artifacts (logs)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: test-results/**/*
