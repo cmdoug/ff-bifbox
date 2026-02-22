@@ -21,7 +21,7 @@ git clone https://github.com/cmdoug/FreeFem-sources
 cd FreeFem-sources
 git checkout develop
 autoreconf -i
-./configure --enable-download --enable-optim --with-petsc="../petsc/real" --with-petsc_complex="../petsc/complex" --prefix="FreeFem-sources"
+./configure --enable-download --enable-optim --with-petsc="${LOCAL_DIR}/petsc/real" --with-petsc_complex="${LOCAL_DIR}/petsc/complex" --prefix="${LOCAL_DIR}/FreeFem-sources"
 ./3rdparty/getall -a
 ./reconfigure
 make -j 4
