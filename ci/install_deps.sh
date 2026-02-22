@@ -3,8 +3,8 @@ set -euo pipefail
 echo "=== CI: install_deps.sh ==="
 
 # Basic system deps
-sudo apt update
-sudo apt install gcc g++ gfortran m4 patch git wget cmake libhdf5-dev libopenblas-dev liblapack-dev flex bison autoconf automake autotools-dev
+sudo apt-get update -y
+sudo apt-get install -y gcc g++ gfortran m4 patch git wget cmake libhdf5-dev libopenblas-dev liblapack-dev flex bison autoconf automake autotools-dev
 
 # Clone and build PETSc (cmdoug fork)
 export LOCAL_DIR=${PWD}
@@ -25,12 +25,11 @@ autoreconf -i
 ./3rdparty/getall -a
 ./reconfigure
 make -j 4
-make install
 cd -
 
 # Add FreeFEM to $PATH and export necessary environment variables
-export PATH=${PATH}:${LOCAL_DIR}/FreeFem-sources/src/mpi:${LOCAL_DIR}/FreeFem-sources/src/nw
-export FF_INCLUDEPATH=${LOCAL_DIR}/FreeFem-sources/idp"
+export PATH="${PATH}:${LOCAL_DIR}/FreeFem-sources/src/mpi:${LOCAL_DIR}/FreeFem-sources/src/nw"
+export FF_INCLUDEPATH="${LOCAL_DIR}/FreeFem-sources/idp"
 export FF_LOADPATH="${LOCAL_DIR}/FreeFem-sources/plugin/mpi;;${LOCAL_DIR}/FreeFem-sources/plugin/seq"
 
 echo "=== Done: install_deps.sh ==="
