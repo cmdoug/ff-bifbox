@@ -42,7 +42,7 @@ jobs:
           cd FreeFem-sources
           git checkout develop
           autoreconf -i
-          ./configure --enable-download --enable-optim --with-petsc="../petsc/real" --with-petsc_complex="../petsc/complex" --prefix="."
+          ./configure --enable-download --enable-optim --with-petsc="../petsc/real" --with-petsc_complex="../petsc/complex" --prefix="${PWD}"
           ./3rdparty/getall -a
           ./reconfigure
           make -j 4
