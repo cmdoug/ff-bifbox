@@ -54,6 +54,8 @@ jobs:
           if [ -d "FreeFem-sources" ] && [ -f "FreeFem-sources/.built_sha" ] && grep -Fxq "$FREEFEM_SHA" FreeFem-sources/.built_sha && [ -x "FreeFem-sources/src/mpi/FreeFem++-mpi" ]; then
             echo "FreeFEM cache is present and matches expected commit — skipping build."
             ls -la FreeFem-sources/src/mpi || true
+            echo "${{ github.workspace }}/FreeFem-sources/src/mpi" >> $GITHUB_PATH
+            echo "${{ github.workspace }}/FreeFem-sources/src/nw" >> $GITHUB_PATH
             exit 0
           fi
 
