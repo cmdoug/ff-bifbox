@@ -18,7 +18,7 @@ jobs:
       - name: Install basic system dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y gcc g++ gfortran m4 patch git wget cmakelibhdf5-dev \
+          sudo apt-get install -y gcc g++ gfortran m4 patch git wget cmake libhdf5-dev \
           libopenblas-dev liblapack-dev flex bison autoconf automake autotools-dev
                 
       - name: Get FreeFEM develop commit SHA
