@@ -54,8 +54,6 @@ jobs:
           if [ -d "FreeFem-sources" ] && [ -f "FreeFem-sources/.built_sha" ] && grep -Fxq "$FREEFEM_SHA" FreeFem-sources/.built_sha && [ -x "FreeFem-sources/src/mpi/FreeFem++-mpi" ]; then
             echo "FreeFEM cache is present and matches expected commit — skipping build."
             ls -la FreeFem-sources/src/mpi || true
-            echo "${{ github.workspace }}/FreeFem-sources/src/mpi" >> $GITHUB_PATH
-            echo "${{ github.workspace }}/FreeFem-sources/src/nw" >> $GITHUB_PATH
             exit 0
           fi
 
@@ -87,13 +85,21 @@ jobs:
           # write marker so future runs can validate the cache quickly
           echo "$FREEFEM_SHA" > .built_sha
           cd ..
+
+      - name: Export FreeFEM env (PATH + load paths)
+        run: |
+          set -euo pipefail
+          test -x "${{ github.workspace }}/FreeFem-sources/src/mpi/FreeFem++-mpi"
+          test -x "${{ github.workspace }}/FreeFem-sources/src/nw/ff-mpirun"
+
           echo "${{ github.workspace }}/FreeFem-sources/src/mpi" >> $GITHUB_PATH
           echo "${{ github.workspace }}/FreeFem-sources/src/nw" >> $GITHUB_PATH
 
+          echo "FF_INCLUDEPATH=${{ github.workspace }}/FreeFem-sources/idp" >> $GITHUB_ENV
+          echo "FF_LOADPATH=${{ github.workspace }}/FreeFem-sources/plugin/mpi;;${{ github.workspace }}/FreeFem-sources/plugin/seq" >> $GITHUB_ENV
+
       - name: Run ff-bifbox test
         run: |
-          export FF_INCLUDEPATH="${PWD}/FreeFem-sources/idp"
-          export FF_LOADPATH="${PWD}/FreeFem-sources/plugin/mpi;;${PWD}/FreeFem-sources/plugin/seq"
           mkdir -p test-results
           export workdir=test-results
           export nproc=4
