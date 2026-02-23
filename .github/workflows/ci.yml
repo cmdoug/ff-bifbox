@@ -18,38 +18,78 @@ jobs:
       - name: Install basic system dependencies
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y gcc g++ gfortran m4 patch git wget cmake libhdf5-dev libopenblas-dev liblapack-dev flex bison autoconf automake autotools-dev
-
-      - name: Build PETSc for real scalars
-        id: petsc-real
+          sudo apt-get install -y gcc g++ gfortran m4 patch git wget cmakelibhdf5-dev \
+          libopenblas-dev liblapack-dev flex bison autoconf automake autotools-dev
+                
+      - name: Get FreeFEM develop commit SHA
+        id: get_freefem_commit
         run: |
-          git clone https://gitlab.com/cmdoug/petsc
-          cd petsc
-          ./configure PETSC_ARCH=real --with-fortran-bindings=0 --with-debugging=0 --with-scalar-type=real --download-mpich --download-mumps --download-parmetis --download-metis --download-hypre --download-superlu --download-slepc --download-hpddm --download-ptscotch --download-suitesparse --download-scalapack --download-tetgen --download-mmg --download-parmmg --download-gsl=https://mirrors.kernel.org/gnu/gsl/gsl-2.8.tar.gz --download-bison=https://mirrors.kernel.org/gnu/bison/bison-3.8.2.tar.gz --download-slepc-configure-arguments="--download-arpack"
-          make PETSC_ARCH=real
+          set -euo pipefail
+          echo "Querying remote commit for FreeFem/FreeFem-sources develop..."
+          sha=$(git ls-remote https://github.com/FreeFem/FreeFem-sources develop | awk '{print $1}')
+          if [ -z "$sha" ]; then
+            echo "Failed to fetch SHA for FreeFem-sources develop"
+            exit 1
+          fi
+          echo "FreeFEM develop sha: $sha"
+          echo "freefem_sha=$sha" >> $GITHUB_OUTPUT
 
-      - name: Build PETSc for complex scalars
-        id: petsc-complex
-        run: |
-          cd petsc
-          ./configure PETSC_ARCH=complex --with-fortran-bindings=0 --with-debugging=0 --with-scalar-type=complex --with-mpich-dir=real --with-mumps-dir=real --with-parmetis-dir=real --with-metis-dir=real --with-superlu-dir=real --download-slepc --download-hpddm --download-htool --with-ptscotch-dir=real --with-suitesparse-dir=real --with-scalapack-dir=real --with-tetgen-dir=real --with-gsl-dir=real --with-bison-dir=real
-          make PETSC_ARCH=complex
-          
-      - name: Build FreeFEM
+      - name: Restore FreeFEM cache (by commit)
+        uses: actions/cache@v4
+        with:
+          path: FreeFem-sources
+          key: ${{ runner.os }}-freefem-${{ steps.get_freefem_commit.outputs.freefem_sha }}
+          restore-keys: |
+            ${{ runner.os }}-freefem-
+
+      - name: Build FreeFEM (if needed)
         id: freefem
+        env:
+          FREEFEM_SHA: ${{ steps.get_freefem_commit.outputs.freefem_sha }}
         run: |
-          git clone https://github.com/cmdoug/FreeFem-sources
-          cd FreeFem-sources
-          git checkout develop
+          set -euo pipefail
+          echo "Expected FreeFEM sha: $FREEFEM_SHA"
+
+          # If cache restored and .built_sha matches expected SHA and binary present, skip build.
+          if [ -d "FreeFem-sources" ] && [ -f "FreeFem-sources/.built_sha" ] && grep -Fxq "$FREEFEM_SHA" FreeFem-sources/.built_sha && [ -x "FreeFem-sources/src/mpi/FreeFem++-mpi" ]; then
+            echo "FreeFEM cache is present and matches expected commit — skipping build."
+            ls -la FreeFem-sources/src/mpi || true
+            exit 0
+          fi
+
+          # If directory exists, update it instead of recloning
+          if [ -d "FreeFem-sources" ]; then
+            echo "FreeFem-sources exists — updating in place."
+            cd FreeFem-sources
+            git pull
+            echo "On commit: $(git rev-parse HEAD)"
+          else
+            # Clone fresh at develop (shallow) and ensure we're on the expected commit
+            echo "Cloning FreeFem-sources (shallow) ..."
+            git clone --branch develop --single-branch --depth 1 https://github.com/FreeFem/FreeFem-sources
+            cd FreeFem-sources
+            echo "On commit: $(git rev-parse HEAD)"
+          fi
+
+          # Now build
           autoreconf -i
-          ./configure --enable-download --enable-optim --with-petsc="../petsc/real" --with-petsc_complex="../petsc/complex" --prefix="${PWD}"
+          ./configure --enable-download --enable-optim --prefix="${PWD}"
           ./3rdparty/getall -a
+          cd 3rdparty/ff-petsc
+          make petsc-slepc
+          cd -
+
           ./reconfigure
           make -j 4
 
+          # write marker so future runs can validate the cache quickly
+          echo "$FREEFEM_SHA" > .built_sha
+          cd ..
+          echo "${{ github.workspace }}/FreeFem-sources/src/mpi" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/FreeFem-sources/src/nw" >> $GITHUB_PATH
+
       - name: Run ff-bifbox test
         run: |
-          export PATH="${PATH}:${PWD}/FreeFem-sources/src/mpi:${PWD}/FreeFem-sources/src/nw"
           export FF_INCLUDEPATH="${PWD}/FreeFem-sources/idp"
           export FF_LOADPATH="${PWD}/FreeFem-sources/plugin/mpi;;${PWD}/FreeFem-sources/plugin/seq"
           mkdir -p test-results
