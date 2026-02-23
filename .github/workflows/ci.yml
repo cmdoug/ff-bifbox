@@ -101,6 +101,14 @@ jobs:
           FreeFem++-mpi -v 0 examples/sipp_lebedev_2007/cavity.edp -mo $workdir/cavity
           ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cylinder.msh -fo cylinder -1/Re 0.1
           ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cavity.msh -fo cavity -1/Re 0.1
+          ff-mpirun -np $nproc basecontinue.edp -v 0 -dir $workdir -fi cylinder.base -fo cylinder -param 1/Re -h0 -1 -scount 2 -maxcount 8 -mo cylinder -thetamax 5
+          ff-mpirun -np $nproc basecontinue.edp -v 0 -dir $workdir -fi cavity.base -fo cavity -param 1/Re -h0 -1 -scount 4 -maxcount 16 -mo cavity
+          ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -fi cylinder_8.base -fo cylinder50 -1/Re 0.021
+          ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -fi cavity_16.base -fo cavity4000 -1/Re 0.00025
+          ff-mpirun -np $nproc modecompute.edp -v 0 -dir $workdir -fi cylinder50.base -fo cylinder50 -eps_target 0.1+0.8i -sym 1 -eps_pos_gen_non_hermitian
+          ff-mpirun -np $nproc modecompute.edp -v 0 -dir $workdir -fi cavity4000.base -fo cavity4000 -eps_target 0.1+8.0i -sym 0 -eps_pos_gen_non_hermitian
+          ff-mpirun -np $nproc hopfcompute.edp -v 0 -dir $workdir -fi cylinder50.mode -fo cylinder -param 1/Re -nf 0
+          ff-mpirun -np $nproc hopfcompute.edp -v 0 -dir $workdir -fi cavity4000.mode -fo cavity -param 1/Re -nf 0
 
       - name: Upload test artifacts (logs)
         if: failure()
