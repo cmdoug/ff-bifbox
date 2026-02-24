@@ -90,7 +90,7 @@ jobs:
         run: |
           set -euo pipefail
           test -x "${{ github.workspace }}/FreeFem-sources/src/mpi/FreeFem++-mpi"
-          test -x "${{ github.workspace }}/FreeFem-sources/src/nw/ff-mpirun"
+          test -x "${{ github.workspace }}/FreeFem-sources/src/nw/FreeFem++"
 
           echo "${{ github.workspace }}/FreeFem-sources/src/mpi" >> $GITHUB_PATH
           echo "${{ github.workspace }}/FreeFem-sources/src/nw" >> $GITHUB_PATH
