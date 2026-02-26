@@ -1,0 +1,59 @@
+//
+// 2d-buckling_settings.idp
+// Chris Douglas
+// christopher.douglas@duke.edu
+//
+// Set dimension macro for 'macro_ddm.idp'
+  macro dimension()2//EOM
+  macro meshtype()V//EOM
+// Declare that a cubic nonlinear term exists and its "Tressian" operator is defined
+  macro cubic()//EOM
+// Load ddm macros
+  include "macro_ddm.idp"
+  verbosity = getARGV("-v", 0);
+// Define parameter and monitor names
+  string[int] paramnames = ["P", "nu"];
+  string[int] monitornames = ["dispX", "dispY"];
+// Declare symmetries
+  real[int] sym(1);
+// Define state vector and FE space
+  macro initu(i)[i, i]//EOM
+  macro defu(u)[u, u#y]//EOM
+  func Pk = [P2, P2];
+// Define solution monitors to extract:
+  macro getmonitors(){
+    monitors["dispX"] = real(ubg(0., 0.));
+    monitors["dispY"] = real(ubgy(0., 0.));
+  }// EOM
+//
+/* 
+    The items below are details that don't need to be covered in the tutorial!
+*/
+//
+// Boundary labels on the mesh
+  int BCnull = 0;
+  int BCpin = 1;
+  int BCfree = 5;
+  int BCtop = 6;
+  int BCxsym = 7;
+// Define forcing vector and FE space (for resolvent analysis, not needed for this example)
+  macro deff(f)[f, f#y]//EOM
+  macro initf(i)[i, i]//EOM
+  func Pkf = [P2, P2];
+// Define quantities for mesh adaptation and/or plotting in Paraview
+  macro adaptu(u)[u, u#y]//EOM
+  macro adaptf(f)[f, f#y]//EOM
+// Name and order for real Paraview outputs
+  string ParaviewDataName = "disp";
+  string ParaviewDataNamef = ParaviewDataName;
+  int[int] ParaviewOrder = [1];
+  int[int] ParaviewOrderf = ParaviewOrder;
+// Name and order for complex Paraview outputs
+  string ParaviewDataNamec = ParaviewDataName + "_r " + ParaviewDataName + "_i";
+  string ParaviewDataNamefc = ParaviewDataNamec;
+  int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
+  int[int] ParaviewOrderfc = ParaviewOrderc;
+  // Initial conditions (if no file)
+  macro InitialConditions()initu(0)//EOM
+// coordinate mapping macros ---------------------------------------------------
+  macro coordinatetransform(U) x + real(U), y + real(U#y) // EOM

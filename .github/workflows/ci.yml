@@ -86,7 +86,7 @@ jobs:
           echo "$FREEFEM_SHA" > .built_sha
           cd ..
 
-      - name: Export FreeFEM env (PATH + load paths)
+      - name: Export FreeFEM environment variables
         run: |
           set -euo pipefail
           test -x "${{ github.workspace }}/FreeFem-sources/src/mpi/FreeFem++-mpi"
@@ -97,26 +97,24 @@ jobs:
 
           echo "FF_INCLUDEPATH=${{ github.workspace }}/FreeFem-sources/idp" >> $GITHUB_ENV
           echo "FF_LOADPATH=${{ github.workspace }}/FreeFem-sources/plugin/mpi;;${{ github.workspace }}/FreeFem-sources/plugin/seq" >> $GITHUB_ENV
+          
+          echo "workdir=${{ github.workspace }}/.ci-suite/data" >> $GITHUB_ENV
+          echo "nproc=4" >> $GITHUB_ENV
 
-      - name: Run ff-bifbox test
+      - name: Execute 2D Brusselator test
         run: |
-          mkdir -p test-results
-          export workdir=test-results
-          export nproc=4
-          ln -sf examples/sipp_lebedev_2007/eqns_sipp_lebedev_2007.idp eqns.idp
-          ln -sf examples/sipp_lebedev_2007/settings_sipp_lebedev_2007.idp settings.idp
-          FreeFem++-mpi -v 0 examples/sipp_lebedev_2007/cylinder.edp -mo $workdir/cylinder
-          FreeFem++-mpi -v 0 examples/sipp_lebedev_2007/cavity.edp -mo $workdir/cavity
-          ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cylinder.msh -fo cylinder -1/Re 0.1
-          ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cavity.msh -fo cavity -1/Re 0.1
-          ff-mpirun -np $nproc basecontinue.edp -v 0 -dir $workdir -fi cylinder.base -fo cylinder -param 1/Re -h0 -1 -scount 2 -maxcount 8 -mo cylinder -thetamax 5
-          ff-mpirun -np $nproc basecontinue.edp -v 0 -dir $workdir -fi cavity.base -fo cavity -param 1/Re -h0 -1 -scount 4 -maxcount 16 -mo cavity
-          ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -fi cylinder_8.base -fo cylinder50 -1/Re 0.021
-          ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -fi cavity_16.base -fo cavity4000 -1/Re 0.00025
-          ff-mpirun -np $nproc modecompute.edp -v 0 -dir $workdir -fi cylinder50.base -fo cylinder50 -eps_target 0.1+0.8i -sym 1 -eps_pos_gen_non_hermitian
-          ff-mpirun -np $nproc modecompute.edp -v 0 -dir $workdir -fi cavity4000.base -fo cavity4000 -eps_target 0.1+8.0i -sym 0 -eps_pos_gen_non_hermitian
-          ff-mpirun -np $nproc hopfcompute.edp -v 0 -dir $workdir -fi cylinder50.mode -fo cylinder -param 1/Re -nf 0
-          ff-mpirun -np $nproc hopfcompute.edp -v 0 -dir $workdir -fi cavity4000.mode -fo cavity -param 1/Re -nf 0
+          chmod +x 2d-brusselator.sh
+          ./examples/.ci-suite/2d-brusselator.sh
+
+      - name: Execute 2D buckling beam test
+        run: |
+          chmod +x 2d-buckling.sh
+          ./examples/.ci-suite/2d-buckling.sh
+      
+      - name: Execute 2D cylinder flow test
+        run: |
+          chmod +x 2d-cylinder.sh
+          ./examples/.ci-suite/2d-cylinder.sh
 
       - name: Upload test artifacts (logs)
         if: failure()

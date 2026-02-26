@@ -1,0 +1,90 @@
+//
+// 2d-buckling_eqns.idp
+// Chris Douglas
+// christopher.douglas@duke.edu
+//
+
+// macros
+macro vdotu(v, u) (v*u + v#y*u#y) //EOM
+
+macro el(u) [ dx(u), dy(u#y), dy(u) + dx(u#y) ]// EOM
+
+macro en(u, U) [ 0.5*(dx(u)*dx(U) + dx(u#y)*dx(U#y)),
+                 0.5*(dy(u)*dy(U) + dy(u#y)*dy(U#y)),
+                 dx(u)*dy(U) + dx(u#y)*dy(U#y) ]// EOM
+
+macro GLE(u)(el(u) + en(u, u)) // EOM
+macro dGLE(u, U) (el(u) + en(u, U) + en(U, u)) // EOM
+macro ddGLE(u, U)(en(u, U) + en(U, u)) // EOM
+
+func D = [[1. - params["nu"], params["nu"],      0                 ], 
+          [params["nu"],      1. - params["nu"], 0                 ], 
+          [0		   ,      0				   , 0.5 - params["nu"]]];
+
+// Define default KSP parameters (here we use PCCHOLESKY since the problem is small/cheap, but could use iterative methods too)
+  string KSPparams = "-ksp_type preonly -pc_type cholesky";
+
+// Boundary conditions (these are used to define the different symmetries of the system)
+  macro BoundaryConditions(u, U)
+	on (BCpin, u = U, u#y = U#y)
+	+ on(BCxsym, u = U)
+  // EOM
+  macro HomBoundaryConditions(u)
+	on (BCpin, u = 0, u#y = 0)
+    + on(((abs(int(sym(0))) % 2) == 0)*BCxsym, u = 0)
+    + on(((abs(int(sym(0))) % 2) != 0)*BCxsym, u#y = 0)
+  // EOM
+// 
+
+// RESIDUAL OPERATOR
+  varf vR(defu(dum), defu(v))
+    = int2d(Th, qforder=3)( GLE(ub)'*D*dGLE(v, ub) )
+    + int1d(Th, BCtop)( params["P"]/1e6*vy )
+    + BoundaryConditions(dum, ub);
+    
+// JACOBIAN OPERATOR
+  varf vJ(defu(dum), defu(v))
+    = int2d(Th, qforder=3)( dGLE(dum, ub)'*D*dGLE(v, ub) + GLE(ub)'*D*ddGLE(v, dum) )
+    + int2d(Th, qforder=3)( dGLE(um, ub)'*D*dGLE(v, ub) + GLE(ub)'*D*ddGLE(v, um) )
+    + HomBoundaryConditions(dum);
+
+// HESSIAN OPERATOR
+  varf vH(defu(dum), defu(v))
+    = int2d(Th, qforder=3)( dGLE(um, ub)'*D*ddGLE(v, dum) + ddGLE(um, dum)'*D*dGLE(v, ub) + dGLE(dum, ub)'*D*ddGLE(v, um) )
+    + int2d(Th, qforder=3)( dGLE(um, ub)'*D*ddGLE(v, um2) + ddGLE(um, um2)'*D*dGLE(v, ub) + dGLE(um2, ub)'*D*ddGLE(v, um) )
+    + HomBoundaryConditions(dum);
+
+// TRESSIAN OPERATOR
+  varf vT(defu(dum), defu(v))
+    = int2d(Th, qforder=3)( ddGLE(um, dum)'*D*ddGLE(v, um2) + ddGLE(um, um2)'*D*ddGLE(v, dum) + ddGLE(um2, dum)'*D*ddGLE(v, um) )
+    + int2d(Th, qforder=3)( ddGLE(um, um3)'*D*ddGLE(v, um2) + ddGLE(um, um2)'*D*ddGLE(v, um3) + ddGLE(um2, um3)'*D*ddGLE(v, um) )
+    + HomBoundaryConditions(dum);
+//
+/* 
+    MACROS BELOW ARE NOT USED IN THIS EXAMPLE 
+*/
+//
+// MASS OPERATOR
+  varf vM(defu(dum), defu(v))
+    = int2d(Th, qforder=3)( vdotu(v, dum) )
+    + int2d(Th, qforder=3)( vdotu(v, um) )
+    + HomBoundaryConditions(dum);
+
+// MASS DERIVATIVE OPERATOR
+  varf vdM(defu(dum), defu(v))
+    = HomBoundaryConditions(dum);
+
+// MASS 2ND DERIVATIVE OPERATOR
+  varf vddM(defu(dum), defu(v))
+    = HomBoundaryConditions(dum);
+
+// FORCING/RESPONSE OPERATORS
+  varf vMq(defu(dum), defu(v))
+    = int2d(Th)( vdotu(v, dum) )
+    + int2d(Th)( vdotu(v, um) );
+
+  varf vMf(deff(fm), deff(v))
+    = int2d(Th)( vdotu(v, fm) );
+
+  varf vP(deff(fm), defu(v))
+    = int2d(Th)( vdotu(v, fm) );

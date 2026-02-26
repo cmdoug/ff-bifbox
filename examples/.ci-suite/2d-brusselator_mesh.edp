@@ -1,0 +1,20 @@
+//
+// 2d-brusselator_mesh.edp
+// Chris Douglas
+// christopher.douglas@duke.edu
+//
+
+assert(mpisize == 1); // Must be run with 1 processor
+include "settings.idp" // so that boundary labels match the convention in the settings file
+int n2 = ceil(getARGV("-n", 10)/2);
+string meshout = getARGV("-mo", "square"); // mesh filename
+if(meshout.rfind(".msh") > 0) meshout = meshout(0:meshout.length - 5);
+
+mesh Th4 = square(n2, n2, flags = 1); // create mesh
+Th4 = movemesh(Th4, [x/2, y/2]);
+int[int] labs = [1, BCsY, 2, BCnX, 3, BCnY, 4, BCsX];
+Th4 = change(Th4, label = labs);
+int[int] meshlabels = labels(Th4);
+cout << "\tMesh: " << Th4.nv << " vertices, " << Th4.nt << " elements, " << Th4.nbe << " boundary elements, " << meshlabels.n << " labeled boundaries." << endl;
+cout << "  Saving mesh '" + meshout + ".msh'." << endl;
+savemesh(Th4, meshout + ".msh");

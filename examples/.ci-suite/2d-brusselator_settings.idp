@@ -1,0 +1,56 @@
+//
+// 2d-brusselator_settings.idp
+// Chris Douglas
+// christopher.douglas@duke.edu
+//
+// Set dimension macro for 'macro_ddm.idp'
+  macro dimension()2//EOM
+// Declare that a cubic nonlinear term exists and its "Tressian" operator is defined
+  macro cubic()//EOM
+// Load hpddm macros
+  include "macro_ddm.idp"
+  verbosity = getARGV("-v",0);
+// Define parameter and monitor names
+  string[int] paramnames = ["A", "B", "Dx", "Dy", "1/L^2"]; // set parameter names
+  string[int] monitornames = ["L", "Xavg", "Yavg", "L2diff"]; // set monitor names
+// Declare symmetries
+  real[int] sym(2);
+// Define state vector and FE space
+  macro defu(u)[u, u#Y]//EOM
+  macro initu(i)[i, i]//EOM
+  func Pk = [P2, P2];
+// Define forcing vector and FE space (for resolvent analysis)
+  macro deff(f)[f, f#Y]//EOM
+  macro initf(i)[i, i]//EOM
+  func Pkf = [P2, P2];
+// Define quantities for mesh adaptation and plotting in Paraview
+  macro adaptu(u)u, u#Y//EOM
+  macro adaptf(f)f, f#Y//EOM
+// Name and order for real Paraview outputs
+  string ParaviewDataName = "X Y";
+  string ParaviewDataNamef = ParaviewDataName;
+  int[int] ParaviewOrder = [1, 1];
+  int[int] ParaviewOrderf = ParaviewOrder;
+// Name and order for complex Paraview outputs
+  string ParaviewDataNamec = "X_r Y_r X_i Y_i";
+  string ParaviewDataNamefc = ParaviewDataNamec;
+  int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
+  int[int] ParaviewOrderfc = ParaviewOrderc;
+  // Initial conditions (if no file)
+  macro InitialConditions()[params["A"], params["B"]/params["A"]]//EOM
+// Boundary labels
+  int BCnull = 0;
+  int BCdY = 1;
+  int BCnX = 2;
+  int BCnY = 3;
+  int BCdX = 4;
+  int BCsX = 7;
+  int BCsY = 8;
+// Define solution monitors to extract:
+  macro getmonitors(){
+    monitors["L"] = 1.0/sqrt(params["1/L^2"]);
+    real tempsize = int2d(Thg)(1.0);
+    monitors["Xavg"] = real(int2d(Thg)(ubg)/tempsize);
+    monitors["Yavg"] = real(int2d(Thg)(ubgY)/tempsize);
+    monitors["L2diff"] = real(int2d(Thg)(sqrt((ubg - params["A"])^2.0 + (ubgY - params["B"]/params["A"])^2.0))/tempsize);
+  }// EOM
