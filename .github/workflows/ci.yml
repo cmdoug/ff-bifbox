@@ -103,17 +103,17 @@ jobs:
 
       - name: Execute 2D Brusselator test
         run: |
-          chmod +x 2d-brusselator.sh
+          chmod +x examples/.ci-suite/2d-brusselator.sh
           ./examples/.ci-suite/2d-brusselator.sh
 
       - name: Execute 2D buckling beam test
         run: |
-          chmod +x 2d-buckling.sh
+          chmod +x examples/.ci-suite/2d-buckling.sh
           ./examples/.ci-suite/2d-buckling.sh
       
       - name: Execute 2D cylinder flow test
         run: |
-          chmod +x 2d-cylinder.sh
+          chmod +x examples/.ci-suite/2d-cylinder.sh
           ./examples/.ci-suite/2d-cylinder.sh
 
       - name: Upload test artifacts (logs)
