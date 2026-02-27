@@ -15,7 +15,7 @@ cd "$workdir" && declare -a foldguesslist=(buckling_*specialpt.base) && cd -
 for guess in "${foldguesslist[@]}"; do
 export out=$(echo "$guess" | awk -F'specialpt' '{print $1}')
 ff-mpirun -np $nproc foldcompute.edp -v 0 -dir $workdir -fi $guess -fo $out -param P -tgv -2 -snes_atol 1e-10
-ff-mpirun -np $nproc foldcontinue.edp -v 0 -dir $workdir -fi "$out".fold -fo $out -param P -param2 nu -tgv -2 -snes_atol 1e-10 -maxcount -1 -param2target 0.49
+ff-mpirun -np $nproc foldcontinue.edp -v 0 -dir $workdir -fi "$out".fold -fo $out -param P -param2 nu -tgv -2 -h0 0.1 -snes_atol 1e-10 -maxcount -1 -param2target 0.49
 done
 # stability analysis
 ff-mpirun -np $nproc modecompute.edp -v 0 -dir $workdir -fi "$out".fold -so buckling -eps_target 0.1+0i -eps_nev 3 -eps_gen_hermitian -sym 0
