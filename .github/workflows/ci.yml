@@ -1,0 +1,124 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install basic system dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y gcc g++ gfortran m4 patch git wget cmake libhdf5-dev \
+          libopenblas-dev liblapack-dev flex bison autoconf automake autotools-dev
+                
+      - name: Get FreeFEM develop commit SHA
+        id: get_freefem_commit
+        run: |
+          set -euo pipefail
+          echo "Querying remote commit for FreeFem/FreeFem-sources develop..."
+          sha=$(git ls-remote https://github.com/FreeFem/FreeFem-sources develop | awk '{print $1}')
+          if [ -z "$sha" ]; then
+            echo "Failed to fetch SHA for FreeFem-sources develop"
+            exit 1
+          fi
+          echo "FreeFEM develop sha: $sha"
+          echo "freefem_sha=$sha" >> $GITHUB_OUTPUT
+
+      - name: Restore FreeFEM cache (by commit)
+        uses: actions/cache@v4
+        with:
+          path: FreeFem-sources
+          key: ${{ runner.os }}-freefem-${{ steps.get_freefem_commit.outputs.freefem_sha }}
+          restore-keys: |
+            ${{ runner.os }}-freefem-
+
+      - name: Build FreeFEM (if needed)
+        id: freefem
+        env:
+          FREEFEM_SHA: ${{ steps.get_freefem_commit.outputs.freefem_sha }}
+        run: |
+          set -euo pipefail
+          echo "Expected FreeFEM sha: $FREEFEM_SHA"
+
+          # If cache restored and .built_sha matches expected SHA and binary present, skip build.
+          if [ -d "FreeFem-sources" ] && [ -f "FreeFem-sources/.built_sha" ] && grep -Fxq "$FREEFEM_SHA" FreeFem-sources/.built_sha && [ -x "FreeFem-sources/src/mpi/FreeFem++-mpi" ]; then
+            echo "FreeFEM cache is present and matches expected commit — skipping build."
+            ls -la FreeFem-sources/src/mpi || true
+            exit 0
+          fi
+
+          # If directory exists, update it instead of recloning
+          if [ -d "FreeFem-sources" ]; then
+            echo "FreeFem-sources exists — updating in place."
+            cd FreeFem-sources
+            git pull
+            echo "On commit: $(git rev-parse HEAD)"
+          else
+            # Clone fresh at develop (shallow) and ensure we're on the expected commit
+            echo "Cloning FreeFem-sources (shallow) ..."
+            git clone --branch develop --single-branch --depth 1 https://github.com/FreeFem/FreeFem-sources
+            cd FreeFem-sources
+            echo "On commit: $(git rev-parse HEAD)"
+          fi
+
+          # Now build
+          autoreconf -i
+          ./configure --enable-download --enable-optim --prefix="${PWD}"
+          ./3rdparty/getall -a
+          cd 3rdparty/ff-petsc
+          make petsc-slepc
+          cd -
+
+          ./reconfigure
+          make -j 4
+
+          # write marker so future runs can validate the cache quickly
+          echo "$FREEFEM_SHA" > .built_sha
+          cd ..
+
+      - name: Export FreeFEM environment variables
+        run: |
+          set -euo pipefail
+          test -x "${{ github.workspace }}/FreeFem-sources/src/mpi/FreeFem++-mpi"
+          test -x "${{ github.workspace }}/FreeFem-sources/src/nw/FreeFem++"
+
+          echo "${{ github.workspace }}/FreeFem-sources/src/mpi" >> $GITHUB_PATH
+          echo "${{ github.workspace }}/FreeFem-sources/src/nw" >> $GITHUB_PATH
+
+          echo "FF_INCLUDEPATH=${{ github.workspace }}/FreeFem-sources/idp" >> $GITHUB_ENV
+          echo "FF_LOADPATH=${{ github.workspace }}/FreeFem-sources/plugin/mpi;;${{ github.workspace }}/FreeFem-sources/plugin/seq" >> $GITHUB_ENV
+          
+          echo "workdir=${{ github.workspace }}/.ci-suite/data" >> $GITHUB_ENV
+          echo "nproc=4" >> $GITHUB_ENV
+
+      - name: Execute 2D Brusselator test
+        run: |
+          chmod +x examples/.ci-suite/2d-brusselator.sh
+          ./examples/.ci-suite/2d-brusselator.sh
+
+      - name: Execute 2D buckling beam test
+        run: |
+          chmod +x examples/.ci-suite/2d-buckling.sh
+          ./examples/.ci-suite/2d-buckling.sh
+      
+      - name: Execute 2D cylinder flow test
+        run: |
+          chmod +x examples/.ci-suite/2d-cylinder.sh
+          ./examples/.ci-suite/2d-cylinder.sh
+
+      - name: Upload test artifacts (logs)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs
+          path: test-results/**/*

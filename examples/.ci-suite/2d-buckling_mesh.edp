@@ -1,0 +1,24 @@
+//
+// 2d-buckling_mesh.edp
+// Chris Douglas
+// christopher.douglas@duke.edu
+//
+
+assert(mpisize == 1); // Must be run with 1 processor
+include "settings.idp" // so that boundary labels match the convention in the settings file
+real AR = getARGV("-AR", 100.);
+real rho = 10.0;
+int n0 = 2*ceil(getARGV("-n0", 100)/2);
+int n1 = 2*ceil(getARGV("-n1", 4)/2);
+string meshout = getARGV("-mo", "square"); // mesh filename
+if(meshout.rfind(".msh") > 0) meshout = meshout(0:meshout.length - 5);
+
+mesh Th = square(n0/2, n1, [(x - 1.), (y - 0.5)/AR], flags = 1);
+Th = movemesh(Th, [(rho + y)*sin(pi/2*x/rho), (rho + y)*cos(pi/2*x/rho) - rho]);
+int[int] rmid = [1, BCfree, 2, BCxsym, 3, BCtop, 4, BCpin];
+Th = change(Th, label = rmid, rmInternalEdges = true);
+int[int] meshlabels = labels(Th);
+cout << "\tMesh: " << Th.nv << " vertices, " << Th.nt << " elements, " << Th.nbe << " boundary elements, " << meshlabels.n << " labeled boundaries." << endl;
+cout << "  Saving mesh '" + meshout + ".msh'." << endl;
+savemesh(Th, meshout + ".msh");
+plot(Th);
