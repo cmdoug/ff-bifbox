@@ -1,0 +1,81 @@
+// 
+// eqns_FK.idp
+// Mario Napieralski-Fernandez
+// mnapiera@pa.uc3m.es
+//
+// Define KSP parameters
+  string KSPparams = "-ksp_type preonly -pc_type cholesky";//lu  
+  // we use cholesky cause the problem is self-adjoint, but for non-symmetric problems, you may want to use a different direct solver (e.g., lu) or an iterative solver with preconditioning.
+  // is a string to pass the options to the KSP solver. 
+  // Here, we specify that we want to use a direct LU factorization to solve the linear systems. 
+  // This is suitable for small problems, but for larger problems, you may want to use an iterative solver and preconditioner instead.
+  // KSP means Krylov Subspace Method, which is a class of iterative solvers for linear systems.
+  // -pc_type lu means that we want to use a direct LU factorization as the preconditioner, which effectively makes the KSP solver a direct solver.
+  // term macros ------------------------------------------------------
+    macro vdotu(v, u) ( v*u ) // EOM
+    macro grad(u) [dx(u), dy(u)] // EOM
+// Boundary conditions
+  macro BoundaryConditions(u, U) on(BCwall, u = U - 0.0) // EOM
+  macro HomBoundaryConditions(u) on(BCwall, u = 0) // EOM
+
+// RESIDUAL OPERATOR
+  varf vR(defu(dum), defu(v))
+    = int2d(Th)(
+         + grad(ub)' * grad(v)
+         - params["Da"]*exp(ub)*v
+    )
+    + BoundaryConditions(dum, ub);
+// JACOBIAN OPERATOR
+  varf vJ(defu(dum), defu(v))
+    = int2d(Th)(
+        iomega * params["Da"] * vdotu(v, dum)
+        + grad(dum)' * grad(v) 
+        - params["Da"] * exp(ub) * dum  * v
+    )
+    + int2d(Th)(
+        iomega * params["Da"] * vdotu(v, um)
+        + grad(um)' * grad(v) 
+        - params["Da"] * exp(ub) * um  * v
+    )
+    + HomBoundaryConditions(dum);
+// MASS OPERATOR
+    varf vM(defu(dum), defu(v))
+        = int2d(Th)( vdotu(v, dum) * params["Da"])
+        + int2d(Th)( vdotu(v, um) * params["Da"])
+        + HomBoundaryConditions(dum);
+// MASS DERIVATIVE OPERATOR
+    varf vdM(defu(dum), defu(v))
+        = HomBoundaryConditions(dum);
+// MASS 2ND DERIVATIVE OPERATOR
+  varf vddM(defu(dum), defu(v))
+    = HomBoundaryConditions(dum);
+
+// FORCING/RESPONSE OPERATORS
+  varf vMq(defu(dum), defu(v))
+    = int2d(Th)( vdotu(v, dum) )
+    + int2d(Th)( vdotu(v, um) )
+    + HomBoundaryConditions(dum);
+
+  varf vMf(deff(fm), deff(v))
+    = int2d(Th)( vdotu(v, fm) );
+
+  varf vP(deff(fm), defu(v))
+    = int2d(Th)( vdotu(v, fm) );
+// HESSIAN OPERATOR
+  varf vH(defu(dum), defu(v))
+    = int2d(Th)(
+        - params["Da"] * exp(ub) * um * dum * v
+    )
+    + int2d(Th)(
+       - params["Da"] * exp(ub) * um * um2 * v
+    )
+    + HomBoundaryConditions(dum);
+// TRESSIAN OPERATOR
+  varf vT(defu(dum), defu(v))
+    = int2d(Th)(
+        - params["Da"] * exp(ub) * um * um2  * dum * v
+    )
+    + int2d(Th)(
+        - params["Da"] * exp(ub) * um * um2  * um3 * v
+    )
+    + HomBoundaryConditions(dum);
