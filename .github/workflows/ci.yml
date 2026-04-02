@@ -1,5 +1,8 @@
 name: CI
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 on:
   push:
     branches: [ "main" ]
@@ -64,9 +67,9 @@ jobs:
             git pull
             echo "On commit: $(git rev-parse HEAD)"
           else
-            # Clone fresh at develop (shallow) and ensure we're on the expected commit
-            echo "Cloning FreeFem-sources (shallow) ..."
-            git clone --branch develop --single-branch --depth 1 https://github.com/FreeFem/FreeFem-sources
+            # Clone fresh and ensure we're on the expected commit
+            echo "Cloning FreeFem-sources..."
+            git clone https://github.com/FreeFem/FreeFem-sources
             cd FreeFem-sources
             echo "On commit: $(git rev-parse HEAD)"
           fi

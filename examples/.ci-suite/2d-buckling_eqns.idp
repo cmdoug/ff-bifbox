@@ -19,7 +19,7 @@ macro ddGLE(u, U)(en(u, U) + en(U, u)) // EOM
 
 func D = [[1. - params["nu"], params["nu"],      0                 ], 
           [params["nu"],      1. - params["nu"], 0                 ], 
-          [0		   ,      0				   , 0.5 - params["nu"]]];
+          [0,                 0,                 0.5 - params["nu"]]];
 
 // Define default KSP parameters (here we use PCCHOLESKY since the problem is small/cheap, but could use iterative methods too)
   string KSPparams = "-ksp_type preonly -pc_type cholesky";

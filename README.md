@@ -56,7 +56,7 @@
 <!-- GETTING STARTED -->
 ## Getting Started
 ### Prerequisites
-Make sure you have access to the current [FreeFEM](https://freefem.org/) build, compiled from the `develop` branch with `PETSc` and `PETSc-complex` **(with SLEPc)**. Guides for compiling FreeFEM with PETSc can be found on the [FreeFEM GitHub page](https://github.com/FreeFem/FreeFem-sources) or in [this tutorial](https://joliv.et/FreeFem-tutorial/) by Pierre Jolivet. More details about the [PETSc](https://petsc.org/release/docs/manual/) and [SLEPc](http://slepc.upv.es/documentation/slepc.pdf) options used in the solvers may be found in their respective manuals.
+Make sure you have access to a recent [FreeFEM](https://freefem.org/) build, compiled with `PETSc` and `PETSc-complex` **(with SLEPc)**. Suitable versions include the latest major release (v4.16) (found on the `master` branch) or any more recent bleeding edge version from the `develop` branch. Guides for compiling FreeFEM with PETSc can be found on the [FreeFEM GitHub page](https://github.com/FreeFem/FreeFem-sources) or in [this tutorial](https://joliv.et/FreeFem-tutorial/) by Pierre Jolivet. An example installation workflow can also be found in the continuous integration script `ci.yml` in the `ff-bifbox/.github/workflows` folder. More details about the [PETSc](https://petsc.org/release/docs/manual/) and [SLEPc](http://slepc.upv.es/documentation/slepc.pdf) options used in the solvers may be found in their respective manuals.
 
 ### Installation
 
@@ -83,10 +83,10 @@ See the [examples](https://github.com/cmdoug/ff-bifbox/tree/main/examples) folde
 If you use `ff-bifbox` for research, please cite the following:
 
 ```bibtex
-@article{douglas_ff-bifbox_2025,
+@article{douglas_ff-bifbox_2026,
 author = {Douglas, Christopher M. and Jolivet, Pierre},
 title = {ff-bifbox: A scalable, open-source toolbox for bifurcation analysis of nonlinear PDEs},
-year = {2025},
+year = {2026},
 doi = {10.48550/arXiv.2509.18429},
 url = {https://arxiv.org/abs/2509.18429},
 }
@@ -119,10 +119,9 @@ See the [open issues](https://github.com/cmdoug/ff-bifbox/issues) for a full lis
 <!-- CONTRIBUTING -->
 ## Contributing
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Any contributions you make are **greatly appreciated**.
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+If you have bug fix or improvement to share, please fork the repo and create a pull request. You can also simply open an issue.
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
@@ -146,7 +145,7 @@ Distributed under the GPL-3.0 License. See `LICENSE` for more information.
 <!-- CONTACT -->
 ## Contact
 
-Chris Douglas - christopher.douglas@duke.edu
+Chris Douglas - [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
 Project Link: [https://github.com/cmdoug/ff-bifbox](https://github.com/cmdoug/ff-bifbox)
 
