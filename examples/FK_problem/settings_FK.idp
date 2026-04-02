@@ -1,0 +1,46 @@
+//
+// settings_FK.idp
+// Mario Napieralski-Fernandez
+// mnapiera@pa.uc3m.es
+//
+
+// Set dimension macro for 'macro_ddm.idp' (2)
+macro dimension()2// EOM
+// Load hpddm macros
+  include "macro_ddm.idp"
+verbosity = getARGV("-v", 0); 
+// Define parameters and monitor names
+string[int] paramnames = ["Da"]; // set parameter names
+string[int] monitornames = ["Tmax"]; // set monitor names
+// Declare symmetries
+  real[int] sym(1);
+// Define state vector and FE space
+macro defu(u) u// EOM
+macro initu(i) i// EOM
+func Pk = P2; // FE space for state variable, P1 could also be used
+// Define forcing vector and FE space (for resolvent analysis)
+macro deff(f) f// EOM
+macro initf(i) i// EOM
+func Pkf = P2; // FE space for forcing vector
+// Define quantities for mesh adaptation and plotting in Paraview
+macro adaptu(u) u// EOM
+macro adaptf(f) f// EOM
+// Name and order for real Paraview outputs
+string ParaviewDataName = "temperature";
+int[int] ParaviewOrder = [1];
+int[int] ParaviewOrderf = [1];
+// Name and order for complex Paraview outputs
+string ParaviewDataNamec = "temperature_r temperature_i";
+string ParaviewDataNamefc = "forcing_r forcing_i";
+int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
+int[int] ParaviewOrderfc = [ParaviewOrderf, ParaviewOrderf];
+// Initial conditions (if no file)
+macro InitialConditions() 1// EOM
+// Boundary labels 
+int BCnull = 0;
+int BCwall = 1;
+// Define solution monitors to extract: here maximum temperature in the domain
+macro getmonitors() {
+    real Tmax = ubg[].max;
+    monitors["Tmax"] = Tmax;
+}// EOM
