@@ -37,8 +37,7 @@ $$
 \begin{bmatrix}
 w \\
 g
-\end{bmatrix}=
-\begin{bmatrix}
+\end{bmatrix} = \begin{bmatrix}
 0 \\
 1
 \end{bmatrix}
@@ -69,9 +68,7 @@ v^H & h^{*}
 \end{bmatrix}\begin{bmatrix}
 -\mathcal{L} & \mathcal{M}p_0 \\
 (\mathcal{M}q_0)^H & 0
-\end{bmatrix}
-=
-\begin{bmatrix}
+\end{bmatrix} = \begin{bmatrix}
 0 & 1
 \end{bmatrix}
 $$
@@ -93,9 +90,7 @@ $$
 \begin{bmatrix}
 v \\
 h
-\end{bmatrix}
-=
-\begin{bmatrix}
+\end{bmatrix} = \begin{bmatrix}
 0 \\
 1
 \end{bmatrix}
@@ -131,9 +126,7 @@ $$
 \delta{}q \\
 \delta{}\lambda \\
 \delta{}\omega
-\end{bmatrix}
-=
-\begin{bmatrix}
+\end{bmatrix} = \begin{bmatrix}
 \mathcal{R} \\
 g
 \end{bmatrix},
@@ -144,7 +137,7 @@ where $g = v^H\mathcal{L}w$. In real arithmetic, this gives:
 
 $$
 \begin{align*}
-    \mathcal{J}\delta{}q + \frac{\partial \mathcal{J}}{\partial\lambda}\delta\lambda &=\mathcal{R} \\
+    \mathcal{J}\delta{}q + \frac{\partial \mathcal{J}}{\partial\lambda}\delta\lambda &= \mathcal{R} \\
     \Re\left(\frac{\partial{}g}{\partial q}\right)\delta{}q + \Re\left(\frac{\partial g}{\partial \lambda}\right)\delta\lambda + \Re\left(\frac{\partial g}{\partial \omega}\right)\delta{}\omega &= \Re(g) \\
     -\Im\left(\frac{\partial{}g}{\partial q}\right)\delta{}q + \Im\left(\frac{\partial g}{\partial \lambda}\right)\delta\lambda + \Im\left(\frac{\partial g}{\partial \omega}\right)\delta{}\omega &= \Im(g)
 \end{align*}
@@ -161,8 +154,7 @@ $$
 \begin{bmatrix}
 \frac{\partial w}{\partial z} \\
 \frac{\partial g}{\partial z}
-\end{bmatrix}=
-\begin{bmatrix}
+\end{bmatrix} = \begin{bmatrix}
 \frac{\partial\mathcal{L}}{\partial z}w \\
 0
 \end{bmatrix}
@@ -187,9 +179,7 @@ $$
 \delta{}q \\
 \delta{}\lambda \\
 \delta{}\omega
-\end{bmatrix}
-=
-\begin{bmatrix}
+\end{bmatrix} = \begin{bmatrix}
 \mathcal{R} \\
 \Re(g) \\
 \Im(g)
