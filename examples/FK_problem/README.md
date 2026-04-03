@@ -1,6 +1,6 @@
 # Steady-state theory of thermal explosions in a homogeneous mixture
 
-This repository reproduces the classical Frank–Kamenetskii bifurcation diagram using ff-bifbox.
+This repository reproduces the classical Frank–Kamenetskii bifurcation diagram using `ff-bifbox`.
 
 We compute steady solutions of
 
@@ -21,20 +21,20 @@ export nproc=4
 ```
 3. Create symbolic links for governing equations and solver settings.
 ```sh
-ln -sf ../projects_mario/FK_problem/eqns_FK.idp eqns.idp
-ln -sf ../projects_mario/FK_problem/settings_FK.idp settings.idp
+ln -sf examples/FK_problem/eqns_FK.idp eqns.idp
+ln -sf examples/FK_problem/settings_FK.idp settings.idp
 ````
 
 ## Build initial meshes
 
 #### Build initial mesh using BAMG in FreeFEM
 ```sh
-FreeFem++-mpi -v 0 ../projects_mario/FK_problem/cylinder_vessel.edp -mo $workdir/cylinder_vessel
+FreeFem++-mpi -v 0 examples/FK_problem/cylinder_vessel.edp -mo $workdir/cylinder_vessel
 ```
 
 ## Perform parallel computations using `ff-bifbox`
 ### Zeroth order
-1. Compute base states on the created meshes at $Da= 0$ from default guess
+1. Compute base states on the created meshes at $Da=0$ from default guess
 ```sh
 ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cylinder_vessel.msh -fo cylinder_vessel -Da 0 -tgv -2
 ```
@@ -42,14 +42,17 @@ ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi cylinder_vessel.msh 
 2. Continue base state along the parameter $Da$ 
 
 ```sh
-ff-mpirun -np $nproc basecontinue.edp -v 0 -dir $workdir -fi cylinder_vessel.base -fo cylinder_vessel -param Da -h0 1 -scount 2 -maxcount 120 -tgv -2 -mo cylinder_vessel -thetamax 5 -amax 10 -dmax 0.5 -kmax 1 -contorder 1
+ff-mpirun -np $nproc basecontinue.edp -v 0 -dir $workdir -fi cylinder_vessel.base -fo cylinder_vessel -param Da -h0 1 -scount 2 -maxcount 25 -tgv -2 -amax 10 -dmax 0.5 -kmax 1 -contorder 1
 ```
 This step computes the steady-state bifurcation diagram.
 
 
 # Compute fold bifurcation 
 ```sh
-ff-mpirun -np $nproc foldcompute.edp -v 0 -dir $workdir -fi cylinder_vessel_9specialpt.base -fo cylinder_vessel_fold -param Da -pv 1 -tgv -2
+cd "$workdir" && declare -a foldguesslist=(cylinder_vessel_*specialpt.base) && cd -
+for guess in "${foldguesslist[@]}"; do
+ff-mpirun -np $nproc foldcompute.edp -v 0 -dir $workdir -fi "$guess" -fo cylinder_vessel_fold -param Da -pv 1 -tgv -2
+done
 ````
 Example output:
  alpha[Da] = 2.6252,
@@ -61,8 +64,8 @@ Example output:
 
 Compute eigenvalues along the branch:
 ```sh
-ff-mpirun -np $nproc modecompute.edp -v 0 -dir $workdir -fi cylinder_vessel_6.base -fo cylinder_vessel_6 -eps_target 0.1+0.0i -eps_gen_hermitian -tgv -2
+cd "$workdir" && declare -a baselist=(cylinder_vessel_*[0-9].base) && cd -
+for base in "${baselist[@]}"; do
+ff-mpirun -np $nproc modecompute.edp -v 0 -dir $workdir -fi "$base" -fo "$base" -eps_target 1.0+0.0i -eps_gen_hermitian -tgv -2
+done
 ```
-
-# Post-process
-Some Matlab scripts are given to generate representative results.
