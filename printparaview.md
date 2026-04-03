@@ -1,0 +1,421 @@
+# printparaview.md
+Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
+
+## EXAMPLE USAGE:
+### Print previously computed solution to .vtu file:
+```sh
+ff-mpirun -np 1 printparaview.md -fi <FILEIN>
+```
+
+NOTE: This file should not be changed unless you know what you're doing.
+
+```freefem
+load "iovtk"
+include "settings.idp"
+include "macros_bifbox.idp"
+// arguments
+string meshin = getARGV("-mi", ""); // input meshfile
+string filein = getARGV("-fi", "");
+string fileout = getARGV("-fo", filein);
+paraviewflag = getARGV("-pv", 1); // indicate whether solution is saved for Paraview
+
+assert(filein.rfind(".") > 0); // assert that filein includes extension
+string fileext = filein(filein.rfind(".")+1:filein.length-1); // get file extension
+string fileroot = filein(0:filein.rfind(".")-1); // get file root
+if (fileout.rfind(".") > 0) fileout = fileout(0:fileout.rfind(".")-1); // trim extension
+
+if (mpirank==0){
+  if(meshin == "") meshin = readmeshname(workdir + filein);
+  Thg = readmeshN(workdir + meshin);
+  meshN Thgpv;
+  if (fileext == "base"){
+    XMhg defu(ubg);
+    restu = 0:XMhg.ndof-1;
+    ubg[] = loadbase(fileroot, meshin);
+    cout << "  Saving '" + fileout + "_base.vtu' in '" + workdir + "'." << endl;
+    real[int] qpv = ubg[];
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs defu(us) = defu(ubg);
+      qpv.resize(us[].n);
+      qpv = us[];
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(ubg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr);
+    ugr[] = qpv;
+    savevtk(workdir + fileout + "_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+  }
+  else if (fileext == "mode"){
+    XMhg<complex> defu(umg);
+    restu = 0:XMhg.ndof-1;
+    complex eigenvalue;
+    umg[] = loadmode(fileroot, meshin, sym, eigenvalue);
+    cout << "  Saving '" + fileout + "_mode.vtu' in '" + workdir + "'." << endl;
+    complex[int] qpv = umg[];
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs<complex> defu(us) = defu(umg);
+      qpv.resize(us[].n);
+      qpv = us[];
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(umg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr), defu(ugi);
+    ugr[] = qpv.re;
+    ugi[] = qpv.im;
+    savevtk(workdir + fileout + "_mode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+  }
+  else if (fileext == "resp"){
+    XMhg<complex> defu(umg);
+    restu = 0:XMhg.ndof-1;
+    real omega;
+    umg[] = loadresp(fileroot, meshin, sym, omega);
+    cout << "  Saving '" + fileout + "_resp.vtu' in '" + workdir + "'." << endl;
+    complex[int] qpv = umg[];
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs<complex> defu(us) = defu(umg);
+      qpv.resize(us[].n);
+      qpv = us[];
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(umg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr), defu(ugi);
+    ugr[] = qpv.re;
+    ugi[] = qpv.im;
+    savevtk(workdir + fileout + "_resp.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+  }
+  else if (fileext == "rslv"){
+    Xhg<complex> deff(fmg);
+    XMhg<complex> defu(umg);
+    restf = 0:Xhg.ndof-1;
+    restu = 0:XMhg.ndof-1;
+    real omega;
+    real gain;
+    umg[] = loadrslv(fileroot, meshin, fmg[], sym, omega, gain);
+    cout << "  Saving '" + fileout + "_rslv_[forcing,response].vtu' in '" + workdir + "'." << endl;
+    complex[int] fpv = fmg[], qpv = umg[];
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace Xhs(Thgs, Pkf);
+      Xhs<complex> deff(fs) = deff(fmg);
+      fpv.resize(fs[].n);
+      fpv = fs[];
+      fespace XMhs(Thgs, Pk);
+      XMhs<complex> defu(us) = defu(umg);
+      qpv.resize(us[].n);
+      qpv = us[];
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(umg)]);
+    fespace Xhgpv(Thgpv, Pkf);
+    Xhgpv deff(fgr), deff(fgi);
+    fgr[] = fpv.re;
+    fgi[] = fpv.im;
+    savevtk(workdir + fileout + "_rslv_forcing.vtu", Thgpv, paraviewf(fgr), paraviewf(fgi), dataname = ParaviewDataNamefc, order = ParaviewOrderfc);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr), defu(ugi);
+    ugi[] = qpv.im;
+    ugr[] = qpv.re;
+    savevtk(workdir + fileout + "_rslv_response.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+  }
+  else if (fileext == "fold"){
+    XMhg defu(ubg), defu(umg), defu(umag);
+    restu = 0:XMhg.ndof-1;
+    real[string] alpha;
+    real beta;
+    ubg[] = loadfold(fileroot, meshin, umg[], umag[], alpha, beta);
+    cout << "  Saving '" + fileout + "_fold_[base,dirmode,adjmode].vtu' in '" + workdir + "'." << endl;
+    real[int] qpv = ubg[], qmpv = umg[], qmapv = umag[];
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs defu(us) = defu(umg);
+      qpv.resize(us[].n);
+      qmpv.resize(us[].n);
+      qmapv.resize(us[].n);
+      qmpv = us[];
+      defu(us) = defu(umag);
+      qmapv = us[];
+      defu(us) = defu(ubg);
+      qpv = us[];
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(ubg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr);
+    ugr[] = qpv;
+    savevtk(workdir + fileout + "_fold_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    ugr[] = qmpv;
+    savevtk(workdir + fileout + "_fold_dirmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    ugr[] = qmapv;
+    savevtk(workdir + fileout + "_fold_adjmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+  }
+  else if (fileext == "hopf"){
+    XMhg defu(ubg);
+    XMhg<complex> defu(umg), defu(umag);
+    restu = 0:XMhg.ndof-1;
+    real omega;
+    complex[string] alpha;
+    complex beta;
+    ubg[] = loadhopf(fileroot, meshin, umg[], umag[], sym, omega, alpha, beta);
+    cout << "  Saving '" + fileout + "_hopf_[base,dirmode,adjmode].vtu' in '" + workdir + "'." << endl;
+    real[int] qpv = ubg[];
+    complex[int] qmpv = umg[], qmapv = umag[];
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs defu(us) = defu(ubg);
+      XMhs<complex> defu(ums) = defu(umg);
+      qpv.resize(us[].n);
+      qmpv.resize(ums[].n);
+      qmapv.resize(ums[].n);
+      qpv = us[];
+      qmpv = ums[];
+      defu(ums) = defu(umag);
+      qmapv = ums[];
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(ubg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr), defu(ugi);
+    ugr[] = qpv;
+    savevtk(workdir + fileout + "_hopf_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    ugr[] = qmpv.re;
+    ugi[] = qmpv.im;
+    savevtk(workdir + fileout + "_hopf_dirmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    ugr[] = qmapv.re;
+    ugi[] = qmapv.im;
+    savevtk(workdir + fileout + "_hopf_adjmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+  }
+  else if (fileext == "tdns"){
+    XMhg defu(ubg);
+    restu = 0:XMhg.ndof-1;
+    real time;
+    ubg[] = loadtdns(fileroot, meshin, time);
+    cout << "  Saving '" + fileout + "_tdns.vtu' in '" + workdir + "'." << endl;
+    real[int] qpv = ubg[];
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs defu(us) = defu(ubg);
+      qpv.resize(us[].n);
+      qpv = us[];
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(ubg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr);
+    ugr[] = qpv;
+    savevtk(workdir + fileout + "_tdns.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+  }
+  else if (fileext == "tdls"){
+    XMhg<complex> defu(umg);
+    restu = 0:XMhg.ndof-1;
+    real time;
+    umg[] = loadtdls(fileroot, meshin, sym, time);
+    cout << "  Saving '" + fileout + "_tdls.vtu' in '" + workdir + "'." << endl;
+    meshN Thgpv;
+    complex[int] qpv = umg[];
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs<complex> defu(us) = defu(umg);
+      qpv.resize(us[].n);
+      qpv = us[];
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(umg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr), defu(ugi);
+    ugr[] = qpv.re;
+    ugi[] = qpv.im;
+    savevtk(workdir + fileout + "_tdls.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+  }
+  else if (fileext == "hoho"){
+    XMhg defu(ubg);
+    XMhg<complex> defu(u1mg), defu(u1mag), defu(u2mg), defu(u2mag);
+    restu = 0:XMhg.ndof-1;
+    real omega1, omega2;
+    real[int] sym1(sym.n), sym2(sym.n);
+    complex[string] alpha1, alpha2;
+    complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+    ubg[] = loadhoho(fileroot, meshin, u1mg[], u1mag[], u2mg[], u2mag[], sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+    cout << "  Saving '" + fileout + "_hoho_[base,dirmode1,adjmode1,dirmode2,adjmode2].vtu' in '" + workdir + "'." << endl;
+    real[int] qpv = ubg[];
+    complex[int] q1mpv = u1mg[], q1mapv = u1mag[], q2mpv = u2mg[], q2mapv = u2mag[];
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs defu(us) = defu(ubg);
+      XMhs<complex> defu(ums) = defu(u1mg);
+      qpv.resize(us[].n);
+      q1mpv.resize(ums[].n);
+      q1mapv.resize(ums[].n);
+      q2mpv.resize(ums[].n);
+      q2mapv.resize(ums[].n);
+      qpv = us[];
+      q1mpv = ums[];
+      defu(ums) = defu(u1mag);
+      q1mapv = ums[];
+      defu(ums) = defu(u2mg);
+      q2mpv = ums[];
+      defu(ums) = defu(u2mag);
+      q2mapv = ums[];
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(ubg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr), defu(ugi);
+    ugr[] = qpv;
+    savevtk(workdir + fileout + "_hoho_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    ugr[] = q1mpv.re;
+    ugi[] = q1mpv.im;
+    savevtk(workdir + fileout + "_hoho_dirmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    ugr[] = q1mapv.re;
+    ugi[] = q1mapv.im;
+    savevtk(workdir + fileout + "_hoho_adjmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    ugr[] = q2mpv.re;
+    ugi[] = q2mpv.im;
+    savevtk(workdir + fileout + "_hoho_dirmode2.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    ugr[] = q2mapv.re;
+    ugi[] = q2mapv.im;
+    savevtk(workdir + fileout + "_hoho_adjmode2.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+  }
+  else if (fileext == "foho"){
+    XMhg defu(ubg), defu(u2mg), defu(u2mag);
+    XMhg<complex> defu(u1mg), defu(u1mag);
+    restu = 0:XMhg.ndof-1;
+    real omega;
+    complex[string] alpha1;
+    real[string] alpha2;
+    complex beta1, gamma12, gamma13;
+    real beta22, beta23, gamma22, gamma23;
+    complex[int] q1m, q1ma;
+    real[int] q2m, q2ma;
+    ubg[] = loadfoho(fileroot, meshin, u1mg[], u1mag[], u2mg[], u2mag[], sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+    cout << "  Saving '" + fileout + "_foho_[base,dirmode1,adjmode1,dirmode2,adjmode2].vtu' in '" + workdir + "'." << endl;
+    real[int] qpv = ubg[], q2mpv = u2mg[], q2mapv = u2mag[];
+    complex[int] q1mpv = u1mg[], q1mapv = u1mag[];
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs defu(us) = defu(u2mg);
+      XMhs<complex> defu(ums) = defu(u1mg);
+      qpv.resize(us[].n);
+      q1mpv.resize(ums[].n);
+      q1mapv.resize(ums[].n);
+      q2mpv.resize(us[].n);
+      q2mapv.resize(us[].n);
+      q1mpv = ums[];
+      defu(ums) = defu(u1mag);
+      q1mapv = ums[];
+      q2mpv = us[];
+      defu(us) = defu(u2mag);
+      q2mapv = us[];
+      defu(us) = defu(ubg);
+      qpv = us[];
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+      }
+    else Thgpv = movemesh(Thg, [coordinatetransform(ubg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr), defu(ugi);
+    ugr[] = qpv;
+    savevtk(workdir + fileout + "_foho_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    ugr[] = q1mpv.re;
+    ugi[] = q1mpv.im;
+    savevtk(workdir + fileout + "_foho_dirmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    ugr[] = q1mapv.re;
+    ugi[] = q1mapv.im;
+    savevtk(workdir + fileout + "_foho_adjmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    ugr[] = q2mpv;
+    savevtk(workdir + fileout + "_foho_dirmode2.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    ugr[] = q2mapv;
+    savevtk(workdir + fileout + "_foho_adjmode2.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+  }
+  else if (fileext == "porb"){
+    XMhg defu(ubg);
+    XMhg<complex> defu(umg);
+    restu = 0:XMhg.ndof-1;
+    int Nh=0;
+    real omega;
+    complex[int, int] uhg(umg[].n, Nh);
+    ubg[] = loadporb(fileroot, meshin, uhg, sym, omega, Nh);
+    cout << "  Saving '" + fileout + "_porb_[mean,harm0,harm1,...].vtu' in '" + workdir + "'." << endl;  
+    real[int] qpv = ubg[];
+    complex[int, int] qmpv = uhg;
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs defu(us) = defu(ubg);
+      XMhs<complex> defu(ums);
+      qpv.resize(us[].n);
+      qmpv.resize(ums[].n, uhg.m);
+      for(int harm = 0; harm < Nh; harm++){
+        umg[] = uhg(:, harm);
+        defu(ums) = defu(umg);
+        qmpv(:, harm) = ums[];
+      }
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(ubg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr), defu(ugi);
+    XMhgpv<complex> defu(ugc);
+    ugr[] = qpv;
+    savevtk(workdir + fileout + "_porb_mean.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    for(int harm = 0; harm < Nh; harm++){
+      ugc[] = qmpv(:, harm);
+      ugr[] = ugc[].re;
+      ugi[] = ugc[].im;
+      savevtk(workdir + fileout + "_porb_harm" + harm + ".vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    }
+  }
+  else if (fileext == "floq"){
+    XMhg<complex> defu(umg);
+    restu = 0:XMhg.ndof-1;
+    int Nh=0;
+    real omega;
+    complex[int, int] qh(umg[].n, Nh);  
+    complex eigenvalue;
+    real[int] symtemp(sym.n);
+    umg[] = loadfloq(fileroot, meshin, qh, sym, eigenvalue, symtemp, omega, Nh);
+    cout << "  Saving '" + fileout + "_floq_[comp0,comp1,comp2,...].vtu' in '" + workdir + "'." << endl;
+    complex[int, int] qmpv(qh.n, qh.m+1);
+    qmpv(:, 0) = umg[];
+    for (int jj = 0; jj < 2*Nh; jj++){
+      umg[] = qh(:, jj);
+      qmpv(:, jj+1) = umg[];
+    }
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs<complex> defu(ums);
+      qmpv.resize(ums[].n, qmpv.m);
+      for(int jj = 2*Nh; jj >= 0; jj--){
+        umg[] = qmpv(:, jj);
+        defu(ums) = defu(umg);
+        qmpv(:, jj) = ums[];
+      }
+      Thgpv = movemesh(Thgs, [coordinatetransform(ums)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(umg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr), defu(ugi);
+    XMhgpv<complex> defu(ugc);
+    for(int jj = 0; jj < (1+2*Nh); jj++){
+      ugc[] = qmpv(:, jj);
+      ugr[] = ugc[].re;
+      ugi[] = ugc[].im;
+      savevtk(workdir + fileout + "_floq_comp" + jj + ".vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    }
+  }
+}
+```

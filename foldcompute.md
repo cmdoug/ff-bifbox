@@ -1,0 +1,331 @@
+# foldcompute.md
+Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
+
+This script computes the normal form at a non-degenerate fold point.
+
+The normal form is written for the real amplitude $A$ as:
+
+$$
+    \frac{dA}{dt} = \alpha\cdot\delta\lambda + \beta{}A^2
+$$
+
+where:
+- $\alpha$ is the coefficient for the term from parameter changes,
+- $\beta$ is the coefficient for the term from harmonic interactions.
+
+
+## EXAMPLE USAGE:
+### Initialize with fold guess from base file, solve on same mesh
+```sh
+ff-mpirun -np 4 foldcompute.md -param <PARAM> -fi <FILEIN> -fo <FILEOUT>
+```
+
+### Initialize with fold from base and mode file, solve on same mesh
+```sh
+ff-mpirun -np 4 foldcompute.md -param <PARAM> -fi <FILEIN> -fo <FILEOUT>
+```
+
+### Initialize with fold guess from file on a mesh from file
+```sh
+ff-mpirun -np 4 foldcompute.md -param <PARAM> -mi <MESHIN> -fi <FILEIN> -fo <FILEOUT>
+```
+
+### Initialize with fold from file, adapt mesh/solution
+```sh
+ff-mpirun -np 4 foldcompute.md -param <PARAM> -fi <FILEIN> -fo <FILEOUT> -mo <MESHOUT>
+```
+
+NOTE: This file should not be changed unless you know what you're doing.
+
+SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [foldcontinue.md](./foldcontinue.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md)
+
+```freefem
+load "iovtk"
+load "PETSc"
+include "settings.idp"
+include "macros_bifbox.idp"
+// arguments
+string meshin = getARGV("-mi", "");
+string meshout = getARGV("-mo", "");
+string filein = getARGV("-fi", "");
+string fileout = getARGV("-fo", "");
+bool normalform = getARGV("-nf", 1);
+string param = getARGV("-param", "");
+string adaptto = getARGV("-adaptto", "b");
+real eps = getARGV("-eps", 1e-7);
+real TGV = getARGV("-tgv", -1);
+string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
+real[string] alpha;
+real beta;
+
+// Load mesh, make FE basis
+string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension
+parsefilename(fileout, fileout); // trim extension from output file, if given
+if(fileext == "mode" || fileext == "resp" || fileext == "rslv" || fileext == "tdls" || fileext == "floq") {
+  filein = readbasename(workdir + filein);
+  fileext = parsefilename(filein, fileroot);
+}
+if(meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
+string meshroot, meshext = parsefilename(meshin, meshroot);
+parsefilename(meshout, meshout); // trim extension from output mesh, if given
+Th = readmeshN(workdir + meshin);
+Thg = Th;
+DmeshCreate(Th);
+restu = restrict(XMh, XMhg, n2o);
+XMh defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
+// Initialize solution with guess or file
+if(fileext == "base") {
+  ub[] = loadbase(fileroot, meshin);
+}
+else if(fileext == "fold") {
+  ub[] = loadfold(fileroot, meshin, um[], uma[], alpha, beta);
+}
+else if(fileext == "foho") {
+  real omega, beta23, gamma22, gamma23;
+  complex[string] alpha1;
+  complex beta1, gamma12, gamma13;
+  complex[int] q1m, q1ma;
+  ub[] = loadfoho(fileroot, meshin, q1m, q1ma, um[], uma[], sym, omega, alpha1, alpha, beta1, beta, beta23, gamma12, gamma13, gamma22, gamma23);
+}
+else if(fileext == "hopf") {
+  real omega;
+  complex[string] alpha;
+  complex beta;
+  complex[int] qm, qma;
+  ub[] = loadhopf(fileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(fileext == "hoho") {
+  real[int] sym1(sym.n), sym2(sym.n);
+  real omega1, omega2;
+  complex[string] alpha1, alpha2;
+  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex[int] q1m, q1ma, q2m, q2ma;
+  ub[] = loadhoho(fileroot, meshin, q1m, q1ma, q2m, q2ma, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+}
+else if(fileext == "tdns") {
+  real time;
+  ub[] = loadtdns(fileroot, meshin, time);
+}
+else if(fileext == "porb") {
+  int Nh=1;
+  real omega;
+  complex[int, int] qh(um[].n, Nh);
+  ub[] = loadporb(fileroot, meshin, qh, sym, omega, Nh);
+}
+real paramval = getparam(param);
+// Create distributed Mat
+Mat J;
+createMatu(Th, J, Pk);
+// MESH ADAPTATION
+bool adapt = false;
+if(meshout == "") meshout = meshin; // if no adaptation
+else { // if output meshfile is given, adapt mesh
+  adapt = true;
+  meshout = meshout + "." + meshext;
+  real[int] q;
+  ChangeNumbering(J, ub[], q);
+  ChangeNumbering(J, ub[], q, inverse = true);
+  ChangeNumbering(J, um[], q);
+  ChangeNumbering(J, um[], q, inverse = true);
+  ChangeNumbering(J, uma[], q);
+  ChangeNumbering(J, uma[], q, inverse = true);
+  XMhg defu(uG), defu(umG), defu(umaG), defu(tempu), defu(uoG); // create private global FE functions
+  tempu[](restu) = ub[]; // populate local portion of global soln
+  mpiAllReduce(tempu[], uG[], mpiCommWorld, mpiSUM); //aggregate local solns into global soln
+  tempu[](restu) = um[]; // populate local portion of global soln
+  mpiAllReduce(tempu[], umG[], mpiCommWorld, mpiSUM); //aggregate local solns into global soln
+  tempu[](restu) = uma[]; // populate local portion of global soln
+  mpiAllReduce(tempu[], umaG[], mpiCommWorld, mpiSUM); //aggregate local solns into global soln
+  if(mpirank == 0) {  // Perform mesh adaptation (serially) on processor 0
+    if(adaptto == "bo") {
+      defu(tempu) = initu(defu(umaG)'*defu(umaG));
+      tempu[] = sqrt(tempu[]);
+      uoG[] = (umG[].*umG[]);
+      uoG[] = sqrt(uoG[]);
+      uoG[] .*= tempu[];
+    }
+    IFMACRO(dimension,2)
+      if(adaptto == "b") Thg = adaptmesh(Thg, adaptu(uG), adaptmeshoptions);
+      else if(adaptto == "bd") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umG), adaptmeshoptions);
+      else if(adaptto == "ba") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umaG), adaptmeshoptions);
+      else if(adaptto == "bda") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umG), adaptu(umaG), adaptmeshoptions);
+      else if(adaptto == "bo") Thg = adaptmesh(Thg, adaptu(uG), adaptu(uoG), adaptmeshoptions);
+    ENDIFMACRO
+    IFMACRO(dimension,3)
+      //NOTE: 3D mesh adaptation is still under development.
+      load "mshmet"
+      load "mmg"
+      real anisomax = getARGV("-anisomax",1.0);
+      real[int] met((bool(anisomax > 1) ? 6 : 1)*Thg.nv);
+      if(adaptto == "b") met = mshmet(Thg, adaptu(uG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "bd") met = mshmet(Thg, adaptu(uG), adaptu(umG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "ba") met = mshmet(Thg, adaptu(uG), adaptu(umaG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "bda") met = mshmet(Thg, adaptu(uG), adaptu(umG), adaptu(umaG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "bo") met = mshmet(Thg, adaptu(uG), adaptu(uoG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      if(anisomax > 1.0) {
+        load "aniso"
+        boundaniso(6, met, anisomax);
+      }
+      Thg = mmg3d(Thg, metric = met, hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), hgrad = -1, verbose = verbosity-(verbosity==0));
+    ENDIFMACRO
+  }
+  broadcast(processor(0), Thg); // broadcast global mesh to all processors
+  defu(uG) = defu(uG); //interpolate global solution from old mesh to new mesh
+  defu(umG) = defu(umG); //interpolate global solution from old mesh to new mesh
+  defu(umaG) = defu(umaG); //interpolate global solution from old mesh to new mesh
+  Th = Thg; //Reinitialize local mesh with global mesh
+  Mat Adapt; // Partition new mesh and update the PETSc numbering
+  createMatu(Th, Adapt, Pk);
+  J = Adapt;
+  defu(ub) = initu(0.0); // set local values to zero
+  defu(um) = initu(0.0); // set local values to zero
+  defu(uma) = initu(0.0); // set local values to zero
+  defu(um2) = initu(0.0);
+  defu(um3) = initu(0.0);
+  restu.resize(ub[].n); // Change size of restriction operator
+  restu = restrict(XMh, XMhg, n2o); // Compute new restriction from global mesh to local mesh
+  ub[] = uG[](restu); //restrict global solution to each local mesh
+  um[] = umG[](restu); //restrict global solution to each local mesh
+  uma[] = umaG[](restu); //restrict global solution to each local mesh
+}
+// Build bordered block matrix from only Mat components
+sym = 0;
+real[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
+real iomega = 0.0, iomega2 = 0.0, iomega3 = 0.0;
+include "eqns.idp"
+Mat JlPM(J.n, mpirank == 0 ? 1 : 0), gqPM(J.n, mpirank == 0 ? 1 : 0), glPM(mpirank == 0 ? 1 : 0, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
+Mat Ja = [[J, JlPM], [gqPM', glPM]]; // make dummy Jacobian
+real[int] R(ub[].n), qm(J.n), qma(J.n), pP(J.n), qP(J.n);
+// FUNCTIONS
+  func real[int] funcRa(real[int]& qa) {
+      ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
+      if(mpirank == 0) paramval = qa(Ja.n-1); // Extract parameter value from state vector on proc 0
+      broadcast(processor(0), paramval);
+      updateparam(param, paramval);
+      R = vR(0, XMh, tgv = TGV);
+      real[int] Ra;
+      ChangeNumbering(J, R, Ra); // FreeFEM to PETSc
+      J = vJ(XMh, XMh, tgv = -2);
+      KSPSolve(J, pP, qm);
+      KSPSolveTranspose(J, qP, qma);
+      real ginv, ginvl = (qP'*qm);
+      mpiAllReduce(ginvl, ginv, mpiCommWorld, mpiSUM);
+      qm /= ginv;
+      qma /= ginv;
+      Ra.resize(Ja.n); // Append 0 to residual vector on proc 0
+      if(mpirank == 0) Ra(Ja.n-1) = 1.0/ginv;
+      return Ra;
+  }
+
+  func int funcJa(real[int]& qa) {
+      ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
+      if(mpirank == 0) paramval = qa(Ja.n-1); // Extract parameter value from state vector on proc 0
+      broadcast(processor(0), paramval);
+      ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+      ChangeNumbering(J, uma[], qma, inverse = true);
+      updateparam(param, paramval + eps);
+      um2[] = vR(0, XMh, tgv = TGV);
+      um2[] -= R;
+      um2[] /= eps;
+      ChangeNumbering(J, um2[], qm); // FreeFEM to PETSc
+      matrix tempPms = [[qm]]; // dense array to sparse matrix
+      ChangeOperator(JlPM, tempPms, parent = Ja); // send to Mat
+      um3[] = vJ(0, XMh, tgv = -10);
+      updateparam(param, paramval);
+      um2[] = vJ(0, XMh, tgv = -10);
+      um3[] -= um2[];
+      J = vH(XMh, XMh, tgv = 0);
+      MatMultTranspose(J, qma, qm);
+      tempPms = [[qm]]; // dense array to sparse matrix
+      ChangeOperator(gqPM, tempPms, parent = Ja); // send to Mat
+      tempPms = [[J(uma[], um3[])/eps]]; // dense array to sparse matrix
+      ChangeOperator(glPM, tempPms, parent = Ja); // send to Mat
+      J = vJ(XMh, XMh, tgv = TGV);
+      return 0;
+  }
+// set up Mat parameters
+IFMACRO(Jprecon) Jprecon(0); ENDIFMACRO
+set(Ja, sparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full"
+                + " -prefix_push fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
+                + " -prefix_push fieldsplit_0_ " + KSPparams + " -prefix_pop", setup = 1);
+set(J, IFMACRO(Jsetargs) Jsetargs, ENDIFMACRO prefix = "fieldsplit_0_", parent = Ja);
+// Initialize
+real[int] qa;
+ChangeNumbering(J, ub[], qa);
+qa.resize(Ja.n);
+if(mpirank == 0) qa(Ja.n - 1) = paramval;
+if (fileext != "fold" && fileext != "foho"){
+  updateparam(param, paramval + eps);
+  um2[] = vR(0, XMh);
+  updateparam(param, paramval);
+  R = vR(0, XMh);
+  um2[] -= R;
+  um2[] /= eps;
+  J = vJ(XMh, XMh);
+  um[] = J^-1*um2[];
+  uma[] = J'^-1*um2[];
+}
+um2[] = vM(0, XMh, tgv = 0);
+ChangeNumbering(J, um[], qm);
+ChangeNumbering(J, um[], qm, inverse = true);
+real Mnorm = sqrt(J(um[], um2[]));
+um2[] /= Mnorm;
+ChangeNumbering(J, um2[], qP);
+ChangeNumbering(J, uma[], qma);
+ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
+um2[] = vM(0, XMh, tgv = 0);
+ChangeNumbering(J, um[], qm, inverse = true);
+um2[] *= (Mnorm/J(um[], um2[])); // so that <uma[],M*um[]> = 1
+ChangeNumbering(J, um2[], pP);
+// solve nonlinear problem with SNES
+int ret;
+SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
+          sparams = "-snes_linesearch_type " + sneslinesearchtype + " -options_left no -snes_monitor -snes_converged_reason");
+if (ret > 0) { // Save solution if solver converged and output file is given
+  ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true);
+  if(mpirank == 0) paramval = qa(Ja.n-1);
+  broadcast(processor(0), paramval);
+  updateparam(param, paramval);
+  ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+  um2[] = vM(0, XMh, tgv = 0);
+  ChangeNumbering(J, um[], qm, inverse = true);
+  ChangeNumbering(J, uma[], qma, inverse = true);
+  Mnorm = sqrt(J(um[], um2[]));
+  um[] /= Mnorm; // so that <um[],M*um[]> = 1
+  uma[] *= (Mnorm/J(uma[], um2[])); // so that <uma[],M*um[]> = 1
+  ChangeNumbering(J, um[], qm);
+  ChangeNumbering(J, uma[], qma);
+  if (normalform){
+    // 2nd-order
+    //  A: base modification due to parameter changes
+    if(paramnames[0] != ""){
+      for (int k = 0; k < paramnames.n; ++k){
+        paramval = getparam(paramnames[k]);
+        updateparam(paramnames[k], paramval + eps);
+        um2[] = vR(0, XMh, tgv = TGV);
+        updateparam(paramnames[k], paramval);
+        um2[] -= R;
+        alpha[paramnames[k]] = -J(uma[], um2[])/eps;
+      }
+    }
+    //  B: base modification due to quadratic nonlinear interaction
+    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+    um2[] = um[];
+    um3[] = vH(0, XMh, tgv = -10);
+    beta = -0.5*J(uma[], um3[]);
+  }
+  else {
+    for (int k = 0; k < paramnames.n; ++k){
+      alpha[paramnames[k]] = 0.0;
+    }
+    beta = 0.0;
+  }
+  if(mpirank==0 && adapt) { // Save adapted mesh
+    cout << "  Saving adapted mesh '" + meshout + "' in '" + workdir + "'." << endl;
+    savemesh(Thg, workdir + meshout);
+  }
+  ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true);
+  ChangeNumbering(J, um[], qm, inverse = true);
+  savefold(fileout, "", meshout, alpha, beta, true, true);
+}
+```

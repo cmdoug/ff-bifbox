@@ -1,0 +1,320 @@
+# porbcompute.md
+Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
+
+## EXAMPLE USAGE:
+### Initialize with guess from file, solve on same mesh
+```sh
+ff-mpirun -np 4 porbcompute.md -Re 1 -fi <FILEIN> -fo <FILEOUT> -Nh <N>
+```
+
+### Initialize with guess from file, solve on different mesh
+```sh
+ff-mpirun -np 4 porbcompute.md -mi <MESHIN> -fi <FILEIN> -fo <FILEOUT>
+```
+
+### Initialize with guess from file, adapt mesh/solution
+```sh
+ff-mpirun -np 4 porbcompute.md -fi <FILEIN> -fo <FILEOUT> -mo <MESHOUT>
+```
+
+NOTE: This file should not be changed unless you know what you're doing.
+
+SEE ALSO: [porbcontinue.md](./porbcontinue.md), [porbdeflate.md](./porbdeflate.md), [floqcompute.md](./floqcompute.md)
+
+```freefem
+load "iovtk"
+load "PETSc"
+include "settings.idp"
+include "macros_bifbox.idp"
+// arguments
+string meshin = getARGV("-mi", ""); // input meshfile with extension
+string meshout = getARGV("-mo", ""); // output mesh without extension
+string filein = getARGV("-fi", ""); // input file with extension
+string basefilein = getARGV("-bfi", "");
+string fileout = getARGV("-fo", ""); // output file without extension
+int select = getARGV("-select", 1);
+bool zerofreq = getARGV("-zero", 0);
+string adaptto = getARGV("-adaptto", "0");
+string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
+int Nh = getARGV("-Nh", 0); //if 0, will read Nh from file. In practice, Nh must be at least 1, otherwise use basecompute.md
+int blocks = getARGV("-blocks", 1); //if blocks = 1, use monolithic LU; if blocks = N w/ 2 <= N <= Nh+1, use block preconditioner with N blocks
+real[int] sym0(sym.n);
+real omega;
+
+// Load mesh, make FE basis
+string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension
+parsefilename(fileout, fileout); // trim extension from output file, if given
+if((fileext == "mode" || fileext == "resp" || fileext == "rslv" || fileext == "tdls" || fileext == "floq") && basefilein == "") basefilein = readbasename(workdir + filein);
+string basefileroot, basefileext = parsefilename(basefilein, basefileroot);
+if(meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
+string meshroot, meshext = parsefilename(meshin, meshroot);
+parsefilename(meshout, meshout); // trim extension from output mesh, if given
+Th = readmeshN(workdir + meshin);
+Thg = Th;
+DmeshCreate(Th);
+restu = restrict(XMh, XMhg, n2o);
+XMh defu(ub);
+XMh<complex> defu(um), defu(um2), defu(um3);
+complex[int, int] uh(um[].n, max(1, Nh));
+if (fileext == "porb") {
+  ub[] = loadporb(fileroot, meshin, uh, sym0, omega, Nh);
+}
+else if (fileext == "hopf") {
+  complex[string] alpha;
+  complex beta;
+  complex[int] qma;
+  ub[] = loadhopf(fileroot, meshin, um[], qma, sym0, omega, alpha, beta);
+  uh(:, 0) = um[];
+}
+else if (fileext == "foho") {
+  real[string] alpha2;
+  real beta22, beta23, gamma22, gamma23;
+  complex[string] alpha;
+  complex beta;
+  complex gamma12, gamma13;
+  real[int] q2m, q2ma;
+  complex[int] qma;
+  ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  uh(:, 0) = um[];
+}
+else if(fileext == "hoho") {
+  real omegaN;
+  complex[string] alpha, alphaN;
+  complex beta, betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex[int] qma, qNm, qNma;
+  if(select == 1){
+    ub[] = loadhoho(fileroot, meshin, um[], qma, qNm, qNma, sym0, sym, omega, omegaN, alpha, alphaN, beta, betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+  }
+  else if(select == 2){
+    ub[] = loadhoho(fileroot, meshin, qNm, qNma, um[], qma, sym, sym0, omegaN, omega, alphaN, alpha, betaN, beta, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+  }
+  uh(:, 0) = um[];
+}
+else if (fileext == "mode") {
+  complex eigenvalue;
+  uh(:, 0) = loadmode(fileroot, meshin, sym0, eigenvalue);
+  omega = imag(eigenvalue);
+}
+else if (fileext == "resp") {
+  uh(:, 0) = loadresp(fileroot, meshin, sym0, omega);
+}
+else if (fileext == "rslv") {
+  real gain;
+  complex[int] fm;
+  uh(:, 0) = loadrslv(fileroot, meshin, fm, sym0, omega, gain);
+}
+else if (fileext == "floq") {
+  complex[int, int] qh(um[].n, 2*Nh);
+  complex eigenvalue;
+  real[int] symtemp(sym.n);
+  uh(:, 0) = loadfloq(fileroot, meshin, qh, sym0, eigenvalue, symtemp, omega, Nh);
+  omega = imag(eigenvalue);
+}
+else assert(false); // invalid input filetype
+if (zerofreq) omega = 0;
+Nh = max(1, Nh); // Nh must be at least 1, otherwise use basecompute.md
+if (basefileext == "base") {
+  ub[] = loadbase(basefileroot, meshin);
+}
+else if(basefileext == "fold") {
+  real[string] alpha;
+  real beta;
+  real[int] qm, qma;
+  ub[] = loadfold(basefileroot, meshin, qm, qma, alpha, beta);
+}
+else if(basefileext == "hopf") {
+  real omega;
+  complex[string] alpha;
+  complex beta;
+  complex[int] qm, qma;
+  ub[] = loadhopf(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(basefileext == "foho") {
+  real omega;
+  complex[string] alpha1;
+  complex beta1, gamma12, gamma13;
+  real[string] alpha2;
+  real beta22, beta23, gamma22, gamma23;
+  complex[int] q1m, q1ma;
+  real[int] q2m, q2ma;
+  ub[] = loadfoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+}
+else if(basefileext == "hoho") {
+  real[int] sym2(sym.n);
+  real omega1, omega2;
+  complex[string] alpha1, alpha2;
+  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex[int] q1m, q1ma, q2m, q2ma;
+  ub[] = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+}
+else if(basefileext == "tdns") {
+  real time;
+  ub[] = loadtdns(basefileroot, meshin, time);
+}
+else if (basefileext == "porb") {
+  complex[int,int] qh(um[].n,1);
+  int Nh;
+  real omega;
+  ub[] = loadporb(basefileroot, meshin, qh, sym, omega, Nh);
+}
+// Create distributed Mat
+Mat J;
+createMatu(Th, J, Pk);
+// MESH ADAPTATION
+bool adapt = false;
+if(meshout == "") meshout = meshin; // if no adaptation
+else { // if output meshfile is given, adapt mesh
+  adapt = true;
+  meshout = meshout + "." + meshext;
+  real[int] q;
+  ChangeNumbering(J, ub[], q);
+  ChangeNumbering(J, ub[], q, inverse = true);
+  for (int nh = 0; nh < Nh; nh++){
+    ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], q);
+    ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], q, inverse = true);
+  }
+  XMhg defu(uG), defu(u1rG), defu(u1iG), defu(u2rG), defu(u2iG);
+  XMhg<complex> defu(cplxu), defu(cplxu2);
+  complex[int, int] uhG(uG[].n, Nh); // create private global FE functions
+  u2iG[](restu) = ub[]; // populate local portion of global soln
+  mpiAllReduce(u2iG[], uG[], mpiCommWorld, mpiSUM);
+  for (int nh = 0; nh < Nh; nh++){
+    cplxu[](restu) = uh(:, nh);
+    mpiAllReduce(cplxu[], uhG(:, nh), mpiCommWorld, mpiSUM);
+  }
+  u1rG[] = uhG(:, 0).re;
+  u1iG[] = uhG(:, 0).im;
+  if (Nh > 1){
+    u2rG[] = uhG(:, 1).re;
+    u2iG[] = uhG(:, 1).im;
+  }
+  if(mpirank == 0) { // Perform mesh adaptation (serially) on processor 0
+    IFMACRO(dimension,2)
+      if(adaptto == "0") Thg = adaptmesh(Thg, adaptu(uG), adaptmeshoptions);
+      else if(adaptto == "01") Thg = adaptmesh(Thg, adaptu(uG), adaptu(u1rG), adaptu(u1iG), adaptmeshoptions);
+      else if(Nh > 1 && adaptto == "02") Thg = adaptmesh(Thg, adaptu(uG), adaptu(u2rG), adaptu(u2iG), adaptmeshoptions);
+      else if(Nh > 1 && adaptto == "012") Thg = adaptmesh(Thg, adaptu(uG), adaptu(u1rG), adaptu(u1iG), adaptu(u2rG), adaptu(u2iG), adaptmeshoptions);
+    ENDIFMACRO
+    IFMACRO(dimension,3)
+      //NOTE: 3D mesh adaptation is still under development.
+      load "mshmet"
+      load "mmg"
+      real anisomax = getARGV("-anisomax",1.0);
+      real[int] met((bool(anisomax > 1) ? 6 : 1)*Thg.nv);
+      if(adaptto == "0") met = mshmet(Thg, adaptu(uG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0), hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "01") met = mshmet(Thg, adaptu(uG), adaptu(u1rG), adaptu(u1iG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0), hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(Nh > 1 && adaptto == "02") met = mshmet(Thg, adaptu(uG), adaptu(u2rG), adaptu(u2iG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0), hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(Nh > 1 && adaptto == "012") met = mshmet(Thg, adaptu(uG), adaptu(u1rG), adaptu(u1iG), adaptu(u2rG), adaptu(u2iG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0), hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      if(anisomax > 1.0) {
+        load "aniso"
+        boundaniso(6, met, anisomax);
+      }
+      Thg = mmg3d(Thg, metric = met, hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), hgrad = -1, verbose = verbosity-(verbosity==0));
+    ENDIFMACRO
+  }
+  broadcast(processor(0), Thg);
+  defu(uG) = defu(uG);
+  complex[int, int] uhG2(uG[].n, Nh); // create private global FE functions
+  for (int nh = 0; nh < Nh; nh++){
+    cplxu[] = uhG(:, nh);
+    defu(cplxu2) = defu(cplxu);
+    uhG2(:, nh) = cplxu2[];
+  }
+  Th = Thg; //Reinitialize local mesh with global mesh
+  Mat Adapt;
+  createMatu(Th, Adapt, Pk); // Partition new mesh and update the PETSc numbering
+  J = Adapt;
+  defu(ub) = initu(0.0); // set local values to zero
+  defu(um) = initu(0.0); // set local values to zero
+  defu(um2) = initu(0.0); // set local values to zero
+  defu(um3) = initu(0.0); // set local values to zero
+  uh.resize(um[].n, Nh);
+  restu.resize(ub[].n); // Change size of restriction operator
+  restu = restrict(XMh, XMhg, n2o); // Compute new restriction from global mesh to local mesh
+  ub[] = uG[](restu); //restrict global solution to each local mesh
+  for (int nh = 0; nh < Nh; nh++) {
+    cplxu2[] = uhG2(:, nh);
+    um[] = cplxu2[](restu);
+    uh(:, nh) = um[];
+  }
+}
+
+complex[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
+complex iomega, iomega2, iomega3;
+include "eqns.idp" // load equations
+// Build bordered block matrix from only Mat components
+Mat JHBa, JHB((1+2*Nh)*J.n, (1+2*Nh)*J.n), dwHB((1+2*Nh)*J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
+real[int] RHB;
+if(zerofreq) JHBa = JHB;
+else JHBa = [[JHB, dwHB],[dwHB',0]];
+// Function to build residual operator in PETSc numbering
+  func real[int] funcRHB(PetscScalar[int]& qPETSc) {
+      ChangeNumbering(J, ub[], qPETSc(0:J.n-1), inverse = true, exchange = true);
+      for (int nh = 0; nh < Nh; nh++)
+        ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], qPETSc((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true, exchange = true);
+      if(mpirank == 0 && !zerofreq) omega = qPETSc(qPETSc.n-1); 
+      broadcast(processor(0), omega);
+      PetscScalar[int] RPETSc(JHBa.n);
+      ResidualHB(RHB, J, ub, uh, sym0, omega);
+      RPETSc(0:JHB.n-1) = RHB;
+      if(mpirank == 0 && !zerofreq) RPETSc(JHBa.n-1) = 0.0;
+      return RPETSc;
+  }
+
+// Function to build Jacobian operator in PETSc numbering
+func int funcJHB(PetscScalar[int]& qPETSc) {
+    ChangeNumbering(J, ub[], qPETSc(0:J.n-1), inverse = true, exchange = true);
+    for (int nh = 0; nh < Nh; nh++)
+      ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], qPETSc((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true, exchange = true);
+    if(mpirank == 0 && !zerofreq) omega = qPETSc(JHBa.n-1); 
+    broadcast(processor(0), omega);
+    JacobianHB(JHB, J, ub, uh, sym0, omega);
+    if (zerofreq) JHBa = JHB;
+    else {
+      domegaResidualHB(RHB, J, ub, uh, sym0);
+      matrix<PetscScalar> tempPms = [[RHB]];
+      ChangeOperator(dwHB, tempPms, parent = JHBa); // send to Mat
+    }
+    return 0;
+}
+// set up Mat parameters
+real[int] fieldlabels(JHB.n);
+fieldlabels(0: J.n-1) = 1.0;
+blocks = min(blocks, 1+Nh);
+for (int nh = 0; nh < Nh; nh++) fieldlabels((1+2*nh)*J.n:(3+2*nh)*J.n-1) = 1.0 + max(0, blocks + nh - Nh);
+string HBKSPparams = KSPparams;
+if (blocks > 1) HBKSPparams = "-ksp_type gmres -ksp_norm_type unpreconditioned -ksp_pc_side right -pc_type fieldsplit -pc_fieldsplit_type symmetric_multiplicative -fieldsplit_pc_type lu -ksp_gmres_cgs_refinement_type refine_ifneeded";
+if (zerofreq) set(JHBa, sparams = HBKSPparams, fields = fieldlabels);
+else {
+  set(JHBa, sparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full"
+                    + " -prefix_push fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
+                    + " -prefix_push fieldsplit_0_ " + HBKSPparams + " -prefix_pop", setup = 1);
+  set(JHB, prefix = "fieldsplit_0_", fields = fieldlabels, parent = JHBa);
+}
+// initialize
+real[int] qHB(JHBa.n);
+ChangeNumbering(J, ub[], RHB);
+qHB(0:J.n-1) = RHB;
+for (int nh = 0; nh < Nh; nh++){
+  ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], RHB);
+  qHB((1+2*nh)*J.n:(3+2*nh)*J.n-1) = RHB;
+}
+RHB.resize(JHB.n);
+if(mpirank == 0 && !zerofreq) qHB(JHBa.n-1) = omega;
+int ret;
+// solve nonlinear problem with SNES
+SNESSolve(JHBa, funcJHB, funcRHB, qHB, reason = ret,
+          sparams = "-snes_linesearch_type " + sneslinesearchtype + " -snes_monitor -snes_converged_reason -options_left no");
+if(ret > 0) { // Save solution if solver converged and output file is given
+  if(mpirank==0 && adapt) { // Save adapted mesh
+    cout << "  Saving adapted mesh '" + meshout + "' in '" + workdir + "'." << endl;
+    savemesh(Thg, workdir + meshout);
+  }
+  ChangeNumbering(J, ub[], qHB(0:J.n-1), inverse = true);
+  for (int nh = 0; nh < Nh; nh++)
+    ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], qHB((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true);
+  if(mpirank == 0 && !zerofreq) omega = qHB(JHBa.n-1); 
+  broadcast(processor(0), omega);
+  saveporb(fileout, "", meshout, sym0, omega, Nh, true, true);
+}
+```

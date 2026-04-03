@@ -1,0 +1,126 @@
+# respcompute.md
+Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
+
+## EXAMPLE USAGE:
+### Solve linear forced response problem, store solution:
+```sh
+ff-mpirun -np 4 respcompute.md -eps_target 0+1.0i -forcing 1 -fi <FILEIN> -fo <VECFILE>
+```
+
+### Solve linear forced response problem over a sequence of shifts, store solutions:
+```sh
+ff-mpirun -np 4 respcompute.md -eps_target 0+0.2i -ntarget 10 -targetf 0+2.0i -forcing 1 -fi <FILEIN> -fo <VECFILE>
+```
+
+NOTE: This file should not be changed unless you know what you're doing.
+
+SEE ALSO: [basecompute.md](./basecompute.md), [basecontinue.md](./basecontinue.md), [modecompute.md](./modecompute.md), [rslvcompute.md](./rslvcompute.md), [tdlscompute.md](./tdlscompute.md), [tdnscompute.md](./tdnscompute.md)
+
+```freefem
+load "iovtk"
+load "PETSc-complex"
+include "settings.idp"
+include "macros_bifbox.idp"
+// arguments
+string meshin = getARGV("-mi", ""); // input meshfile
+string filein = getARGV("-fi", "");
+string fileout = getARGV("-fo", "");
+string statout = getARGV("-so", "");
+string symstr = getARGV("-sym", "0");
+real omega = getARGV("-omega", 1.0);
+int nomega = getARGV("-nomega", 1);
+real omegaf = getARGV("-omegaf", 1.0);
+
+// Load mesh, make FE basis
+string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension
+parsefilename(statout, statout); // trim extension from output file, if given
+parsefilename(fileout, fileout); // trim extension from output file, if given
+if(fileext == "mode" || fileext == "resp" || fileext == "rslv" || fileext == "tdls" || fileext == "floq"){
+  filein = readbasename(workdir + filein);
+  fileext = parsefilename(filein, fileroot);
+}
+if(filein != "" && meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
+Th = readmeshN(workdir + meshin);
+Thg = Th;
+DmeshCreate(Th);
+restu = restrict(XMh, XMhg, n2o);
+XMh defu(ub), defu(um2), defu(um3);
+if(fileext == "base") {
+  ub[] = loadbase(fileroot, meshin);
+}
+else if(fileext == "fold") {
+  real[string] alpha;
+  real beta;
+  real[int] qm, qma;
+  ub[] = loadfold(fileroot, meshin, qm, qma, alpha, beta);
+}
+else if(fileext == "hopf") {
+  real omega;
+  complex[string] alpha;
+  complex beta;
+  complex[int] qm, qma;
+  ub[] = loadhopf(fileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(fileext == "foho") {
+  real omega;
+  complex[string] alpha1;
+  real[string] alpha2;
+  complex beta1, gamma12, gamma13;
+  real beta22, beta23, gamma22, gamma23;
+  complex[int] q1m, q1ma;
+  real[int] q2m, q2ma;
+  ub[] = loadfoho(fileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+}
+else if(fileext == "hoho") {
+  real[int] sym1(sym.n), sym2(sym.n);
+  real omega1, omega2;
+  complex[string] alpha1, alpha2;
+  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex[int] q1m, q1ma, q2m, q2ma;
+  ub[] = loadhoho(fileroot, meshin, q1m, q1ma, q2m, q2ma, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+}
+else if(fileext == "tdns") {
+  real time;
+  ub[] = loadtdns(fileroot, meshin, time);
+}
+else if(fileext == "porb") {
+  int Nh=1;
+  real omega;
+  complex[int, int] qh(ub[].n, Nh);
+  ub[] = loadporb(fileroot, meshin, qh, sym, omega, Nh);
+}
+XMh<complex> defu(um);
+
+Mat<complex> J;
+createMatu(Th, J, Pk);
+
+sym = parsesymstr(symstr);
+complex[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
+ik.im = sym;
+complex iomega = 0.0, iomega2 = 0.0, iomega3 = 0.0; // Let PETSc/SLEPc do the shift
+include "eqns.idp"
+
+complex[int] RHS(J.n), qm(J.n);
+um[] = vMq(0, XMh, tgv = -1);
+ChangeNumbering(J, um[], RHS);
+matrix<complex> M = vM(XMh, XMh, tgv = -20);
+matrix<complex> Jx, Js = vJ(XMh, XMh, tgv = -2);
+um[].re = ub[];
+ChangeNumbering(J, um[], qm);
+ChangeNumbering(J, um[], qm, inverse = true);
+ub[] = um[].re;
+real omegas = omega;
+for (int n = 0; n < nomega; ++n){
+  if (nomega > 1) omega = omegas + (omegaf - omegas)*real(n)/real(nomega - 1);
+  iomega = 1i*omega;
+  Jx = iomega*M;
+  Jx += Js;
+  ChangeOperator(J, Jx);
+  // set up Mat parameters
+  IFMACRO(Jprecon) Jprecon(iomega); ENDIFMACRO
+  set(J, IFMACRO(Jsetargs) Jsetargs, ENDIFMACRO sparams = KSPparams + " -options_left no");
+  KSPSolve(J, RHS, qm);
+  ChangeNumbering(J, um[], qm, inverse = true);
+  saveresp(fileout + ((nomega > 1) ? ("_" + n) : ""), statout, filein, meshin, sym, omega, (fileout != ""), true);
+}
+```
