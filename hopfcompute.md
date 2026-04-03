@@ -4,9 +4,11 @@ Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.dougla
 This script computes the normal form at a non-degenerate Hopf point.
 
 The normal form is written for the complex amplitude $Z = A\exp(\mathrm{i}\omega{}t)$ as:
+
 $$
     \frac{dZ}{dt} = Z( \alpha\delta\lambda + \mathrm{i}\omega + \beta|Z|^2 )
 $$
+
 where:
 - $\alpha$ is the coefficient for the term from parameter changes,
 - $\beta$ is the coefficient for the term from harmonic interactions.
@@ -17,9 +19,11 @@ Using this convention, the bifurcation is supercritical for $\Re(\beta) < 0$, an
 We can directly compute the residual using the varf `vR()`.
 
 To build the augmented residual `Ra`, we must additionally compute the Hopf residual augmentation:
+
 $$
 g = \langle{}v,(\mathrm{i}\omega{}\mathcal{M} + \mathcal{J})w\rangle = \langle{}v,\mathcal{L}w\rangle
 $$
+
 where $g$ is the Hopf residual and $v$ and $w$ are the adjoint & direct eigenvectors.
 
 $g$, $v$, and $w$ can be found using minimially augmented systems (For more details, see Govaerts, (2000), Ch. 4, particularly page 87.):
@@ -37,13 +41,17 @@ w \\ g
 \end{bmatrix}
 \end{equation}
 $$
+
 where $q_0$, $p_0$ are initial approximations of the direct & adjoint eigenvectors.
 
 This implies:
+
 $$
 \mathcal{L}w = \mathcal{M}p_0g\qquad{}\text{and}\qquad{}(\mathcal{M}q_0)^Hw = 1
 $$
+
 so
+
 $$
 w = \mathcal{L}^{-1}\mathcal{M}p_0g\qquad{}\text{and}\qquad{}g = \frac{1}{(\mathcal{M}q_0)^H\mathcal{L}^{-1}\mathcal{M}p_0}.
 $$
@@ -65,9 +73,11 @@ v^H & h^*
 $$
 
 This implies:
+
 $$
 v^H\mathcal{L} = h^*(\mathcal{M}q_0)^H\qquad{}\text{and}\qquad{}v^H\mathcal{M}p_0 = 1
 $$
+
 or, taking the complex conjugate transpose:
 
 $$
@@ -86,10 +96,13 @@ v & h
 $$
 
 giving, equivalently,
+
 $$
      \mathcal{L}^Hv = \mathcal{M}q_0h\qquad{}\text{and}\qquad{}(\mathcal{M}p_0)^Hv = 1
 $$
+
 so
+
 $$
      v = \mathcal{L}^{-H}\mathcal{M}q_0h\qquad{}\text{and}\qquad{}h = \frac{1}{(\mathcal{M}p_0)^H\mathcal{L}^{-H}\mathcal{M}q_0}
 $$
@@ -116,7 +129,9 @@ $$
 \end{bmatrix},
 \end{equation}
 $$
+
 where $g = v^H\mathcal{L}w$. In real arithmetic, this gives:
+
 $$
 \begin{align*}
     \mathcal{J}\delta{}q + \frac{\partial \mathcal{J}}{\partial\lambda}\delta\lambda &=\mathcal{R} \\
@@ -124,7 +139,9 @@ $$
     -\Im\left(\frac{\partial{}g}{\partial q}\right)\delta{}q + \Im\left(\frac{\partial g}{\partial \lambda}\right)\delta\lambda + \Im\left(\frac{\partial g}{\partial \omega}\right)\delta{}\omega &= \Im(g)
 \end{align*}
 $$
+
 To determine the matrix entries, we differentiate Eq. (1) along each $z$ in $q, \lambda, \omega$ to find:
+
 $$
 \begin{equation}
 \begin{bmatrix}
@@ -140,11 +157,13 @@ $$
 $$
 
 We now left-multiply Eq. (4) by $\begin{bmatrix}v^H&h^*\end{bmatrix}$, finding due to Eq. (2) that:
+
 $$
   \frac{\partial g}{\partial z} = v^H\frac{\partial \mathcal{L}}{\partial z}w
 $$
 
 So we can write Eq. (3) explicitly as
+
 $$
 \begin{bmatrix}
 \mathcal{J} & \frac{\partial\mathcal{J}}{\partial \lambda} & 0 \\

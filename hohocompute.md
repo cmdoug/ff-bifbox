@@ -4,6 +4,7 @@ Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.dougla
 This script computes the normal form at a non-degenerate Hopf-Hopf point.
 
 The normal form is written for the complex amplitudes $Y = A_1\exp(\mathrm{i}\omega_1t)$ and $Z = A_2\exp(\mathrm{i}\omega_2t)$ as:
+
 $$
 \begin{align*}
     \frac{dY}{dt} &= \alpha_1\delta{}\lambda{}Y + \mathrm{i}\omega_1Y + \beta_1Y|Y|^2 + \gamma_{11}Y|Z|^2 + \gamma_{12}Z^2 + \gamma_{13}Z^3\\
