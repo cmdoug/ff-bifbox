@@ -6,7 +6,7 @@ This script computes the normal form at a non-degenerate Hopf point.
 The normal form is written for the complex amplitude $Z = A \exp(\mathrm{i} \omega t)$ as:
 
 $$
-\frac{dZ}{dt} = \alpha \cdot \delta\lambda Z + \mathrm{i} \omega Z+ \beta Z |Z|^2
+\frac{dZ}{dt} = \alpha \cdot \delta\lambda Z + \mathrm{i} \omega Z + \beta Z |Z|^2
 $$
 
 where:
@@ -65,7 +65,7 @@ Similarly, we can find the adjoint eigenmode using the related system:
 
 $$
 \begin{bmatrix}
-v^H & h^{*}
+v^H & h^{\ast}
 \end{bmatrix}\begin{bmatrix}
 -\mathcal{L} & \mathcal{M}p_0 \\
 (\mathcal{M}q_0)^H & 0
@@ -77,7 +77,7 @@ $$
 This implies:
 
 $$
-v^H\mathcal{L} = h^{*}(\mathcal{M}q_0)^H\qquad{}\text{and}\qquad{}v^H\mathcal{M}p_0 = 1
+v^H\mathcal{L} = h^{\ast}(\mathcal{M}q_0)^H\qquad{}\text{and}\qquad{}v^H\mathcal{M}p_0 = 1
 $$
 
 or, taking the complex conjugate transpose:
@@ -112,7 +112,7 @@ $$
 
 At $h = 0$, we have $\mathcal{L}^Hv = 0$ and $(\mathcal{M}p_0)^Hv = 1$, so $v^H\mathcal{L} = 0$ and $v^H\mathcal{M}p_0 = 1$.
 
-It can then be confirmed that $g = v^H\mathcal{L}w$, $h = w^H\mathcal{L}^Hv$ and therefore that $g = h^{*}$.
+It can then be confirmed that $g = v^H\mathcal{L}w$, $h = w^H\mathcal{L}^Hv$ and therefore that $g = h^{\ast}$.
 
 #### JACOBIAN CONSTRUCTION IN MINIMALLY AUGMENTED FORMULATION
 Having computed the RHS of the augmented system in `funcRa`, we now have to build the complex augmented Jacobian matrix for the Newton scheme:
@@ -162,7 +162,7 @@ $$
 \end{equation}
 $$
 
-We now left-multiply Eq. (4) by $\begin{bmatrix}v^H&h^{*}\end{bmatrix}$, finding due to Eq. (2) that:
+We now left-multiply Eq. (4) by $\begin{bmatrix}v^H & h^{\ast}\end{bmatrix}$, finding due to Eq. (2) that:
 
 $$
 \frac{\partial g}{\partial z} = v^H\frac{\partial \mathcal{L}}{\partial z}w
@@ -178,8 +178,8 @@ $$
 \end{bmatrix}
 \begin{bmatrix}
 \delta{}q \\
-\delta{}\lambda \\
-\delta{}\omega
+\delta\lambda \\
+\delta\omega
 \end{bmatrix} = \begin{bmatrix}
 \mathcal{R} \\
 \Re(g) \\
