@@ -6,10 +6,10 @@ This script computes the normal form at a non-degenerate fold–Hopf point.
 The normal form is written for the complex amplitude $Y = A \exp(\mathrm{i} \omega t)$ and the real amplitude $Z$ as:
 
 $$
-\begin{aligned}
+\begin{align*}
 \frac{dY}{dt} &= \alpha_1 \cdot \delta\lambda Y + \mathrm{i} \omega Y + \beta_1 Y |Y|^2 + \gamma_{12} Y Z + \gamma_{13} Y Z^2 \\
 \frac{dZ}{dt} &= \alpha_2 \cdot \delta\lambda + \beta_{22} Z^2 + \beta_{23} Z^3 + \gamma_{22} |Y|^2 + \gamma_{23} Z |Y|^2
-\end{aligned}
+\end{align*}
 $$
 
 where:

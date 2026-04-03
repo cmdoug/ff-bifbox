@@ -137,11 +137,11 @@ $$
 where $g = v^H\mathcal{L}w$. In real arithmetic, this gives:
 
 $$
-\begin{aligned}
+\begin{align*}
     \mathcal{J}\delta{}q + \frac{\partial \mathcal{J}}{\partial\lambda}\delta\lambda &= \mathcal{R} \\
     \Re\left(\frac{\partial{}g}{\partial q}\right)\delta{}q + \Re\left(\frac{\partial g}{\partial \lambda}\right)\delta\lambda + \Re\left(\frac{\partial g}{\partial \omega}\right)\delta{}\omega &= \Re(g) \\
     -\Im\left(\frac{\partial{}g}{\partial q}\right)\delta{}q + \Im\left(\frac{\partial g}{\partial \lambda}\right)\delta\lambda + \Im\left(\frac{\partial g}{\partial \omega}\right)\delta{}\omega &= \Im(g)
-\end{aligned}
+\end{align*}
 $$
 
 To determine the matrix entries, we differentiate Eq. (1) along each $z$ in $q, \lambda, \omega$ to find:
