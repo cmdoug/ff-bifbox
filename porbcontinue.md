@@ -1,0 +1,456 @@
+# porbcontinue.md
+Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
+
+## EXAMPLE USAGE:
+### Continue input file along parameter without mesh adaptation:
+```sh
+ff-mpirun -np 4 porbcontinue.md -fi <FILEIN> -param <PARAM>
+```
+### Continue input file along parameter with mesh adaptation:
+```sh
+ff-mpirun -np 4 porbcontinue.md -fi <FILEIN> -param <PARAM> -mo <MESHOUT>
+```
+
+NOTE: This file should not be changed unless you know what you're doing.
+
+SEE ALSO: [porbcompute.md](./porbcompute.md), [porbdeflate.md](./porbdeflate.md), [floqcompute.md](./floqcompute.md)
+
+```freefem
+load "iovtk"
+load "PETSc"
+include "settings.idp"
+include "macros_bifbox.idp"
+// arguments
+string meshin = getARGV("-mi", ""); // input meshfile with extension
+string meshout = getARGV("-mo", "");
+string filein = getARGV("-fi", "");
+string branchfilein = getARGV("-fi2", "");
+string fileout = getARGV("-fo", filein);
+int contorder = getARGV("-contorder", 1);
+int select = getARGV("-select", 1);
+bool zerofreq = getARGV("-zero", 0);
+int count = getARGV("-count", 0);
+int savecount = getARGV("-scount", 1);
+int maxcount = getARGV("-maxcount", 100);
+real h0 = getARGV("-h0", 1.0);
+string param = getARGV("-param", "");
+string adaptto = getARGV("-adaptto", "0");
+real fmax = getARGV("-fmax", 2.0);
+real kappamax = getARGV("-kmax", 0.5);
+real deltamax = getARGV("-dmax", 4.0);
+real anglemax = getARGV("-amax", 30.)*pi/180.0;
+real monotone = getARGV("-mono", 1.0);
+real eps = getARGV("-eps", 1e-7);
+bool stricttangent = bool(getARGV("-stricttangent", 1));
+int snesmaxit = getARGV("-snes_max_it", 10);
+string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
+int Nh = getARGV("-Nh", 0); //if 0, will read Nh from file. In practice, Nh must be at least 1, otherwise use basecompute.md
+int blocks = getARGV("-blocks", 1); //if blocks = 1, use monolithic LU; if blocks = N w/ 2 <= N <= Nh+1, use block preconditioner with N blocks
+int refactor = getARGV("-refact", snesmaxit);
+real paramtarget = getARGV("-paramtarget",1.0);
+real[int] sym0(sym.n);
+real omega;
+bool stopflag = false;
+bool forcesave = false;
+
+// Load mesh, make FE basis
+string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension
+string branchfileroot, branchfileext = parsefilename(branchfilein, branchfileroot); //extract file name and extension
+parsefilename(fileout, fileout); // trim extension from output file, if given
+if(fileext == "floq"){
+  filein = readbasename(workdir + filein);
+  fileext = parsefilename(filein, fileroot);
+}
+if(meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
+string meshroot, meshext = parsefilename(meshin, meshroot);
+parsefilename(meshout, meshroot); // trim extension from output mesh, if given
+if(count > 0) {
+  fileroot = fileroot(0:fileroot.rfind("_" + count)-1); // get file root
+  meshroot = meshroot(0:meshroot.rfind("_" + count)-1); // get file root
+}
+assert(fileext == "porb" || fileext == "hopf" || fileext == "foho" || fileext == "hoho");
+Th = readmeshN(workdir + meshin);
+Thg = Th;
+DmeshCreate(Th);
+restu = restrict(XMh, XMhg, n2o);
+XMh defu(ub);
+XMh<complex> defu(um), defu(um2), defu(um3);
+complex[int, int] uh(um[].n, max(1, Nh)), umh(um[].n, max(1, Nh));
+if(count == 0) {
+  if (fileext == "porb") {
+    ub[] = loadporb(fileroot, meshin, uh, sym0, omega, Nh);
+  }
+  else if(fileext == "hopf") {
+    complex[string] alpha;
+    complex beta;
+    complex[int] qma;
+    ub[] = loadhopf(fileroot, meshin, um[], qma, sym0, omega, alpha, beta);
+    uh(:, 0) = um[];
+  }
+  else if(fileext == "foho") {
+    real[string] alpha2;
+    real beta22, beta23, gamma22, gamma23;
+    complex[string] alpha;
+    complex beta;
+    complex gamma12, gamma13;
+    real[int] q2m, q2ma;
+    complex[int] qma;
+    ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+    uh(:, 0) = um[];
+  }
+  else if(fileext == "hoho") {
+    real omegaN;
+    complex[string] alpha, alphaN;
+    complex beta, betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+    complex[int] qma, qNm, qNma;
+    if(select == 1){
+      ub[] = loadhoho(fileroot, meshin, um[], qma, qNm, qNma, sym0, sym, omega, omegaN, alpha, alphaN, beta, betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+    }
+    else if(select == 2){
+      ub[] = loadhoho(fileroot, meshin, qNm, qNma, um[], qma, sym, sym0, omegaN, omega, alphaN, alpha, betaN, beta, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+    }
+    uh(:, 0) = um[];  
+  }
+  saveporb(filein, (savecount > 0 ? fileout : ""), meshin, sym0, omega, Nh, false, false);
+}
+else {
+  ub[] = loadporb(fileroot + "_" + count, meshin, uh, sym0, omega, Nh);
+}
+if (branchfilein != ""){
+  if(branchfileext == "porb") {
+    real omega1;
+    int Nh1;
+    um2[].re = loadporb(branchfileroot, meshin, umh, sym0, omega1, Nh1);
+  }
+}
+Nh = max(1, Nh); // Nh must be at least 1, otherwise use basecompute.md
+real[int] paramvals(2-zerofreq);
+paramvals(0) = zerofreq ? 0.0 : omega;
+paramvals(1-zerofreq) = getparam(param);
+real paramdiff = paramvals(1-zerofreq) - paramtarget;
+// Create distributed Mat
+Mat J;
+createMatu(Th, J, Pk);
+complex[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
+complex iomega, iomega2, iomega3;
+include "eqns.idp"
+bool adaptflag, adapt = false;
+if(meshout != "")  adapt = true;  // if output meshfile is given, adapt mesh
+meshout = meshin; // if no adaptation
+// Build bordered block matrix from only Mat components
+Mat JHBa, JHB((1+2*Nh)*J.n, (1+2*Nh)*J.n), dwHB((1+2*Nh)*J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
+if(zerofreq) JHBa = JHB;
+else JHBa = [[JHB, dwHB],[dwHB', 0]];
+Mat JlPMa(JHBa.n, mpirank == 0 ? 1 : 0), yqPMa(JHBa.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
+Mat JHBaa = [[JHBa, JlPMa],[yqPMa', -1.0]]; // make dummy Jacobian
+
+real[int] RHB(JHB.n), yqP(JHBa.n), yqP0(JHBa.n);
+int ret, it = 0;
+real f, kappa, cosalpha, res, delta, maxdelta;
+// FUNCTIONS
+  func PetscScalar[int] funcRa(PetscScalar[int]& qPETSc) {
+      ChangeNumbering(J, ub[], qPETSc(0:J.n-1), inverse = true, exchange = true);
+      for (int nh = 0; nh < Nh; nh++)
+        ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], qPETSc((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true, exchange = true);
+      if(mpirank == 0) paramvals = qPETSc(JHB.n:JHBaa.n-1);
+      broadcast(processor(0), paramvals);
+      omega = zerofreq ? 0.0 : paramvals(0);
+      updateparam(param, paramvals(1-zerofreq));
+      PetscScalar[int] RPETSc(JHBaa.n);
+      ResidualHB(RHB, J, ub, uh, sym0, omega);
+      RPETSc(0:JHB.n-1) = RHB;
+      if(mpirank == 0) RPETSc(JHB.n:JHBaa.n-1) = 0.0;
+      return RPETSc;
+  }
+
+  func int funcJa(PetscScalar[int]& qPETSc) {
+      ChangeNumbering(J, ub[], qPETSc(0:J.n-1), inverse = true, exchange = true);
+      for (int nh = 0; nh < Nh; nh++)
+        ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], qPETSc((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true, exchange = true);
+      if(mpirank == 0) paramvals = qPETSc(JHB.n:JHBaa.n-1);
+      broadcast(processor(0), paramvals);
+      omega = zerofreq ? 0.0 : paramvals(0);
+      updateparam(param, paramvals(1-zerofreq));
+      if (it <= refactor) JacobianHB(JHB, J, ub, uh, sym0, omega);
+      if (contorder > 0){
+        updateparam(param, paramvals(1-zerofreq) + eps);
+        ResidualHB(yqP, J, ub, uh, sym0, omega);
+        updateparam(param, paramvals(1-zerofreq));
+        yqP(0:JHB.n-1) -= RHB;
+        yqP /= eps;
+        if (mpirank == 0 && !zerofreq) yqP(JHBa.n-1) = 0.0;
+      }
+      if (zerofreq) JHBa = JHB;
+      else {
+        domegaResidualHB(RHB, J, ub, uh, sym0);
+        matrix<PetscScalar> tempPms = [[RHB]];
+        ChangeOperator(dwHB, tempPms, parent = JHBa); // send to Mat
+      }
+      if (contorder > 0){
+        matrix<PetscScalar> tempPms = [[yqP]]; // dense array to sparse matrix
+        ChangeOperator(JlPMa, tempPms, parent = JHBaa); // send to Mat
+        KSPSolve(JHBa, yqP, yqP); // compute tangent vector in PETSc numbering
+        tempPms = [[yqP]]; // dense array to sparse matrix
+        ChangeOperator(yqPMa, tempPms, parent = JHBaa); // send to Mat
+      }
+      return 0;
+  }
+  
+  ConvergenceCheck(param + " = " + paramvals(1-zerofreq) + ",\tomega = " + (zerofreq ? 0.0 : paramvals(0)));
+// set up Mat parameters
+real[int] fieldlabels(JHB.n);
+fieldlabels = 1.0;
+blocks = min(blocks, 1+Nh);
+for (int nh = 0; nh < Nh; nh++) fieldlabels((1+2*nh)*J.n:(3+2*nh)*J.n-1) = 1.0 + max(0, blocks + nh - Nh);
+string HBKSPparams = KSPparams;
+if (blocks > 1) HBKSPparams = "-ksp_type gmres -ksp_norm_type unpreconditioned -ksp_pc_side right -pc_type fieldsplit -pc_fieldsplit_type symmetric_multiplicative -fieldsplit_pc_type lu -ksp_gmres_cgs_refinement_type refine_ifneeded";
+string ssparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full"
+                + " -prefix_push fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
+                + " -prefix_push fieldsplit_0_ " + (zerofreq ? "" : ("-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full -prefix_pop"
+                + " -prefix_push fieldsplit_0_fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
+                + " -prefix_push fieldsplit_0_fieldsplit_0_ ")) + HBKSPparams + " -prefix_pop";
+set(JHBaa, sparams = ssparams, setup = 1);
+if (zerofreq) set(JHBa, prefix = "fieldsplit_0_", fields = fieldlabels);
+else {
+  set(JHBa, prefix = "fieldsplit_0_", setup = 1, parent = JHBaa);
+  set(JHB, prefix = "fieldsplit_0_fieldsplit_0_", fields = fieldlabels, parent = JHBa);
+}
+// PREDICTOR
+real[int] qa(JHBaa.n), qa0(JHBaa.n);
+real[int] temp;
+ChangeNumbering(J, ub[], temp);
+qa0(0:J.n-1) = temp;
+if(mpirank == 0) qa0(JHB.n:JHBaa.n-1) = paramvals;
+if (contorder > 0 && fileext == "porb") {
+  for (int nh = 0; nh < Nh; nh++){
+    ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], temp);
+    qa0((1+2*nh)*J.n:(3+2*nh)*J.n-1) = temp;
+  }
+  ResidualHB(RHB, J, ub, uh, sym0, omega);
+  funcJa(qa0);
+  if (branchfilein != "") {
+    ChangeNumbering(J, um2[].re, temp);
+    yqP(0:J.n-1) = temp;
+    for (int nh = 0; nh < Nh; nh++){
+      ChangeNumbering([J, J],[umh(:, nh).re, umh(:, nh).im], temp);
+      yqP(J.n:3*J.n-1) = temp;
+    }
+    if (mpirank == 0 && !zerofreq) yqP(JHBa.n-1) = 0.0;
+  }
+}
+else if (contorder > 0) {
+  ChangeNumbering([J, J],[um[].re, um[].im], temp);
+  yqP(J.n:3*J.n-1) = temp;
+}
+else {
+  for (int nh = 0; nh < Nh; nh++){
+    ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], temp);
+    qa0((1+2*nh)*J.n:(3+2*nh)*J.n-1) = temp;
+  }
+  if (branchfilein != "") {
+    ChangeNumbering(J, um2[].re, temp);
+    qa0(0:J.n-1) += temp;
+    for (int nh = 0; nh < Nh; nh++){
+      ChangeNumbering([J, J],[umh(:, nh).re, umh(:, nh).im], temp);
+      qa0(J.n:3*J.n-1) += temp;
+    }
+    if (mpirank == 0 && !zerofreq) yqP(JHBa.n-1) = 0.0;
+  }
+  matrix<PetscScalar> tempPms = [[yqP]];
+  ChangeOperator(JlPMa, tempPms, parent = JHBaa); // send to Mat
+  ChangeOperator(yqPMa, tempPms, parent = JHBaa); // send to Mat
+}
+yqP0 = yqP;
+while (!stopflag){
+  qa = qa0;
+  if (contorder == 0 && mpirank == 0) qa(JHBaa.n-1) += h0;
+  else if (contorder > 0) {
+    real h, hl = (yqP0'*yqP0);
+    mpiAllReduce(hl, h, mpiCommWorld, mpiSUM);
+    h = h0/sqrt(h + (count > 0 || fileext == "porb"));
+    qa(0:JHBa.n-1) -= (h*yqP0);
+    if (mpirank == 0 && (count > 0 || fileext == "porb")) qa(JHBaa.n-1) += h;
+  }
+  // CORRECTOR LOOP
+  adaptflag = false;
+  SNESSolve(JHBaa, funcJa, funcRa, qa, convergence = funcConvergence, reason = ret,
+            sparams = "-snes_linesearch_type " + sneslinesearchtype + " -snes_converged_reason -options_left no -snes_max_it " + snesmaxit); // solve nonlinear problem with SNES
+  if (ret > 0) {
+    ++count;
+    if (maxcount > 0) stopflag = (count >= maxcount);
+    else if ((paramvals(1-zerofreq) - paramtarget)*paramdiff <= 0) stopflag = true;
+    h0 /= f;
+    if (cosalpha < 0 && contorder > 0) {
+      h0 *= -1.0;
+      if (count == 1 && mpirank == 0) cout << "\tIncorrect initial orientation. Orientation reversed." << endl;
+      else if (count > 1 && mpirank == 0) {
+        cout << "\tFold bifurcation detected. Orientation reversed." << endl;
+        forcesave = true;
+      }
+    }
+    if (adapt && (count % savecount == 0)){
+      meshout = meshroot + "_" + count + "." + meshext;
+      ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true);
+      for (int nh = 0; nh < Nh; nh++)
+        ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], qa((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true);
+      if(mpirank == 0) paramvals = qa(JHB.n:JHBaa.n-1);
+      broadcast(processor(0), paramvals);
+      omega = zerofreq ? 0.0 : paramvals(0);
+      updateparam(param, paramvals(1-zerofreq));
+      ChangeNumbering(J, um2[].re, yqP(0:J.n-1), inverse = true);
+      real yomega;
+      if(mpirank == 0 && !zerofreq) yomega = yqP(JHBa.n-1);
+      XMhg defu(uG), defu(yG), defu(u1rG), defu(u1iG), defu(u2rG), defu(u2iG), defu(tempu), defu(tempu2);
+      XMhg<complex> defu(cplxu), defu(cplxu2);
+      complex[int, int] yhG(uG[].n, Nh), uhG(uG[].n, Nh); // create private global FE functions
+      u2iG[](restu) = ub[]; // populate local portion of global soln
+      mpiAllReduce(u2iG[], uG[], mpiCommWorld, mpiSUM);
+      u2iG[](restu) = um2[].re; // populate local portion of global tangent vector
+      mpiAllReduce(u2iG[], yG[], mpiCommWorld, mpiSUM);
+      for (int nh = 0; nh < Nh; nh++){
+        cplxu[](restu) = uh(:, nh);
+        mpiAllReduce(cplxu[], uhG(:, nh), mpiCommWorld, mpiSUM);
+        complex[int] temp(ub[].n);
+        ChangeNumbering([J, J], [temp.re, temp.im], yqP((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true);
+        cplxu[](restu) = temp;
+        mpiAllReduce(cplxu[], yhG(:, nh), mpiCommWorld, mpiSUM);
+      }
+      u1rG[] = uhG(:, 0).re;
+      u1iG[] = uhG(:, 0).im;
+      if (Nh > 1){
+        u2rG[] = uhG(:, 1).re;
+        u2iG[] = uhG(:, 1).im;
+      }
+      if(mpirank == 0) {
+        IFMACRO(dimension,2)
+          if(adaptto == "0") Thg = adaptmesh(Thg, adaptu(uG), adaptmeshoptions);
+          else if(adaptto == "0y") Thg = adaptmesh(Thg, adaptu(uG), adaptu(yG), adaptmeshoptions);
+          else if(adaptto == "01") Thg = adaptmesh(Thg, adaptu(uG), adaptu(u1rG), adaptu(u1iG), adaptmeshoptions);
+          else if(Nh > 1 && adaptto == "02") Thg = adaptmesh(Thg, adaptu(uG), adaptu(u2rG), adaptu(u2iG), adaptmeshoptions);
+          else if(Nh > 1 && adaptto == "012") Thg = adaptmesh(Thg, adaptu(uG), adaptu(u1rG), adaptu(u1iG), adaptu(u2rG), adaptu(u2iG), adaptmeshoptions);
+        ENDIFMACRO
+        IFMACRO(dimension,3)
+          //NOTE: 3D mesh adaptation is still under development.
+          load "mshmet"
+          load "mmg"
+          real anisomax = getARGV("-anisomax",1.0);
+          real[int] met((bool(anisomax > 1) ? 6 : 1)*Thg.nv);
+          if(adaptto == "0") met = mshmet(Thg, adaptu(uG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+          else if(adaptto == "0y") met = mshmet(Thg, adaptu(uG), adaptu(yG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+          else if(adaptto == "01") met = mshmet(Thg, adaptu(uG), adaptu(u1rG), adaptu(u1iG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0), hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+          else if(Nh > 1 && adaptto == "02") met = mshmet(Thg, adaptu(uG), adaptu(u2rG), adaptu(u2iG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0), hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+          else if(Nh > 1 && adaptto == "012") met = mshmet(Thg, adaptu(uG), adaptu(u1rG), adaptu(u1iG), adaptu(u2rG), adaptu(u2iG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0), hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+          if(anisomax > 1.0) {
+            load "aniso"
+            boundaniso(6, met, anisomax);
+          }
+          Thg = mmg3d(Thg, metric = met, hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), hgrad = -1, verbose = verbosity-(verbosity==0));
+        ENDIFMACRO
+      }
+      broadcast(processor(0), Thg);
+      defu(uG) = defu(uG);
+      defu(yG) = defu(yG);
+      complex[int, int] yhG2(uG[].n, Nh), uhG2(uG[].n, Nh); // create private global FE functions
+      for (int nh = 0; nh < Nh; nh++){
+        cplxu[] = uhG(:, nh);
+        defu(cplxu2) = defu(cplxu);
+        uhG2(:, nh) = cplxu2[];
+        cplxu[] = yhG(:, nh);
+        defu(cplxu2) = defu(cplxu);
+        yhG2(:, nh) = cplxu2[];
+      }
+      Th = Thg;
+      Mat Adapt;
+      createMatu(Th, Adapt, Pk);
+      J = Adapt;
+      defu(ub) = initu(0.0);
+      defu(um) = initu(0.0); // set local values to zero
+      defu(um2) = initu(0.0); // set local values to zero
+      defu(um3) = initu(0.0); // set local values to zero
+      uh.resize(um[].n, Nh);
+      yqP.resize((1+2*Nh)*J.n + (!zerofreq && mpirank == 0));
+      restu.resize(ub[].n); // Change size of restriction operator
+      restu = restrict(XMh, XMhg, n2o); // Compute new restriction from global mesh to local mesh
+      ub[] = uG[](restu);
+      um2[].re = yG[](restu);
+      ChangeNumbering(J, um2[].re, temp);
+      yqP(0:J.n-1) = temp;
+      fieldlabels.resize((1+2*Nh)*J.n);
+      fieldlabels = 1.0;
+      for (int nh = 0; nh < Nh; nh++) {
+        cplxu2[] = uhG2(:, nh);
+        um[] = cplxu2[](restu);
+        uh(:, nh) = um[];
+        cplxu2[] = yhG2(:, nh);
+        um2[] = cplxu2[](restu);
+        ChangeNumbering([J, J], [um2[].re, um2[].im], temp);
+        yqP((1+2*nh)*J.n:(3+2*nh)*J.n-1) = temp;
+        fieldlabels((1+2*nh)*J.n:(3+2*nh)*J.n-1) = 1.0 + max(0, blocks + nh - Nh);
+      }
+      Mat Adapt1((1+2*Nh)*J.n, (1+2*Nh)*J.n), Adapt2((1+2*Nh)*J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
+      JHB = Adapt1;
+      dwHB = Adapt2;
+      if(zerofreq) JHBa = JHB;
+      else JHBa = [[JHB, dwHB],[dwHB', 0]];
+      Mat Adapt3(JHBa.n, mpirank == 0 ? 1 : 0), Adapt4(JHBa.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
+      JlPMa = Adapt3;
+      yqPMa = Adapt4;
+      JHBaa = [[JHBa, JlPMa],[yqPMa', -1.0]]; // make dummy Jacobian
+      set(JHBaa, sparams = ssparams, setup = 1);
+      if (zerofreq) set(JHBa, prefix = "fieldsplit_0_", fields = fieldlabels, parent = JHBaa);
+      else {
+        set(JHBa, prefix = "fieldsplit_0_", parent = JHBaa, setup = 1);
+        set(JHB, prefix = "fieldsplit_0_fieldsplit_0_", fields = fieldlabels, parent = JHBa);
+      }
+      qa.resize(JHBaa.n);
+      ChangeNumbering(J, ub[], temp);
+      qa(0:J.n-1) = temp;
+      for (int nh = 0; nh < Nh; nh++){
+        ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], temp);
+        qa((1+2*nh)*J.n:(3+2*nh)*J.n-1) = temp;
+      }
+      if(mpirank == 0) {
+        qa(JHB.n:JHBaa.n-1) = paramvals;
+        if(!zerofreq) yqP(JHBa.n-1) = yomega;
+      }
+      RHB.resize(JHB.n);
+      yqP0.resize(JHBa.n);
+      yqP0 = yqP;
+      qa0.resize(JHBaa.n);
+      if (contorder == 0) {
+        matrix<PetscScalar> tempPms = [[yqP]];
+        ChangeOperator(JlPMa, tempPms, parent = JHBaa); // send to Mat
+        ChangeOperator(yqPMa, tempPms, parent = JHBaa); // send to Mat
+      }
+      adaptflag = true;
+      SNESSolve(JHBaa, funcJa, funcRa, qa, convergence = funcConvergence, reason = ret,
+                sparams = "-snes_linesearch_type " + sneslinesearchtype + " -snes_converged_reason -options_left no"); // solve nonlinear problem with SNES
+      assert(ret > 0);
+      if(mpirank==0) { // Save adapted mesh
+        cout << "  Saving adapted mesh '" + meshout + "' in '" + workdir + "'." << endl;
+        savemesh(Thg, workdir + meshout);
+      }
+    }
+    ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true);
+    for (int nh = 0; nh < Nh; nh++)
+      ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], qa((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true);
+    if (mpirank == 0) paramvals = qa(JHB.n:JHBaa.n-1);
+    broadcast(processor(0), paramvals);
+    omega = zerofreq ? 0.0 : paramvals(0);
+    updateparam(param, paramvals(1-zerofreq));
+    saveporb(fileout + "_" + count + (forcesave ? "specialpt" : ""), (savecount > 0 ? fileout : ""), meshout, sym0, omega, Nh, ((count % savecount == 0) || forcesave || stopflag), true);
+    if (stopflag) break;
+    forcesave = false;
+    it = 0;
+    if (stricttangent) funcJa(qa);
+    else {
+      ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true);
+      for (int nh = 0; nh < Nh; nh++)
+        ChangeNumbering([J, J], [uh(:, nh).re, uh(:, nh).im], qa((1+2*nh)*J.n:(3+2*nh)*J.n-1), inverse = true, exchange = true);
+    }
+    yqP0 = yqP;
+    qa0 = qa;
+  }
+  else h0 /= fmax;
+}
+```

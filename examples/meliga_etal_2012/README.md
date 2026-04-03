@@ -32,12 +32,12 @@ ln -sf examples/meliga_etal_2012/settings_meliga_etal_2012.idp settings.idp
 `ff-bifbox` uses FreeFEM for adaptive meshing during the solution process, but it needs an initial mesh to adaptively refine.
 #### CASE 1: Gmsh is installed - build initial mesh directly from `.geo` files
 ```sh
-FreeFem++-mpi -v 0 importgmsh.edp -gmshdir examples/meliga_etal_2012 -dir $workdir -mi vortex.geo
+FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/meliga_etal_2012 -dir $workdir -mi vortex.geo
 ```
 Note: since no `-mo` argument is specified, the output files (`.msh`) inherit the names of their parents (`.geo`).
 #### CASE 2: Gmsh is not installed - build initial mesh using BAMG in FreeFEM
 ```sh
-FreeFem++-mpi -v 0 examples/meliga_etal_2012/vortex.edp -mo $workdir/vortex
+FreeFem++-mpi -v 0 examples/meliga_etal_2012/vortex.md -mo $workdir/vortex
 ```
 
 ## Perform parallel computations using `ff-bifbox`
@@ -45,31 +45,31 @@ FreeFem++-mpi -v 0 examples/meliga_etal_2012/vortex.edp -mo $workdir/vortex
 ### Steady axisymmetric dynamics
 1. Compute base states on the created mesh at $Re=200$ from default guess
 ```sh
-ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi vortex.msh -fo vortex -1/Re 0.005 -S 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi vortex.msh -fo vortex -1/Re 0.005 -S 0
 ```
 2. Continue base state along the parameter $S$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.edp -v 0 -dir $workdir -fi vortex.base -fo vortex -param S -h0 1 -scount 4 -maxcount 40 -mo vortexadapt
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi vortex.base -fo vortex -param S -h0 1 -scount 4 -maxcount 40 -mo vortexadapt
 ```
 
 ### Unsteady 3-D dynamics
 1. Compute base state near the double Hopf point
 ```sh
-ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -mi vortex.msh -fo vortexDH -1/Re 0.0139 -S 1
-ff-mpirun -np $nproc basecompute.edp -v 0 -dir $workdir -fi vortexDH.base -fo vortexDH -S 1.44
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi vortex.msh -fo vortexDH -1/Re 0.0139 -S 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi vortexDH.base -fo vortexDH -S 1.44
 ```
 2. Compute near-critical modes
 ```sh
-ff-mpirun -np $nproc modecompute.edp -v 0 -dir $workdir -fo vortexm1 -fi vortexDH.base -sym -1 -eps_target 0+1i -eps_pos_gen_non_hermitian
-ff-mpirun -np $nproc modecompute.edp -v 0 -dir $workdir -fo vortexm2 -fi vortexDH.base -sym -2 -eps_target 0+2i -eps_pos_gen_non_hermitian
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fo vortexm1 -fi vortexDH.base -sym -1 -eps_target 0+1i -eps_pos_gen_non_hermitian
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fo vortexm2 -fi vortexDH.base -sym -2 -eps_target 0+2i -eps_pos_gen_non_hermitian
 ```
 3. Compute Hopf-Hopf point assuming non-resonant interaction
 ```sh
-ff-mpirun -np $nproc hohocompute.edp -v 0 -dir $workdir -fo vortexDH -fi vortexm2.mode -fi2 vortexm1.mode -param S -param2 1/Re -nf 0
-ff-mpirun -np $nproc hohocompute.edp -v 0 -dir $workdir -fo vortexDH -fi vortexDH.hoho -param S -param2 1/Re -adaptto bda -mo vortexm1m2adapt
+ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDH -fi vortexm2.mode -fi2 vortexm1.mode -param S -param2 1/Re -nf 0
+ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDH -fi vortexDH.hoho -param S -param2 1/Re -adaptto bda -mo vortexm1m2adapt
 ```
 
 4. Compute Hopf-Hopf point assuming $2:1$ resonant interaction
 ```sh
-ff-mpirun -np $nproc hohocompute.edp -v 0 -dir $workdir -fo vortexDH21res -fi vortexDH.hoho -param S -param2 1/Re -res1x 2
+ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDH21res -fi vortexDH.hoho -param S -param2 1/Re -res1x 2
 ```

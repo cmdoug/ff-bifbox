@@ -1,0 +1,1114 @@
+# hohocompute.md
+Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
+
+This script computes the normal form at a non-degenerate Hopf–Hopf point.
+
+The normal form is written for the complex amplitudes $Y = A_1 \exp(\mathrm{i} \omega_1 t)$ and $Z = A_2\exp(\mathrm{i} \omega_2 t)$ as:
+
+$$
+\begin{align*}
+\frac{dY}{dt} &= \alpha_1 \cdot \delta\lambda Y + \mathrm{i} \omega_1 Y + \beta_1 Y |Y|^2 + \gamma_{11} Y |Z|^2 + \gamma_{12} Z^2 + \gamma_{13} Z^3 \\
+\frac{dZ}{dt} &= \alpha_2 \cdot \delta\lambda Z + \mathrm{i} \omega_2 Z + \beta_2 Z |Z|^2 + \gamma_{21} Z |Y|^2 + \gamma_{22} Y Z^{\ast} + \gamma_{23} Y (Z^{\ast})^2
+\end{align*}
+$$
+
+where:
+- $\alpha_i$ are the coefficients for the terms from parameter changes,
+- $\delta\lambda$ are the parameter increments,
+- $\beta_i$ are the coefficients for the terms from self-coupling harmonic interactions,
+- $\gamma_{ij}$ are the coefficients for the terms from cross-coupling harmonic interactions.
+
+## EXAMPLE USAGE:
+### Initialize with two mode or hopf files, solve on same mesh
+```sh
+ff-mpirun -np 4 hohocompute.md -param <PARAM1> -param2 <PARAM2> -fi <FILEIN> -fi2 <FILEIN2> -fo <FILEOUT1>
+```
+
+### Initialize with hoho from file, adapt mesh to solution
+```sh
+ff-mpirun -np 4 hohocompute.md -param <PARAM1> -param2 <PARAM2> -fi <FILEIN> -fo <FILEOUT1> -mo <MESHOUT>
+```
+
+NOTE: This file should not be changed unless you know what you're doing.
+
+SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [porbcontinue.md](./porbcontinue.md)
+
+```freefem
+load "iovtk"
+load "PETSc-complex"
+include "settings.idp"
+include "macros_bifbox.idp"
+// arguments
+string meshin = getARGV("-mi", ""); // input meshfile with extension
+string meshout = getARGV("-mo", "");
+string filein = getARGV("-fi", "");
+string filein2 = getARGV("-fi2", "");
+string basefilein = getARGV("-bfi", "");
+string fileout = getARGV("-fo", "");
+bool normalform = getARGV("-nf", 1);
+bool wnlsave = getARGV("-wnl", 0);
+int select = getARGV("-select", 1);
+int select2 = getARGV("-select2", 1);
+bool zerofreq = getARGV("-zero", 0);
+bool zerofreq2 = getARGV("-zero2", 0);
+int res1x = getARGV("-res1x", 0);
+string param = getARGV("-param", "");
+string param2 = getARGV("-param2", "");
+string adaptto = getARGV("-adaptto", "b");
+real eps = getARGV("-eps", 1e-7);
+real eps2 = getARGV("-eps2", 1e-7);
+string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
+real TGV = getARGV("-tgv", -1);
+real[int] sym1(sym.n), sym2(sym.n);
+real omega, omega1, omega2;
+complex[string] alpha1, alpha2;
+complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+// Load mesh, make FE basis
+string fileroot1, fileext1 = parsefilename(filein, fileroot1); //extract file name and extension
+string fileroot2, fileext2 = parsefilename(filein2, fileroot2); //extract file name and extension
+parsefilename(fileout, fileout); // trim extension from output file, if given
+if((fileext1 == "mode" || fileext1 == "resp" || fileext1 == "rslv" || fileext1 == "tdls" || fileext1 == "floq") && basefilein == "") basefilein = readbasename(workdir + filein);
+string basefileroot, basefileext = parsefilename(basefilein, basefileroot);
+if(meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
+string meshroot, meshext = parsefilename(meshin, meshroot);
+parsefilename(meshout, meshroot); // trim extension from output mesh, if given
+Th = readmeshN(workdir + meshin);
+Thg = Th;
+DmeshCreate(Th);
+restu = restrict(XMh, XMhg, n2o);
+XMh<complex> defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
+if (fileext2 == "hopf") {
+  ub[].re = loadhopf(fileroot2, meshin, um2[], um3[], sym2, omega2, alpha2, beta2);
+}
+else if (fileext2 == "foho") {
+  real[string] alphaN;
+  real beta22, beta23, gamma22, gamma23;
+  complex gamma12, gamma13;
+  real[int] q2m, q2ma;
+  ub[].re = loadfoho(fileroot2, meshin, um2[], um3[], q2m, q2ma, sym2, omega2, alpha2, alphaN, beta2, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+}
+else if (fileext2 == "hoho") {
+  real omegaN;
+  complex[string] alphaN;
+  complex betaN, gammaN, gamma12, gamma13, gamma22, gamma23;
+  complex[int] qNm, qNma;
+  if(select2 == 1){
+    ub[].re = loadhoho(fileroot2, meshin, um2[], um3[], qNm, qNma, sym2, sym, omega2, omegaN, alpha2, alphaN, beta2, betaN, gammaN, gamma2, gamma12, gamma13, gamma22, gamma23);
+  }
+  else if(select2 == 2){
+    ub[].re = loadhoho(fileroot2, meshin, qNm, qNma, um2[], um3[], sym, sym2, omegaN, omega2, alphaN, alpha2, betaN, beta2, gamma2, gammaN, gamma12, gamma13, gamma22, gamma23);
+  }
+}
+else if (fileext2 == "mode") {
+  complex eigenvalue;
+  um2[] = loadmode(fileroot2, meshin, sym2, eigenvalue);
+  omega2 = imag(eigenvalue);
+}
+else if (fileext2 == "resp") {
+  um2[] = loadresp(fileroot2, meshin, sym2, omega2);
+}
+else if (fileext2 == "rslv") {
+  real gain;
+  complex[int] fm;
+  um2[] = loadrslv(fileroot2, meshin, fm, sym2, omega2, gain);
+}
+else if(fileext2 == "porb") {
+  int Nh=1;
+  complex[int, int] qh(um[].n, Nh);
+  ub[].re = loadporb(fileroot2, meshin, qh, sym2, omega2, Nh);
+  um2[] = qh(:, 0);
+}
+else if(fileext2 == "floq") {
+  int Nh=1;
+  complex[int, int] qh(um[].n, 2);
+  complex eigenvalue;
+  real omegatemp;
+  real[int] symtemp(sym.n);
+  um2[] = loadfloq(fileroot1, meshin, qh, sym1, eigenvalue, symtemp, omegatemp, Nh);
+  omega2 = imag(eigenvalue);
+}
+else if (fileext2 != "") assert(false); // invalid input filetype
+if (fileext1 == "hoho" && fileext2 == "") {
+  ub[].re = loadhoho(fileroot1, meshin, um[], uma[], um2[], um3[], sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+}
+else if (fileext1 == "hoho" && fileext2 != "") {
+  real omegaN;
+  complex[string] alphaN;
+  complex betaN, gammaN, gamma12, gamma13, gamma22, gamma23;
+  complex[int] qNm, qNma;
+  if(select == 1){
+    ub[].re = loadhoho(fileroot1, meshin, um[], uma[], qNm, qNma, sym1, sym, omega1, omegaN, alpha1, alphaN, beta1, betaN, gamma1, gammaN, gamma12, gamma13, gamma22, gamma23);
+  }
+  else if(select == 2){
+    ub[].re = loadhoho(fileroot1, meshin, qNm, qNma, um[], uma[], sym, sym1, omegaN, omega1, alphaN, alpha1, betaN, beta1, gammaN, gamma1, gamma12, gamma13, gamma22, gamma23);
+  }
+}
+else if (fileext1 == "foho") {
+  real[string] alphaN;
+  real beta22, beta23, gamma22, gamma23;
+  complex gamma12, gamma13;
+  real[int] q2m, q2ma;
+  ub[].re = loadfoho(fileroot1, meshin, um[], uma[], q2m, q2ma, sym1, omega1, alpha1, alphaN, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+}
+else if (fileext1 == "hopf") {
+  ub[].re = loadhopf(fileroot1, meshin, um[], uma[], sym1, omega1, alpha1, beta1);
+}
+else if (fileext1 == "mode") {
+  complex eigenvalue;
+  um[] = loadmode(fileroot1, meshin, sym1, eigenvalue);
+  omega1 = imag(eigenvalue);
+}
+else if (fileext1 == "resp") {
+  um[] = loadresp(fileroot1, meshin, sym1, omega1);
+}
+else if (fileext1 == "rslv") {
+  real gain;
+  complex[int] fm;
+  um[] = loadrslv(fileroot1, meshin, fm, sym1, omega1, gain);
+}
+else if(fileext1 == "porb") {
+  int Nh=1;
+  complex[int, int] qh(um[].n, Nh);
+  ub[].re = loadporb(fileroot1, meshin, qh, sym1, omega, Nh);
+  um[] = qh(:, 0);
+}
+else if(fileext1 == "floq") {
+  int Nh=1;
+  complex[int, int] qh(um[].n, 2);
+  complex eigenvalue;
+  real omegatemp;
+  real[int] symtemp(sym.n);
+  um[] = loadfloq(fileroot1, meshin, qh, sym1, eigenvalue, symtemp, omegatemp, Nh);
+  omega1 = imag(eigenvalue);
+}
+else assert(false); // invalid input filetype
+if (basefileext == "base") {
+  ub[].re = loadbase(basefileroot, meshin);
+}
+else if(basefileext == "fold") {
+  real[string] alpha;
+  real beta;
+  real[int] qm, qma;
+  ub[].re = loadfold(basefileroot, meshin, qm, qma, alpha, beta);
+}
+else if(basefileext == "hopf") {
+  real omega;
+  complex[string] alpha;
+  complex beta;
+  complex[int] qm, qma;
+  ub[].re = loadhopf(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(basefileext == "foho") {
+  real omega;
+  complex[string] alpha1;
+  complex beta1, gamma12, gamma13;
+  real[string] alpha2;
+  real beta22, beta23, gamma22, gamma23;
+  complex[int] q1m, q1ma;
+  real[int] q2m, q2ma;
+  ub[].re = loadfoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+}
+else if(basefileext == "hoho") {
+  real[int] symN(sym.n);
+  real omega1, omega2;
+  complex[string] alpha1, alpha2;
+  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex[int] q1m, q1ma, q2m, q2ma;
+  ub[].re = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, symN, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+}
+else if(basefileext == "tdns") {
+  real time;
+  ub[].re = loadtdns(basefileroot, meshin, time);
+}
+else if(basefileext == "porb") {
+  int Nh=1;
+  real omega;
+  complex[int, int] qh(um[].n, Nh);
+  ub[].re = loadporb(basefileroot, meshin, qh, sym, omega, Nh);
+}
+real[int] paramvals(4-zerofreq-zerofreq2);
+paramvals(1-zerofreq) = zerofreq ? 0.0 : omega1;
+paramvals(3-zerofreq-zerofreq2) = zerofreq2 ? 0.0 : omega2;
+paramvals(0) = getparam(param);
+paramvals(2-zerofreq) = getparam(param2);
+// Create distributed Mat
+Mat<complex> J;
+createMatu(Th, J, Pk);
+// MESH ADAPTATION
+bool adapt = false;
+if(meshout == "") meshout = meshin; // if no adaptation
+else { // if output meshfile is given, adapt mesh
+  adapt = true;
+  meshout = meshout + "." + meshext;
+  complex[int] q;
+  ChangeNumbering(J, ub[], q);
+  ChangeNumbering(J, ub[], q, inverse = true);
+  ChangeNumbering(J, um[], q);
+  ChangeNumbering(J, um[], q, inverse = true);
+  ChangeNumbering(J, uma[], q);
+  ChangeNumbering(J, uma[], q, inverse = true);
+  ChangeNumbering(J, um2[], q);
+  ChangeNumbering(J, um2[], q, inverse = true);
+  ChangeNumbering(J, um3[], q);
+  ChangeNumbering(J, um3[], q, inverse = true);
+  XMhg defu(uG), defu(umrG), defu(umiG), defu(umarG), defu(umaiG), defu(tempu), defu(um2rG), defu(um2iG), defu(um3rG), defu(um3iG), defu(uoG), defu(uo2G);
+  tempu[](restu) = ub[].re; // populate local portion of global soln
+  mpiAllReduce(tempu[], uG[], mpiCommWorld, mpiSUM);
+  tempu[](restu) = um[].re; // populate local portion of global soln
+  mpiAllReduce(tempu[], umrG[], mpiCommWorld, mpiSUM);
+  tempu[](restu) = um[].im; // populate local portion of global soln
+  mpiAllReduce(tempu[], umiG[], mpiCommWorld, mpiSUM);
+  tempu[](restu) = uma[].re; // populate local portion of global soln
+  mpiAllReduce(tempu[], umarG[], mpiCommWorld, mpiSUM);
+  tempu[](restu) = um[].im; // populate local portion of global soln
+  mpiAllReduce(tempu[], umaiG[], mpiCommWorld, mpiSUM);
+  tempu[](restu) = um2[].re; // populate local portion of global soln
+  mpiAllReduce(tempu[], um2rG[], mpiCommWorld, mpiSUM);
+  tempu[](restu) = um2[].im; // populate local portion of global soln
+  mpiAllReduce(tempu[], um2iG[], mpiCommWorld, mpiSUM);
+  tempu[](restu) = um3[].re; // populate local portion of global soln
+  mpiAllReduce(tempu[], um3rG[], mpiCommWorld, mpiSUM);
+  tempu[](restu) = um3[].im; // populate local portion of global soln
+  mpiAllReduce(tempu[], um3iG[], mpiCommWorld, mpiSUM);
+  if(mpirank == 0) {  // Perform mesh adaptation (serially) on processor 0
+    if(adaptto == "bo") {
+      defu(uoG) = initu(defu(umarG)'*defu(umarG));
+      defu(tempu) = initu(defu(umaiG)'*defu(umaiG));
+      tempu[] += uoG[];
+      tempu[] = sqrt(tempu[]);
+      uoG[] = (umrG[].*umrG[]);
+      uoG[] += (umiG[].*umiG[]);
+      uoG[] = sqrt(uoG[]);
+      uoG[] .*= tempu[];
+      defu(uo2G) = initu(defu(um3rG)'*defu(um3rG));
+      defu(tempu) = initu(defu(um3iG)'*defu(um3iG));
+      tempu[] += uo2G[];
+      tempu[] = sqrt(tempu[]);
+      uo2G[] = (um2rG[].*um2rG[]);
+      uo2G[] += (um2iG[].*um2iG[]);
+      uo2G[] = sqrt(uo2G[]);
+      uo2G[] .*= tempu[];
+    }
+    IFMACRO(dimension,2)
+      if(adaptto == "b") Thg = adaptmesh(Thg, adaptu(uG), adaptmeshoptions);
+      else if(adaptto == "bd") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umrG), adaptu(umiG), adaptu(um2rG), adaptu(um2iG), adaptmeshoptions);
+      else if(adaptto == "ba") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umarG), adaptu(umaiG), adaptu(um3rG), adaptu(um3iG), adaptmeshoptions);
+      else if(adaptto == "bda") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umrG), adaptu(umiG), adaptu(umarG), adaptu(umaiG), adaptu(um2rG), adaptu(um2iG), adaptu(um3rG), adaptu(um3iG), adaptmeshoptions);
+      else if(adaptto == "bo") Thg = adaptmesh(Thg, adaptu(uG), adaptu(uoG), adaptu(uo2G), adaptmeshoptions);
+    ENDIFMACRO
+    IFMACRO(dimension,3)
+      //NOTE: 3D mesh adaptation is still under development.
+      load "mshmet"
+      load "mmg"
+      real anisomax = getARGV("-anisomax",1.0);
+      real[int] met((bool(anisomax > 1) ? 6 : 1)*Thg.nv);
+      if(adaptto == "b") met = mshmet(Thg, adaptu(uG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "bd") met = mshmet(Thg, adaptu(uG), adaptu(umrG), adaptu(umiG), adaptu(um2rG), adaptu(um2iG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "ba") met = mshmet(Thg, adaptu(uG), adaptu(umarG), adaptu(umaiG), adaptu(um3rG), adaptu(um3iG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "bda") met = mshmet(Thg, adaptu(uG), adaptu(umrG), adaptu(umiG), adaptu(umarG), adaptu(umaiG), adaptu(um2rG), adaptu(um2iG), adaptu(um3rG), adaptu(um3iG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "bo") met = mshmet(Thg, adaptu(uG), adaptu(uoG), adaptu(uo2G), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      if(anisomax > 1.0) {
+        load "aniso"
+        boundaniso(6, met, anisomax);
+      }
+      Thg = mmg3d(Thg, metric = met, hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), hgrad = -1, verbose = verbosity-(verbosity==0));
+    ENDIFMACRO
+  }
+  broadcast(processor(0), Thg);
+  defu(uG) = defu(uG);
+  defu(umrG) = defu(umrG);
+  defu(umiG) = defu(umiG);
+  defu(umarG) = defu(umarG);
+  defu(umaiG) = defu(umaiG);
+  defu(um2rG) = defu(um2rG);
+  defu(um2iG) = defu(um2iG);
+  defu(um3rG) = defu(um3rG);
+  defu(um3iG) = defu(um3iG);
+  Th = Thg;
+  Mat<complex> Adapt;
+  createMatu(Th, Adapt, Pk);
+  J = Adapt;
+  defu(ub) = initu(0.0);
+  defu(um) = initu(0.0);
+  defu(uma) = initu(0.0);
+  defu(um2) = initu(0.0);
+  defu(um3) = initu(0.0);
+  restu.resize(ub[].n); // Change size of restriction operator
+  restu = restrict(XMh, XMhg, n2o); // Compute new restriction from global mesh to local mesh
+  ub[].re = uG[](restu);
+  um[].re = umrG[](restu);
+  um[].im = umiG[](restu);
+  uma[].re = umarG[](restu);
+  uma[].im = umaiG[](restu);
+  um2[].re = um2rG[](restu);
+  um2[].im = um2iG[](restu);
+  um3[].re = um3rG[](restu);
+  um3[].im = um3iG[](restu);
+}
+// Build bordered block matrix from only Mat components
+complex[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
+complex iomega, iomega2 = 0.0, iomega3 = 0.0;
+include "eqns.idp"
+Mat<complex> JlPM(J.n, mpirank == 0 ? (4-zerofreq-zerofreq2) : 0), gqPM(J.n, mpirank == 0 ? (4-zerofreq-zerofreq2) : 0), glPM(mpirank == 0 ? (4-zerofreq-zerofreq2) : 0, mpirank == 0 ? (4-zerofreq-zerofreq2) : 0); // Initialize Mat objects for bordered matrix
+Mat<complex> Ja = [[J, JlPM], [gqPM', glPM]]; // make dummy Jacobian
+complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), p1P(J.n), q1P(J.n), q2m(J.n), q2ma(J.n), p2P(J.n), q2P(J.n);
+// FUNCTIONS
+  func complex[int] funcRa(complex[int]& qa) {
+      ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
+      if(mpirank == 0) paramvals = qa(J.n:Ja.n-1).re;
+      broadcast(processor(0), paramvals);
+      updateparam(param, paramvals(0));
+      omega1 = zerofreq ? 0.0 : paramvals(1-zerofreq);
+      updateparam(param2, paramvals(2-zerofreq));
+      omega2 = zerofreq2 ? 0.0 : paramvals(3-zerofreq-zerofreq2);
+      sym = 0;
+      R = vR(0, XMh, tgv = TGV);
+      complex[int] Ra;
+      ChangeNumbering(J, R, Ra); // FreeFEM to PETSc
+      iomega = 1i*omega1;
+      ik.im = sym1;
+      sym = sym1;
+      J = vJ(XMh, XMh, tgv = -2);
+      KSPSolve(J, p1P, q1m);
+      KSPSolveHermitianTranspose(J, q1P, q1ma);
+      complex ginv, hinv, invl = (q1P'*q1m);
+      mpiAllReduce(invl, ginv, mpiCommWorld, mpiSUM);
+      q1m /= ginv; // rescale direct mode
+      q1ma /= conj(ginv); // rescale adjoint mode
+      iomega = 1i*omega2;
+      ik.im = sym2;
+      sym = sym2;
+      J = vJ(XMh, XMh, tgv = -2);
+      KSPSolve(J, p2P, q2m);
+      KSPSolveHermitianTranspose(J, q2P, q2ma);
+      invl = (q2P'*q2m);
+      mpiAllReduce(invl, hinv, mpiCommWorld, mpiSUM);
+      q2m /= hinv; // rescale direct mode
+      q2ma /= conj(hinv); // rescale adjoint mode
+      Ra.resize(Ja.n); // Append 0 to residual vector on proc 0
+      if(mpirank == 0) {
+        Ra(J.n) = real(1.0/ginv);
+        if(!zerofreq) Ra(J.n+1) = imag(1.0/ginv);
+        Ra(Ja.n-(2-zerofreq2)) = real(1.0/hinv);
+        if(!zerofreq2) Ra(Ja.n-1) = imag(1.0/hinv);
+      }
+      return Ra;
+  }
+
+  func int funcJa(complex[int]& qa) {
+      ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
+      if(mpirank == 0) paramvals = qa(J.n:Ja.n-1).re;
+      broadcast(processor(0), paramvals);
+      updateparam(param, paramvals(0) + eps);
+      omega1 = zerofreq ? 0.0 : paramvals(1-zerofreq);
+      updateparam(param2, paramvals(2-zerofreq));
+      omega2 = zerofreq2 ? 0.0 : paramvals(3-zerofreq-zerofreq2);
+      sym = 0;
+      um2[] = vR(0, XMh, tgv = TGV);
+      um2[] -= R;
+      um2[] /= eps;
+      complex[int] temp1(J.n), temp3(J.n);
+      ChangeNumbering(J, um2[], temp1); // FreeFEM to PETSc
+      ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+      sym = sym2;
+      um3[] = vJ(0, XMh, tgv = -10);
+      sym = sym1;
+      ik.im = sym1;
+      iomega = 1i*omega1;
+      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+      complex[int] Hl1 = vJ(0, XMh, tgv = -10);
+      updateparam(param, paramvals(0));
+      updateparam(param2, paramvals(2-zerofreq) + eps2);
+      complex[int] Hl2 = vJ(0, XMh, tgv = -10);
+      sym = 0;
+      um2[] = vR(0, XMh, tgv = TGV);
+      um2[] -= R;
+      um2[] /= eps2;
+      ChangeNumbering(J, um2[], temp3); // FreeFEM to PETSc
+      matrix<complex> tempPms;
+      if (zerofreq && zerofreq2) tempPms = [[temp1, temp3]];
+      else if (!zerofreq && zerofreq2) tempPms = [[temp1, 0, temp3]];
+      else if (zerofreq && !zerofreq2) tempPms = [[temp1, temp3, 0]];
+      else tempPms = [[temp1, 0, temp3, 0]]; // dense array to sparse matrix
+      ChangeOperator(JlPM, tempPms, parent = Ja); // send to Mat
+      sym = sym2;
+      ik.im = sym2;
+      iomega = 1i*omega2;
+      ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+      um2[] = vJ(0, XMh, tgv = -10);
+      updateparam(param2, paramvals(2-zerofreq));
+      R = vJ(0, XMh, tgv = -10);
+      um3[] -= R;
+      um2[] -= R;
+      ChangeNumbering(J, uma[], q2ma, inverse = true);
+      complex hl1 = J(uma[], um3[])/eps;
+      complex hl2 = J(uma[], um2[])/eps2;
+      sym = sym1;
+      ik.im = sym1;
+      iomega = 1i*omega1;
+      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+      R = vJ(0, XMh, tgv = -10);
+      Hl1 -= R;
+      Hl2 -= R;
+      ChangeNumbering(J, um3[], q1ma, inverse = true);
+      complex gl1 = J(um3[], Hl1)/eps;
+      complex gl2 = J(um3[], Hl2)/eps2;
+      if (zerofreq && zerofreq2) tempPms = [[real(gl1), real(gl2)],
+                                            [real(hl1), real(hl2)]];
+      else if (!zerofreq && zerofreq2) {
+        R = vM(0, XMh, tgv = -10);
+        complex gw = J(um3[], R);
+        tempPms = [[real(gl1), -imag(gw), real(gl2) ],
+                   [imag(gl1),  real(gw), imag(gl2) ],
+                   [real(hl1),  0       , real(hl2) ]];
+      }
+      else if (zerofreq && !zerofreq2) {
+        sym = sym2;
+        ik.im = sym2;
+        iomega = 1i*omega2;
+        ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+        R = vM(0, XMh, tgv = -10);
+        complex hw = J(uma[], R);
+        tempPms = [[real(gl1), real(gl2),  0        ],
+                   [real(hl1), real(hl2), -imag(hw) ],
+                   [imag(hl1), imag(hl2),  real(hw) ]];
+      }
+      else {
+        R = vM(0, XMh, tgv = -10);
+        complex gw = J(um3[], R);
+        sym = sym2;
+        ik.im = sym2;
+        iomega = 1i*omega2;
+        ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+        R = vM(0, XMh, tgv = -10);
+        complex hw = J(uma[], R);
+        tempPms = [[real(gl1), -imag(gw), real(gl2),  0        ],
+                   [imag(gl1),  real(gw), imag(gl2),  0        ],
+                   [real(hl1),  0       , real(hl2), -imag(hw) ],
+                   [imag(hl1),  0       , imag(hl2),  real(hw) ]];
+      }
+      ChangeOperator(glPM, tempPms, parent = Ja); // send to Mat
+      sym = 0;
+      ik.im = sym1;
+      iomega = 1i*omega1;
+      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+      J = vH(XMh, XMh, tgv = 0); // form the matrix (dL/dq*w)
+      MatMultHermitianTranspose(J, q1ma, temp1); // gqr,i
+      ik.im = sym2;
+      iomega = 1i*omega2;
+      ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+      J = vH(XMh, XMh, tgv = 0); // form the matrix (dL/dq*w)
+      MatMultHermitianTranspose(J, q2ma, temp3); // gqr,i
+      if(!zerofreq) q1m.re = -temp1.im;
+      temp1.im = 0.0;
+      q1m.im = 0.0;
+      if(!zerofreq2) q2m.re = -temp3.im;
+      temp3.im = 0.0;
+      q2m.im = 0.0;
+      if (zerofreq && zerofreq2) tempPms = [[temp1, temp3]];
+      else if (!zerofreq && zerofreq2) tempPms = [[temp1, q1m, temp3]];
+      else if (zerofreq && !zerofreq2) tempPms = [[temp1, temp3, q2m]];
+      else tempPms = [[temp1, q1m, temp3, q2m]]; // dense array to sparse matrix
+      ChangeOperator(gqPM, tempPms, parent = Ja); // send to Mat
+      ik = 0.0;
+      iomega = 0.0;
+      J = vJ(XMh, XMh, tgv = TGV);
+      return 0;
+  }
+// set up Mat parameters
+IFMACRO(Jprecon) Jprecon(0); ENDIFMACRO
+set(Ja, sparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full"
+                + " -prefix_push fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
+                + " -prefix_push fieldsplit_0_ " + KSPparams + " -prefix_pop", setup = 1);
+set(J, IFMACRO(Jsetargs) Jsetargs, ENDIFMACRO prefix = "fieldsplit_0_", parent = Ja);
+// Initialize
+complex[int] qa;
+ChangeNumbering(J, ub[], qa);
+qa.resize(Ja.n);
+if(mpirank == 0) qa(J.n:Ja.n-1).re = paramvals;
+sym = sym1;
+R = vM(0, XMh, tgv = 0);
+complex phaseref, phaserefl = R.sum;
+mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+um[] /= phaseref;
+R /= phaseref;
+ChangeNumbering(J, um[], q1m);
+ChangeNumbering(J, um[], q1m, inverse = true);
+real Mnorm = sqrt(real(J(um[], R)));
+R /= Mnorm;
+ChangeNumbering(J, R, q1P);
+if (fileext1 == "hopf" || fileext1 == "foho" || fileext1 == "hoho") um[] = uma[];
+else {
+  ik.im = sym1;
+  iomega = 1i*omega1;
+  J = vJ(XMh, XMh, tgv = -2);
+  KSPSolveHermitianTranspose(J, q1P, q1ma);
+  ChangeNumbering(J, um[], q1ma, inverse = true, exchange = true);
+}
+R = vM(0, XMh, tgv = 0);
+ChangeNumbering(J, um[], q1m, inverse = true);
+R *= (Mnorm/J(um[], R)); // so that <uma[],M*um[]> = 1
+ChangeNumbering(J, R, p1P);
+um[] = um2[];
+sym = sym2;
+R = vM(0, XMh, tgv = 0);
+phaserefl = R.sum;
+mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+um[] /= phaseref;
+R /= phaseref;
+ChangeNumbering(J, um[], q2m);
+ChangeNumbering(J, um[], q2m, inverse = true);
+Mnorm = sqrt(real(J(um[], R)));
+R /= Mnorm;
+ChangeNumbering(J, R, q2P);
+if (fileext2 == "hopf" || fileext2 == "foho" || fileext2 == "hoho") um[] = um3[];
+else {
+  ik.im = sym2;
+  iomega = 1i*omega2;
+  J = vJ(XMh, XMh, tgv = -2);
+  KSPSolveHermitianTranspose(J, q2P, q2ma);
+  ChangeNumbering(J, um[], q2ma, inverse = true, exchange = true);
+}
+R = vM(0, XMh, tgv = 0);
+ChangeNumbering(J, um[], q2m, inverse = true);
+R *= (Mnorm/J(um[], R)); // so that <uma[],M*um[]> = 1
+ChangeNumbering(J, R, p2P);
+// solve nonlinear problem with SNES
+int ret;
+SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
+          sparams = "-snes_linesearch_type " + sneslinesearchtype + " -snes_monitor -snes_converged_reason -options_left no");
+if (ret > 0) { // Save solution if solver converged and output file is given
+  ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
+  if(mpirank == 0) paramvals = qa(J.n:Ja.n-1).re;
+  broadcast(processor(0), paramvals);
+  updateparam(param, paramvals(0) + eps);
+  omega1 = zerofreq ? 0.0 : paramvals(1-zerofreq);
+  updateparam(param2, paramvals(2-zerofreq));
+  omega2 = zerofreq2 ? 0.0 : paramvals(3-zerofreq-zerofreq2);
+  ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+  sym = sym1;
+  um2[] = vM(0, XMh, tgv = 0);
+  phaserefl = um2[].sum;
+  mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+  ChangeNumbering(J, um[], q1m, inverse = true);
+  ChangeNumbering(J, uma[], q1ma, inverse = true);
+  um[] /= phaseref;
+  um2[] /= phaseref;
+  Mnorm = sqrt(real(J(um[], um2[])));
+  um[] /= Mnorm; // so that <um[],M*um[]> = 1
+  uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
+  ChangeNumbering(J, um[], q1m);
+  ChangeNumbering(J, uma[], q1ma);
+  ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+  sym = sym2;
+  um2[] = vM(0, XMh, tgv = 0);
+  phaserefl = um2[].sum;
+  mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+  ChangeNumbering(J, um[], q2m, inverse = true);
+  ChangeNumbering(J, uma[], q2ma, inverse = true);
+  um[] /= phaseref;
+  um2[] /= phaseref;
+  Mnorm = sqrt(real(J(um[], um2[])));
+  um[] /= Mnorm; // so that <um[],M*um[]> = 1
+  uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
+  ChangeNumbering(J, um[], q2m);
+  ChangeNumbering(J, uma[], q2ma);
+  if (normalform){
+    complex[int] qAB(J.n), qBB(J.n);
+    complex[int,int] qDa(paramnames.n, J.n);
+    Mat<complex> qPM(J.n, mpirank == 0 ? 1 : 0), pPM(J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
+    Ja = [[J, qPM], [pPM', 0]]; // make dummy Jacobian
+    set(Ja, sparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full"
+                    + " -prefix_push fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
+                    + " -prefix_push fieldsplit_0_ " + KSPparams + " -prefix_pop", setup = 1);
+    if (res1x > 0){
+      omega2 = (omega2 + omega1/real(res1x))/2.0;
+      omega1 = real(res1x)*omega2;
+    }
+    // 2nd-order
+    //  A: base modifications due to parameter changes
+    ik = 0.0;
+    ik2 = 0.0;
+    iomega = 0.0;
+    iomega2 = 0.0;
+    sym = 0;
+    J = vJ(XMh, XMh, tgv = TGV);
+    if(paramnames[0] != ""){
+      for (int k = 0; k < paramnames.n; ++k){
+        real paramval = getparam(paramnames[k]);
+        updateparam(paramnames[k], paramval + eps);
+        um[] = vR(0, XMh, tgv = TGV);
+        updateparam(paramnames[k], paramval);
+        um[] -= R;
+        um[] /= -eps;
+        ChangeNumbering(J, um[], q1P); // FreeFEM to PETSc
+        KSPSolve(J, q1P, q1P);
+        qDa(k, :) = q1P;
+      }
+    }
+    //  B: base modifications due to quadratic nonlinear interactions
+    ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+    um2[] = conj(um[]);
+    ik.im = sym2;
+    ik2.im = -sym2;
+    iomega = 1i*omega2;
+    iomega2 = -iomega;
+    um3[] = vH(0, XMh, tgv = -10);
+    um3[].re *= -1.0; // -2.0/2.0
+    um3[].im = 0.0;
+    ChangeNumbering(J, um3[], p2P); // FreeFEM to PETSc
+    KSPSolve(J, p2P, p2P);
+
+    ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+    ik.im = sym1;
+    ik2.im = -sym1;
+    iomega = 1i*omega1;
+    iomega2 = -iomega;
+    um2[] = conj(um[]);
+    um3[] = vH(0, XMh, tgv = -10);
+    um3[].re *= -1.0; // -2.0/2.0
+    um3[].im = 0.0;
+    ChangeNumbering(J, um3[], q1P); // FreeFEM to PETSc
+    KSPSolve(J, q1P, q1P);
+
+    //  difference harmonic
+    ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
+    um2[] = conj(um2[]);
+    ik.im = sym1;
+    ik2.im = -sym2;
+    iomega = 1i*omega1;
+    iomega2 = -1i*omega2;
+    sym = sym1 - sym2;
+    um3[] = vH(0, XMh, tgv = -10);
+    um3[] *= -1.0; // -2.0/2.0
+    ChangeNumbering(J, um3[], q2P); // FreeFEM to PETSc
+    ik.im = sym;
+    iomega = 1i*(omega1 - omega2);
+    J = vJ(XMh, XMh, tgv = TGV);
+    if (res1x != 2) KSPSolve(J, q2P, q2P);
+    else {
+      ChangeNumbering(J, um[], q2ma, inverse = true, exchange = true);
+      um2[] = vM(0, XMh, tgv = -10);
+      ChangeNumbering(J, um2[], p1P);
+      matrix<complex> tempPms = [[p1P]]; // dense array to sparse matrix
+      ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
+      ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+      um2[] = vM(0, XMh, tgv = -10);
+      ChangeNumbering(J, um2[], p1P);
+      tempPms = [[p1P]]; // dense array to sparse matrix
+      ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
+      q2P.resize(Ja.n);
+      if(mpirank == 0) q2P(Ja.n-1) = 0.0;
+      KSPSolve(Ja, q2P, q2P);
+      if(mpirank == 0) gamma22 = q2P(Ja.n-1);
+      broadcast(processor(0), gamma22);
+      q2P.resize(J.n);
+    }
+    //  C: harmonics generation due to quadratic nonlinear interactions
+    ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+    um2[] = -0.5*um[];
+    ik.im = sym1;
+    ik2.im = sym1;
+    iomega = 1i*omega1;
+    iomega2 = iomega;
+    sym = 2.0*sym1;
+    um3[] = vH(0, XMh, tgv = -10);
+    ChangeNumbering(J, um3[], p1P); // FreeFEM to PETSc
+    ik.im = sym;
+    iomega = 2i*omega1;
+    J = vJ(XMh, XMh, tgv = TGV);
+    KSPSolve(J, p1P, p1P);
+
+    ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
+    ik.im = sym1;
+    ik2.im = sym2;
+    iomega = 1i*omega1;
+    iomega2 = 1i*omega2;
+    sym = sym1 + sym2;
+    um3[] = vH(0, XMh, tgv = -10);
+    um3[] *= -1.0; // -2.0/2.0
+    ChangeNumbering(J, um3[], qAB); // FreeFEM to PETSc
+    ik.im = sym;
+    iomega = 1i*(omega1 + omega2);
+    J = vJ(XMh, XMh, tgv = TGV);
+    KSPSolve(J, qAB, qAB);
+
+    um[] = -0.5*um2[];
+    ik.im = sym2;
+    iomega = 1i*omega2;
+    sym = 2.0*sym2;
+    um3[] = vH(0, XMh, tgv = -10);
+    ChangeNumbering(J, um3[], qBB); // FreeFEM to PETSc
+    ik.im = sym;
+    iomega = 2i*omega2;
+    J = vJ(XMh, XMh, tgv = TGV);
+    if (res1x != 2) KSPSolve(J, qBB, qBB);
+    else {
+      ChangeNumbering(J, um[], q1ma, inverse = true, exchange = true);
+      um2[] = vM(0, XMh, tgv = -10);
+      complex[int] tempP(J.n);
+      ChangeNumbering(J, um2[], tempP);
+      matrix<complex> tempPms = [[tempP]]; // dense array to sparse matrix
+      ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
+      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+      um2[] = vM(0, XMh, tgv = -10);
+      ChangeNumbering(J, um2[], tempP);
+      tempPms = [[tempP]]; // dense array to sparse matrix
+      ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
+      Ja = [[J, qPM], [pPM', 0]]; // make dummy Jacobian
+      qBB.resize(Ja.n);
+      if(mpirank == 0) qBB(Ja.n-1) = 0.0;
+      KSPSolve(Ja, qBB, qBB);
+      if(mpirank == 0) gamma12 = qBB(Ja.n-1);
+      broadcast(processor(0), gamma12);
+      qBB.resize(J.n);
+    }
+    // 3rd-order
+    // fundamental modifications due to parameter changes and quadratic interaction of fundamental with 2nd order base modification.
+    // A
+    ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+    ChangeNumbering(J, uma[], q1ma, inverse = true);
+    sym = sym1;
+    ik.im = sym1;
+    ik2 = 0.0;
+    iomega = 1i*omega1;
+    iomega2 = 0.0;
+    if(paramnames[0] != ""){
+      R = vJ(0, XMh, tgv = -10);
+      for (int k = 0; k < paramnames.n; ++k){
+        ChangeNumbering(J, um2[], qDa(k, :), inverse = true, exchange = true); // FreeFEM to PETSc
+        um3[] = vH(0, XMh, tgv = -10); // 2.0/2.0
+        real paramval = getparam(paramnames[k]);
+        updateparam(paramnames[k], paramval + eps);
+        um2[] = vJ(0, XMh, tgv = -10);
+        updateparam(paramnames[k], paramval);
+        um2[] -= R;
+        um3[] += um2[]/eps;
+        alpha1[paramnames[k]] = -J(uma[], um3[]);
+      }
+    }
+    // B
+    ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+    ChangeNumbering(J, uma[], q2ma, inverse = true);
+    sym = sym2;
+    ik.im = sym2;
+    iomega = 1i*omega2;
+    if(paramnames[0] != ""){
+      R = vJ(0, XMh, tgv = -10);
+      for (int k = 0; k < paramnames.n; ++k){
+        ChangeNumbering(J, um2[], qDa(k, :), inverse = true, exchange = true); // FreeFEM to PETSc
+        um3[] = vH(0, XMh, tgv = -10); // 2.0/2.0
+        real paramval = getparam(paramnames[k]);
+        updateparam(paramnames[k], paramval + eps);
+        um2[] = vJ(0, XMh, tgv = -10);
+        updateparam(paramnames[k], paramval);
+        um2[] -= R;
+        um3[] += um2[]/eps;
+        alpha2[paramnames[k]] = -J(uma[], um3[]);
+      }
+    }
+    // A|A|^2
+    //  B: fundamental modification due to cubic self-interaction of fundamental
+    ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+    ChangeNumbering(J, uma[], q1ma, inverse = true);
+    sym = sym1;
+    ik.im = sym1;
+    iomega = 1i*omega1;
+    IFMACRO(cubic)
+    um2[] = 0.5*um[];
+    um3[] = conj(um[]);
+    ik2.im = sym1;
+    ik3.im = -sym1;
+    iomega2 = iomega;
+    iomega3 = -iomega;
+    R = vT(0, XMh, tgv = -10);
+    ENDIFMACRO
+    //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
+    ik2 = 0.0;
+    iomega2 = 0.0;
+    ChangeNumbering(J, um2[], q1P, inverse = true, exchange = true); // FreeFEM to PETSc
+    IFMACRO(cubic)
+    um3[] = vH(0, XMh, tgv = -10);
+    R += um3[];
+    ENDIFMACRO
+    IFMACRO(!cubic)
+    R = vH(0, XMh, tgv = -10);
+    ENDIFMACRO
+    //  D: fundamental modification due to quadratic interaction of fundamental with 2nd order modification C
+    ik.im = -sym1;
+    ik2.im = 2.0*sym1;
+    iomega = -iomega;
+    iomega2 = 2i*omega1;
+    um[] = conj(um[]);
+    ChangeNumbering(J, um2[], p1P, inverse = true, exchange = true); // FreeFEM to PETSc
+    um3[] = vH(0, XMh, tgv = -10);
+    R += um3[];
+    beta1 = -J(uma[], R);
+
+    // B|B|^2
+    //  B: fundamental modification due to cubic self-interaction of fundamental
+    ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+    ChangeNumbering(J, uma[], q2ma, inverse = true);
+    sym = sym2;
+    ik.im = sym2;
+    iomega = 1i*omega2;
+    IFMACRO(cubic)
+    um2[] = 0.5*um[];
+    um3[] = conj(um[]);
+    ik2.im = sym2;
+    ik3.im = -sym2;
+    iomega2 = 1i*omega2;
+    iomega3 = -iomega2;
+    R = vT(0, XMh, tgv = -10);
+    ENDIFMACRO
+    //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
+    ik2 = 0.0;
+    iomega2 = 0.0;
+    ChangeNumbering(J, um2[], p2P, inverse = true, exchange = true); // FreeFEM to PETSc
+    IFMACRO(cubic)
+    um3[] = vH(0, XMh, tgv = -10);
+    R += um3[];
+    ENDIFMACRO
+    IFMACRO(!cubic)
+    R = vH(0, XMh, tgv = -10);
+    ENDIFMACRO
+    //  D: fundamental modification due to quadratic interaction of fundamental with 2nd order modification C
+    ik.im = -sym2;
+    ik2.im = 2.0*sym2;
+    iomega = -1i*omega2;
+    iomega2 = 2i*omega2;
+    um[] = conj(um[]);
+    ChangeNumbering(J, um2[], qBB, inverse = true, exchange = true); // FreeFEM to PETSc
+    um3[] = vH(0, XMh, tgv = -10);
+    R += um3[];
+    beta2 = -J(uma[], R);
+
+    // A|B|^2
+    //  B: fundamental modification due to cubic self-interaction of fundamental
+    ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+    ChangeNumbering(J, uma[], q1ma, inverse = true);
+    sym = sym1;
+    ik.im = sym1;
+    iomega = 1i*omega1;
+    IFMACRO(cubic)
+    ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
+    um3[] = conj(um2[]);
+    ik2.im = sym2;
+    ik3.im = -sym2;
+    iomega2 = 1i*omega2;
+    iomega3 = -iomega2;
+    R = vT(0, XMh, tgv = -10);
+    ENDIFMACRO
+    //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
+    ik2 = 0.0;
+    iomega2 = 0.0;
+    ChangeNumbering(J, um2[], p2P, inverse = true, exchange = true); // FreeFEM to PETSc
+    IFMACRO(cubic)
+    um3[] = vH(0, XMh, tgv = -10);
+    R += um3[];
+    ENDIFMACRO
+    IFMACRO(!cubic)
+    R = vH(0, XMh, tgv = -10);
+    ENDIFMACRO
+    ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+    ik.im = sym2;
+    ik2.im = sym1 - sym2;
+    iomega = 1i*omega2;
+    iomega2 = 1i*(omega1 - omega2);
+    ChangeNumbering(J, um2[], q2P, inverse = true, exchange = true); // FreeFEM to PETSc
+    um3[] = vH(0, XMh, tgv = -10);
+    R += um3[];
+    //  D: fundamental modification due to quadratic interaction of fundamental with 2nd order modification C
+    um[] = conj(um[]);
+    ik.im = -sym2;
+    ik2.im = sym1 + sym2;
+    iomega = -1i*omega2;
+    iomega2 = 1i*(omega1 + omega2);
+    ChangeNumbering(J, um2[], qAB, inverse = true, exchange = true); // FreeFEM to PETSc
+    um3[] = vH(0, XMh, tgv = -10);
+    R += um3[];
+    gamma1 = -J(uma[], R);
+
+
+    // B|A|^2
+    //  B: fundamental modification due to cubic self-interaction of fundamental
+    ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+    ChangeNumbering(J, uma[], q2ma, inverse = true);
+    sym = sym2;
+    ik.im = sym2;
+    iomega = 1i*omega2;
+    IFMACRO(cubic)
+    ChangeNumbering(J, um2[], q1m, inverse = true, exchange = true);
+    um3[] = conj(um2[]);
+    ik2.im = sym1;
+    ik3.im = -sym1;
+    iomega2 = 1i*omega1;
+    iomega3 = -iomega2;
+    R = vT(0, XMh, tgv = -10);
+    ENDIFMACRO
+    //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
+    ik2 = 0.0;
+    iomega2 = 0.0;
+    ChangeNumbering(J, um2[], q1P, inverse = true, exchange = true); // FreeFEM to PETSc
+    IFMACRO(cubic)
+    um3[] = vH(0, XMh, tgv = -10);
+    R += um3[];
+    ENDIFMACRO
+    IFMACRO(!cubic)
+    R = vH(0, XMh, tgv = -10);
+    ENDIFMACRO
+    ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+    ik.im = sym1;
+    ik2.im = sym2 - sym1;
+    iomega = 1i*omega1;
+    iomega2 = 1i*(omega2 - omega1);
+    ChangeNumbering(J, um2[], q2P, inverse = true, exchange = true); // FreeFEM to PETSc
+    um2[] = conj(um2[]);
+    um3[] = vH(0, XMh, tgv = -10);
+    R += um3[];
+    //  D: fundamental modification due to quadratic interaction of fundamental with 2nd order modification C
+    um[] = conj(um[]);
+    ik.im = -sym1;
+    ik2.im = sym1 + sym2;
+    iomega = -1i*omega1;
+    iomega2 = 1i*(omega1 + omega2);
+    ChangeNumbering(J, um2[], qAB, inverse = true, exchange = true); // FreeFEM to PETSc
+    um3[] = vH(0, XMh, tgv = -10);
+    R += um3[];
+    gamma2 = -J(uma[], R);
+
+    if (res1x == 3){
+      // B^3
+      //  B: fundamental modification due to cubic self-interaction of fundamental
+      ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+      ChangeNumbering(J, uma[], q1ma, inverse = true);
+      sym = sym1;
+      ik.im = sym2;
+      iomega = 1i*omega2;
+      IFMACRO(cubic)
+      um2[] = um[]/6.0;
+      um3[] = um[];
+      ik2.im = sym2;
+      ik3.im = sym2;
+      iomega2 = iomega;
+      iomega3 = iomega;
+      R = vT(0, XMh, tgv = -10);
+      ENDIFMACRO
+      //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
+      ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+      ik2.im = 2.0*sym2;
+      iomega2 = 2i*omega2;
+      ChangeNumbering(J, um2[], qBB, inverse = true, exchange = true); // FreeFEM to PETSc
+      IFMACRO(cubic)
+      um3[] = vH(0, XMh, tgv = -10);
+      R += um3[];
+      ENDIFMACRO
+      IFMACRO(!cubic)
+      R = vH(0, XMh, tgv = -10);
+      ENDIFMACRO
+      gamma13 = -J(uma[], R);
+
+      // A*(B^*)^2
+      //  B: fundamental modification due to cubic self-interaction of fundamental
+      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+      ChangeNumbering(J, uma[], q2ma, inverse = true);
+      sym = sym1 - 2.0*sym2;
+      ik.im = sym1;
+      iomega = 1i*omega1;
+      IFMACRO(cubic)
+      ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
+      um2[] = conj(um2[]);
+      um3[] = 0.5*um2[];
+      ik2.im = -sym2;
+      ik3.im = -sym2;
+      iomega2 = -1i*omega2;
+      iomega3 = iomega2;
+      R = vT(0, XMh, tgv = -10);
+      ENDIFMACRO
+      //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
+      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+      ik2.im = -2.0*sym2;
+      iomega2 = -2i*omega2;
+      ChangeNumbering(J, um2[], qBB, inverse = true, exchange = true); // FreeFEM to PETSc
+      um2[] = conj(um2[]);
+      IFMACRO(cubic)
+      um3[] = vH(0, XMh, tgv = -10);
+      R += um3[];
+      ENDIFMACRO
+      IFMACRO(!cubic)
+      R = vH(0, XMh, tgv = -10);
+      ENDIFMACRO
+
+      ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+      um[] = conj(um[]);
+      ik.im = -sym2;
+      ik2.im = sym1 - sym2;
+      iomega = -1i*omega2;
+      iomega2 = 1i*(omega1 - omega2);
+      ChangeNumbering(J, um2[], q2P, inverse = true, exchange = true); // FreeFEM to PETSc
+      um3[] = vH(0, XMh, tgv = -10);
+      R += um3[];
+
+      gamma23 = -J(uma[], R);
+    }
+    if(wnlsave){
+      complex[int] val(1);
+      XMh<complex>[int] defu(vec)(1);
+      sym = 0;
+      val = 0.0;
+      if(paramnames[0] != ""){
+        for (int k = 0; k < paramnames.n; ++k){
+          ChangeNumbering(J, vec[0][], qDa(k, :), inverse = true); // FreeFEM to PETSc
+          savemode(fileout + "_wnl_param" + k, "", fileout + ".hoho", meshout, vec, val, sym, true);
+        }
+      }
+      ChangeNumbering(J, vec[0][], q1P, inverse = true); // FreeFEM to PETSc
+      savemode(fileout + "_wnl_AAs", "", fileout + ".hoho", meshout, vec, val, sym, true);
+      ChangeNumbering(J, vec[0][], p2P, inverse = true); // FreeFEM to PETSc
+      savemode(fileout + "_wnl_BBs", "", fileout + ".hoho", meshout, vec, val, sym, true);
+      ChangeNumbering(J, vec[0][], q2P, inverse = true); // FreeFEM to PETSc
+      val = 1i*(omega1 - omega2);
+      sym = sym1 - sym2;
+      savemode(fileout + "_wnl_ABs", "", fileout + ".hoho", meshout, vec, val, sym, true);
+      ChangeNumbering(J, vec[0][], p1P, inverse = true); // FreeFEM to PETSc
+      val = 2i*omega1;
+      sym = 2.0*sym1;
+      savemode(fileout + "_wnl_AA", "", fileout + ".hoho", meshout, vec, val, sym, true);
+      ChangeNumbering(J, vec[0][], qAB, inverse = true); // FreeFEM to PETSc
+      val = 1i*(omega1 + omega2);
+      sym = sym1 + sym2;
+      savemode(fileout + "_wnl_AB", "", fileout + ".hoho", meshout, vec, val, sym, true);
+      ChangeNumbering(J, vec[0][], qBB, inverse = true); // FreeFEM to PETSc
+      val = 2i*omega2;
+      sym = 2.0*sym2;
+      savemode(fileout + "_wnl_BB", "", fileout + ".hoho", meshout, vec, val, sym, true);
+    }
+  }
+  else {
+    if(paramnames[0] != ""){
+      for (int k = 0; k < paramnames.n; ++k){
+        alpha1[paramnames[k]] = 0.0;
+        alpha2[paramnames[k]] = 0.0;
+      }
+    }
+    beta1 = 0.0;
+    beta2 = 0.0;
+    gamma1 = 0.0;
+    gamma2 = 0.0;
+    gamma12 = 0.0;
+    gamma22 = 0.0;
+    gamma13 = 0.0;
+    gamma23 = 0.0;
+  }
+  if(mpirank==0 && adapt) { // Save adapted mesh
+    cout << "  Saving adapted mesh '" + meshout + "' in '" + workdir + "'." << endl;
+    savemesh(Thg, workdir + meshout);
+  }
+  ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true);
+  ChangeNumbering(J, um[], q1m, inverse = true);
+  ChangeNumbering(J, uma[], q1ma, inverse = true);
+  ChangeNumbering(J, um2[], q2m, inverse = true);
+  ChangeNumbering(J, um3[], q2ma, inverse = true);
+  savehoho(fileout, "", meshout, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23, true, true);
+}
+```

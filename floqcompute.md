@@ -1,0 +1,122 @@
+# floqcompute.md
+Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
+
+## EXAMPLE USAGE:
+### Solve Floquet eigenvalue problem, store Floquet exponent spectrum without storing Floquet eigenvectors:
+```sh
+ff-mpirun -np 4 floqcompute.md -eps_target 0.1+1.0i -eps_nev 10 -fi <FILEIN> -so <VALFILE>
+```
+
+### Solve Floquet eigenvalue problem, store Floquet exponent spectrum and Floquet eigenvectors:
+```sh
+ff-mpirun -np 4 floqcompute.md -eps_target 0.1+1.0i -eps_nev 4 -fi <FILEIN> -fo <VECFILE> -so <VALFILE>
+```
+
+### Solve Floquet eigenvalue problem, store Floquet eigenvectors without storing Floquet exponent spectrum:
+```sh
+ff-mpirun -np 4 floqcompute.md -eps_target 0.1+1.0i -eps_nev 4 -fi <FILEIN> -fo <VECFILE>
+```
+
+### Solve Floquet eigenvalue problems over a sequence of shifts, store Floquet exponent spectra and Floquet eigenvectors:
+```sh
+ff-mpirun -np 4 floqcompute.md -eps_target 0.1+0.2i -ntarget 10 -targetf 0.1+2.0i -eps_nev 4 -fi <FILEIN> -fo <VECFILE> -so <VALFILE>
+```
+
+NOTE: This file should not be changed unless you know what you're doing.
+
+SEE ALSO: [porbcompute.md](./porbcompute.md), [porbcontinue.md](./porbcontinue.md), [porbdeflate.md](./porbdeflate.md)
+
+```freefem
+load "iovtk"
+load "PETSc-complex"
+include "settings.idp"
+include "macros_bifbox.idp"
+// arguments
+string meshin = getARGV("-mi", ""); // input meshfile with extension
+string filein = getARGV("-fi", ""); // input file with extension
+string fileout = getARGV("-fo", ""); // output file without extension
+string statout = getARGV("-so", "");
+bool epstwosided = getARGV("-eps_two_sided", 0);
+string symstr = getARGV("-sym", "0");
+string epstarget = getARGV("-eps_target", "0+0i");
+int ntarget = getARGV("-ntarget", 1);
+string targetf = getARGV("-targetf", epstarget);
+int epsnev = getARGV("-eps_nev", 1);
+bool strictnev = getARGV("-strict", 0);
+int select = getARGV("-select", 1);
+int Nh = getARGV("-Nh", 0); //if 0, will read Nh from file. In practice, Nh must be at least 1, otherwise use basecompute.md
+int blocks = getARGV("-blocks", 1); //if blocks = 1, use monolithic LU; if blocks = N w/ 2 <= N <= Nh+1, use block preconditioner with N blocks
+real[int] sym0(sym.n), sym1(sym.n);
+real omega;
+
+// Load mesh, make FE basis
+string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension
+parsefilename(fileout, fileout); // trim extension from output file, if given
+if(fileext == "floq"){
+  filein = readbasename(workdir + filein);
+  fileext = parsefilename(filein, fileroot);
+}
+if(filein != "" && meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
+Th = readmeshN(workdir + meshin);
+Thg = Th;
+DmeshCreate(Th);
+restu = restrict(XMh, XMhg, n2o);
+XMh defu(ub);
+XMh<complex> defu(um), defu(um2), defu(um3);
+complex[int, int] uh(um[].n, max(1, Nh));
+if (fileext == "porb") {
+  ub[] = loadporb(fileroot, meshin, uh, sym0, omega, Nh);
+}
+else assert(false); // invalid input filetype
+Nh = max(1, Nh); // Nh must be at least 1, otherwise use basecompute.md
+
+// Create distributed Mat
+Mat<complex> J;
+createMatu(Th, J, Pk);
+
+complex[int] val(epsnev);
+complex[int, int] arr((1+2*Nh)*J.n, epsnev), larr((1+2*Nh)*J.n, epsnev);
+
+sym1 = parsesymstr(symstr);
+complex[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
+complex iomega, iomega2, iomega3;
+include "eqns.idp" // load equations
+
+complex shifts = string2complex(epstarget);
+complex shift = shifts;
+complex shiftf = string2complex(targetf);
+
+Mat<complex> JHB, MHB;
+JacobianHBcplx(JHB, J, ub, uh, sym0, sym1, omega, 0.0);
+JHB *= -1.0;
+MassHBcplx(MHB, J, ub, uh, sym0, sym1);
+
+real[int] fieldlabels(JHB.n);
+fieldlabels(0: J.n-1) = 1;
+blocks = min(blocks, 1+Nh);
+for (int nh = 0; nh < Nh; nh++) fieldlabels((1+2*nh)*J.n:(3+2*nh)*J.n-1) = 1 + max(0, blocks + nh - Nh);
+string HBKSPparams = KSPparams;
+if (blocks > 1) HBKSPparams = "-ksp_type gmres -ksp_norm_type unpreconditioned -ksp_pc_side right -pc_type fieldsplit -pc_fieldsplit_type symmetric_multiplicative -fieldsplit_pc_type lu -ksp_gmres_cgs_refinement_type refine_ifneeded";
+for (int n = 0; n < ntarget; ++n){
+  if (ntarget > 1) shift = shifts + (shiftf - shifts)*real(n)/real(ntarget - 1);
+  int k = EPSSolve(JHB, MHB, larray = larr, array = arr, values = val, fields = fieldlabels, 
+                 sparams = "-st_type sinvert -options_left no -eps_monitor_conv -prefix_push st_ " + HBKSPparams + " -prefix_pop -eps_target " + string(shift));
+  if (strictnev) {// activate to limit number of eigenpairs
+    val.resize(min(k, epsnev));
+    arr.resize((1+2*Nh)*J.n, val.n);
+    if(epstwosided) larr.resize((1+2*Nh)*J.n, val.n);
+  }
+  complex[int, int] vec((1+2*Nh)*um[].n, val.n), lvec((1+2*Nh)*um[].n, val.n); 
+  for (int ii = 0; ii < val.n; ++ii)
+    for (int jj = 0; jj < (1+2*Nh); ++jj) {
+      ChangeNumbering(J, um[], arr(jj*J.n:(1+jj)*J.n-1, ii), inverse = true);
+      vec(jj*um[].n:(1+jj)*um[].n-1, ii) = um[];
+      if (epstwosided) {
+        ChangeNumbering(J, um[], larr(jj*J.n:(1+jj)*J.n-1, ii), inverse = true);
+        lvec(jj*um[].n:(1+jj)*um[].n-1, ii) = um[];
+      }
+    }
+  savefloq(fileout + ((ntarget > 1) ? ("_" + n) : ""), statout, filein, meshin, vec, val, omega, Nh, sym0, sym1, (fileout != ""));
+  if(epstwosided) savefloq(fileout + ((ntarget > 1) ? ("_" + n) : "") + "adj", "", filein, meshin, lvec, val, omega, Nh, sym0, sym1, (fileout != ""));
+}
+```

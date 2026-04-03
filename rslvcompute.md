@@ -1,0 +1,156 @@
+# rslvcompute.md
+Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
+
+## EXAMPLE USAGE:
+### Compute gains, store without storing forcing/response modes:
+```sh
+ff-mpirun -np 4 rslvcompute.md -eps_target 0.1+1.0i -eps_nev 10 -fi <FILEIN> -fo <VALFILE>
+```
+
+### Compute gains, store with forcing/response modes:
+```sh
+ff-mpirun -np 4 rslvcompute.md -eps_target 0.1+1.0i -eps_nev 4 -fi <FILEIN> -fo <VALFILE>
+```
+
+NOTE: This file should not be changed unless you know what you're doing.
+
+SEE ALSO: [basecompute.md](./basecompute.md), [basecontinue.md](./basecontinue.md), [modecompute.md](./modecompute.md), [respcompute.md](./respcompute.md), [tdlscompute.md](./tdlscompute.md), [tdnscompute.md](./tdnscompute.md)
+
+```freefem
+load "iovtk"
+load "PETSc-complex"
+include "settings.idp"
+include "macros_bifbox.idp"
+// arguments
+string meshin = getARGV("-mi", ""); // input meshfile
+string filein = getARGV("-fi", "");
+string fileout = getARGV("-fo", "");
+string statout = getARGV("-so", "");
+string symstr = getARGV("-sym", "0");
+real omega = getARGV("-omega", 1.0);
+int nomega = getARGV("-nomega", 1);
+real omegaf = getARGV("-omegaf", 1.0);
+int epsnev = getARGV("-eps_nev", 1);
+bool strictnev = getARGV("-strict", 1);
+
+// Load mesh, make FE basis
+string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension
+parsefilename(statout, statout); // trim extension from output file, if given
+parsefilename(fileout, fileout); // trim extension from output file, if given
+if(fileext == "mode" || fileext == "resp" || fileext == "rslv" || fileext == "tdls" || fileext == "floq"){
+  filein = readbasename(workdir + filein);
+  fileext = parsefilename(filein, fileroot);
+}
+if(filein != "" && meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
+Th = readmeshN(workdir + meshin);
+Thg = Th;
+DmeshCreate(Th);
+restf = restrict(Xh, Xhg, n2o);
+restu = restrict(XMh, XMhg, n2o);
+XMh defu(ub), defu(um2), defu(um3);
+
+if(fileext == "base") {
+  ub[] = loadbase(fileroot, meshin);
+}
+else if(fileext == "fold") {
+  real[string] alpha;
+  real beta;
+  real[int] qm, qma;
+  ub[] = loadfold(fileroot, meshin, qm, qma, alpha, beta);
+}
+else if(fileext == "hopf") {
+  real omega;
+  complex[string] alpha;
+  complex beta;
+  complex[int] qm, qma;
+  ub[] = loadhopf(fileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(fileext == "foho") {
+  real omega;
+  complex[string] alpha1;
+  real[string] alpha2;
+  complex beta1, gamma12, gamma13;
+  real beta22, beta23, gamma22, gamma23;
+  complex[int] q1m, q1ma;
+  real[int] q2m, q2ma;
+  ub[] = loadfoho(fileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+}
+else if(fileext == "hoho") {
+  real[int] sym1(sym.n), sym2(sym.n);
+  real omega1, omega2;
+  complex[string] alpha1, alpha2;
+  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex[int] q1m, q1ma, q2m, q2ma;
+  ub[] = loadhoho(fileroot, meshin, q1m, q1ma, q2m, q2ma, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+}
+else if(fileext == "tdns") {
+  real time;
+  ub[] = loadtdns(fileroot, meshin, time);
+}
+else if(fileext == "porb") {
+  int Nh=1;
+  real omega;
+  complex[int, int] qh(ub[].n, Nh);
+  ub[] = loadporb(fileroot, meshin, qh, sym, omega, Nh);
+}
+complex[int] val(epsnev);
+Xh<complex>[int] deff(fvec)(epsnev);
+Xh<complex> deff(fm);
+XMh<complex> defu(um);
+
+Mat<complex> J, Mf;
+createMatu(Th, J, Pk);
+Mat<complex> M(J);
+createMatf(Th, Mf, Pkf);
+
+sym = parsesymstr(symstr);
+complex[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
+ik.im = sym;
+complex iomega, iomega2 = 0.0, iomega3 = 0.0;
+include "eqns.idp"
+// construct matrices
+M  = vMq(XMh, XMh, tgv = -20); // Response Norm
+Mf = vMf(Xh, Xh, tgv = 0); // Forcing Norm
+matrix<complex> LocPQ = vP(Xh, XMh, tgv = 0); // Forcing/Response Correspondence
+Mat<complex> PQ(M, Mf, LocPQ, clean = true);
+
+complex[int] gm(Mf.n), qm(J.n), temp(J.n);
+
+func complex[int] LHSop(complex[int]& inPETSc) {
+  MatMult(PQ, inPETSc, qm);
+  KSPSolve(J, qm, temp);
+  MatMult(M, temp, qm);
+  KSPSolveHermitianTranspose(J, qm, temp);
+  MatMultHermitianTranspose(PQ, temp, gm);
+  return gm;
+}
+
+Mat<complex> LHS(Mf, LHSop);
+
+real omegas = omega;
+for (int n = 0; n < nomega; ++n){
+  if (nomega > 1) omega = omegas + (omegaf - omegas)*real(n)/real(nomega - 1);
+  iomega = 1i*omega;
+  J  = vJ(XMh, XMh, tgv = -2); //Linear operator
+  IFMACRO(Jprecon) Jprecon(iomega); ENDIFMACRO
+  set(J, IFMACRO(Jsetargs) Jsetargs, ENDIFMACRO sparams = KSPparams);
+  int k = EPSSolve(LHS, Mf, vectors = fvec, values = val,
+                 sparams = "-eps_type krylovschur -eps_largest_real -eps_monitor_conv -options_left no -eps_gen_hermitian");
+  if (strictnev) {// activate to limit number of eigenpairs
+    val.resize(min(k, epsnev));
+    fvec.resize(min(k, epsnev));
+  }
+  XMh<complex>[int] defu(uvec)(val.n);
+  real[int] gains = sqrt(val.re);
+  if(fileout != ""){ //If saving modes, compute response modes
+    for (int ii = 0; ii < val.n; ++ii){
+      ChangeNumbering(Mf, fvec[ii][], gm);
+      MatMult(PQ, gm, qm);
+      KSPSolve(J, qm, qm);
+      ChangeNumbering(Mf, fvec[ii][], gm, inverse = true);
+      ChangeNumbering(J, uvec[ii][], qm, inverse = true);
+    }
+  }
+  saverslv(fileout + ((nomega > 1) ? ("_" + n) : ""), statout, filein, meshin, fvec, uvec, gains, sym, omega, (fileout != ""));
+}
+```
