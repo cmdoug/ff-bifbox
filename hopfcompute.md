@@ -11,6 +11,7 @@ $$
 
 where:
 - $\alpha$ is the coefficient for the term from parameter changes,
+- $\delta\lambda$ are the parameter increments,
 - $\beta$ is the coefficient for the term from harmonic interactions.
 
 Using this convention, the bifurcation is supercritical for $\Re(\beta) < 0$, and subcritical for $\Re(\beta) > 0$.

@@ -14,7 +14,7 @@ $$
 
 where:
 - $\alpha_i$ are the coefficients for the terms from parameter changes,
-- $\delta{}\lambda$ are the parameter increments,
+- $\delta\lambda$ are the parameter increments,
 - $\beta_i$ are the coefficients for the terms from self-coupling harmonic interactions,
 - $\gamma_{ij}$ are the coefficients for the terms from cross-coupling harmonic interactions.
 
