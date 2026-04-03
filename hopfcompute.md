@@ -6,7 +6,7 @@ This script computes the normal form at a non-degenerate Hopf point.
 The normal form is written for the complex amplitude $Z = A \exp(\mathrm{i} \omega t)$ as:
 
 $$
-\frac{dZ}{dt} = Z ( \alpha \cdot \delta\lambda + \mathrm{i} \omega + \beta |Z|^2 )
+\frac{dZ}{dt} = \alpha \cdot \delta\lambda Z + \mathrm{i} \omega Z+ \beta Z |Z|^2
 $$
 
 where:
@@ -137,11 +137,11 @@ $$
 where $g = v^H\mathcal{L}w$. In real arithmetic, this gives:
 
 $$
-\begin{align*}
+\begin{aligned}
     \mathcal{J}\delta{}q + \frac{\partial \mathcal{J}}{\partial\lambda}\delta\lambda &= \mathcal{R} \\
     \Re\left(\frac{\partial{}g}{\partial q}\right)\delta{}q + \Re\left(\frac{\partial g}{\partial \lambda}\right)\delta\lambda + \Re\left(\frac{\partial g}{\partial \omega}\right)\delta{}\omega &= \Re(g) \\
     -\Im\left(\frac{\partial{}g}{\partial q}\right)\delta{}q + \Im\left(\frac{\partial g}{\partial \lambda}\right)\delta\lambda + \Im\left(\frac{\partial g}{\partial \omega}\right)\delta{}\omega &= \Im(g)
-\end{align*}
+\end{aligned}
 $$
 
 To determine the matrix entries, we differentiate Eq. (1) along each $z$ in $q, \lambda, \omega$ to find:
