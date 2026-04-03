@@ -1,7 +1,7 @@
 # fohocompute.md
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
-This script computes the normal form at a non-degenerate fold-Hopf point.
+This script computes the normal form at a non-degenerate fold–Hopf point.
 
 The normal form is written for the complex amplitude $Y = A \exp(\mathrm{i} \omega t)$ and the real amplitude $Z$ as:
 
