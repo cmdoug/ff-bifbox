@@ -3,10 +3,10 @@ Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.dougla
 
 This script computes the normal form at a non-degenerate Hopf point.
 
-The normal form is written for the complex amplitude $Z = A\exp(\mathrm{i}\omega{}t)$ as:
+The normal form is written for the complex amplitude $Z = A \exp(\mathrm{i} \omega t)$ as:
 
 $$
-\frac{dZ}{dt} = Z( \alpha\delta\lambda + \mathrm{i}\omega + \beta|Z|^2 )
+\frac{dZ}{dt} = Z ( \alpha \cdot \delta\lambda + \mathrm{i} \omega + \beta\, |Z|^2)
 $$
 
 where:

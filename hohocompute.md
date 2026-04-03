@@ -3,12 +3,12 @@ Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.dougla
 
 This script computes the normal form at a non-degenerate Hopf-Hopf point.
 
-The normal form is written for the complex amplitudes $Y = A_1\exp(\mathrm{i} \omega_1 t)$ and $Z = A_2\exp(\mathrm{i} \omega_2 t)$ as:
+The normal form is written for the complex amplitudes $Y = A_1 \exp(\mathrm{i} \omega_1 t)$ and $Z = A_2\exp(\mathrm{i} \omega_2 t)$ as:
 
 $$
 \begin{align*}
-\frac{dY}{dt} &= \alpha_1 \delta\lambda Y + \mathrm{i} \omega_1 Y + \beta_1 Y |Y|^2 + \gamma_{11} Y |Z|^2 + \gamma_{12} Z^2 + \gamma_{13} Z^3\\
-\frac{dZ}{dt} &= \alpha_2 \delta\lambda Z + \mathrm{i} \omega_2 Z + \beta_2 Z |Z|^2 + \gamma_{21} Z |Y|^2 + \gamma_{22} Y Z^{*} + \gamma_{23} Y (Z^{*})^2
+\frac{dY}{dt} &= \alpha_1 \cdot \delta\lambda\, Y + \mathrm{i} \omega_1\, Y + \beta_1\, Y |Y|^2 + \gamma_{11}\, Y |Z|^2 + \gamma_{12}\, Z^2 + \gamma_{13}\, Z^3\\
+\frac{dZ}{dt} &= \alpha_2 \cdot \delta\lambda\, Z + \mathrm{i} \omega_2\, Z + \beta_2\, Z |Z|^2 + \gamma_{21}\, Z |Y|^2 + \gamma_{22}\, Y Z^{*} + \gamma_{23}\, Y (Z^{*})^2
 \end{align*}
 $$
 

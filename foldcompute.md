@@ -6,7 +6,7 @@ This script computes the normal form at a non-degenerate fold point.
 The normal form is written for the real amplitude $A$ as:
 
 $$
-\frac{dA}{dt} = \alpha\cdot\delta\lambda + \beta{}A^2
+\frac{dA}{dt} = \alpha \cdot \delta\lambda + \beta\, A^2
 $$
 
 where:
