@@ -66,10 +66,10 @@ ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fo vortexm2 -fi vortexDH
 3. Compute Hopf-Hopf point assuming non-resonant interaction
 ```sh
 ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDH -fi vortexm2.mode -fi2 vortexm1.mode -param S -param2 1/Re -nf 0
-ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDH -fi vortexDH.hoho -param S -param2 1/Re -adaptto bda -mo vortexm1m2adapt
+ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDHadapt -fi vortexDH.hoho -param S -param2 1/Re -adaptto bda -mo vortexm1m2adapt
 ```
 
 4. Compute Hopf-Hopf point assuming $2:1$ resonant interaction
 ```sh
-ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDH21res -fi vortexDH.hoho -param S -param2 1/Re -res1x 2
+ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDHadapt21res -fi vortexDHadapt.hoho -param S -param2 1/Re -res1x 2
 ```
