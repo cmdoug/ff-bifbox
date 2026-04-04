@@ -101,13 +101,13 @@ if(count == 0) {
   else if(fileext == "hoho") {
     real omegaN;
     complex[string] alpha, alphaN;
-    complex beta, betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+    complex beta, betaN, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
     complex[int] qma, qNm, qNma;
     if(select == 1){
-      ub[] = loadhoho(fileroot, meshin, um[], qma, qNm, qNma, sym0, sym, omega, omegaN, alpha, alphaN, beta, betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+      ub[] = loadhoho(fileroot, meshin, um[], qma, qNm, qNma, sym0, sym, omega, omegaN, alpha, alphaN, beta, betaN, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
     }
     else if(select == 2){
-      ub[] = loadhoho(fileroot, meshin, qNm, qNma, um[], qma, sym, sym0, omegaN, omega, alphaN, alpha, betaN, beta, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+      ub[] = loadhoho(fileroot, meshin, qNm, qNma, um[], qma, sym, sym0, omegaN, omega, alphaN, alpha, betaN, beta, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
     }
     uh(:, 0) = um[];  
   }

@@ -3,12 +3,12 @@ Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.dougla
 
 This script computes the normal form at a non-degenerate fold–Hopf point.
 
-The normal form is written for the complex amplitude $Y = A \exp(\mathrm{i} \omega t)$ and the real amplitude $Z$ as:
+The normal form is written for the complex amplitude $Y = A_1 \exp(\mathrm{i} \omega t)$ and the real amplitude $A_2$ as:
 
 $$
 \begin{align*}
-\frac{dY}{dt} &= \alpha_1 \cdot \delta\lambda Y + \mathrm{i} \omega Y + \beta_1 Y |Y|^2 + \gamma_{12} Y Z + \gamma_{13} Y Z^2 \\
-\frac{dZ}{dt} &= \alpha_2 \cdot \delta\lambda + \beta_{22} Z^2 + \beta_{23} Z^3 + \gamma_{22} |Y|^2 + \gamma_{23} Z |Y|^2
+\frac{dA_1}{dt} + \alpha_1 \cdot \delta\lambda A_1 + \beta_1 A_1 |A_1|^2 + \gamma_{12} A_1 A_2 + \gamma_{13} A_1 A_2^2 &= 0 \\
+\frac{dA_2}{dt} + \alpha_2 \cdot \delta\lambda + \beta_{22} A_2^2 + \beta_{23} A_2^3 + \gamma_{22} |A_1|^2 + \gamma_{23} A_2 |A_1|^2 &= 0
 \end{align*}
 $$
 
@@ -84,7 +84,7 @@ if (fileext2 == "fold") {
 else if(fileext2 == "foho") {
   real omega;
   complex[string] alpha1;
-  complex beta1, gamma1;
+  complex beta1;
   complex[int] q1m, q1ma;
   ub[].re = loadfoho(fileroot2, meshin, q1m, q1ma, um2[].re, um3[].re, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
 }
@@ -101,13 +101,13 @@ else if (fileext1 == "foho" && fileext2 != "") {
 else if (fileext1 == "hoho") {
   real omegaN;
   complex[string] alphaN;
-  complex betaN, gammaN, gamma12, gammaM, gamma22, gamma23;
+  complex betaN, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
   complex[int] qNm, qNma;
   if(select == 1){
-    ub[].re = loadhoho(fileroot1, meshin, um[], uma[], qNm, qNma, sym1, sym, omega, omegaN, alpha1, alphaN, beta1, betaN, gamma13, gammaN, gamma12, gammaM, gamma22, gamma23);
+    ub[].re = loadhoho(fileroot1, meshin, um[], uma[], qNm, qNma, sym1, sym, omega, omegaN, alpha1, alphaN, beta1, betaN, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
   }
   else if(select == 2){
-    ub[].re = loadhoho(fileroot1, meshin, qNm, qNma, um[], uma[], sym, sym1, omegaN, omega, alphaN, alpha1, betaN, beta1, gammaN, gamma13, gamma12, gammaM, gamma22, gamma23);
+    ub[].re = loadhoho(fileroot1, meshin, qNm, qNma, um[], uma[], sym, sym1, omegaN, omega, alphaN, alpha1, betaN, beta1, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
   }
 }
 else if (fileext1 == "hopf") {
@@ -170,9 +170,9 @@ else if(basefileext == "hoho") {
   real[int] sym2(sym.n);
   real omega1, omega2;
   complex[string] alpha1, alpha2;
-  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
   complex[int] q1m, q1ma, q2m, q2ma;
-  ub[].re = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+  ub[].re = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
 }
 else if(basefileext == "tdns") {
   real time;
@@ -556,7 +556,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
         q1P.resize(Ja.n);
         if(mpirank == 0) q1P(Ja.n-1) = 0.0;
         KSPSolve(Ja, q1P, q1P);
-        if(mpirank == 0) alpha2[paramnames[k]] = real(q1P(Ja.n-1));
+        if(mpirank == 0) alpha2[paramnames[k]] = -real(q1P(Ja.n-1));
         broadcast(processor(0), alpha2[paramnames[k]]);
         qDa(k, :) = q1P(0:J.n-1);
       }
@@ -569,7 +569,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     p2P.resize(Ja.n);
     if(mpirank == 0) p2P(Ja.n-1) = 0.0;
     KSPSolve(Ja, p2P, p2P);
-    if(mpirank == 0) beta22 = real(p2P(Ja.n-1));
+    if(mpirank == 0) beta22 = -real(p2P(Ja.n-1));
     broadcast(processor(0), beta22);
     p2P.resize(J.n);
 
@@ -586,7 +586,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     q1P.resize(Ja.n);
     if(mpirank == 0) q1P(Ja.n-1) = 0.0;
     KSPSolve(Ja, q1P, q1P);
-    if(mpirank == 0) gamma22 = real(q1P(Ja.n-1));
+    if(mpirank == 0) gamma22 = -real(q1P(Ja.n-1));
     broadcast(processor(0), gamma22);
     q1P.resize(J.n);
     //  C: harmonics generation due to quadratic nonlinear interactions
@@ -625,7 +625,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     q2P.resize(Ja.n);
     if(mpirank == 0) q2P(Ja.n-1) = 0.0;
     KSPSolve(Ja, q2P, q2P);
-    if(mpirank == 0) gamma12 = q2P(Ja.n-1);
+    if(mpirank == 0) gamma12 = -q2P(Ja.n-1);
     broadcast(processor(0), gamma12);
     q2P.resize(J.n);
     // 3rd-order
@@ -643,7 +643,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
         updateparam(paramnames[k], paramval);
         um2[] -= R;
         um3[] += um2[]/eps;
-        alpha1[paramnames[k]] = -J(uma[], um3[]);
+        alpha1[paramnames[k]] = J(uma[], um3[]);
       }
     }
     // A|A|^2
@@ -677,7 +677,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um2[], p1P, inverse = true, exchange = true); // FreeFEM to PETSc
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
-    beta1 = -J(uma[], R);
+    beta1 = J(uma[], R);
 
     // B^3
     //  B: fundamental modification due to cubic self-interaction
@@ -704,7 +704,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     IFMACRO(!cubic)
     R = vH(0, XMh, tgv = -10);
     ENDIFMACRO
-    beta23 = -0.5*real(J(uma[], R));
+    beta23 = 0.5*real(J(uma[], R));
 
     // A|B|^2
     //  B: fundamental modification due to cubic self-interaction of fundamental
@@ -736,7 +736,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um2[], q2P, inverse = true, exchange = true); // FreeFEM to PETSc
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
-    gamma13 = -J(uma[], R);
+    gamma13 = J(uma[], R);
 
     // B|A|^2
     //  B: fundamental modification due to cubic self-interaction of fundamental
@@ -771,7 +771,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um2[], q2P, inverse = true, exchange = true); // FreeFEM to PETSc
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
-    gamma23 = -real(J(uma[], R));
+    gamma23 = real(J(uma[], R));
     if(wnlsave){
       complex[int] val(1);
       XMh<complex>[int] defu(vec)(1);

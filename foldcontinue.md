@@ -385,14 +385,14 @@ while (!stopflag){
           um2[] = vR(0, XMh, tgv = TGV);
           updateparam(paramnames[k], paramval);
           um2[] -= R;
-          alpha[paramnames[k]] = -J(uma[], um2[])/eps;
+          alpha[paramnames[k]] = J(uma[], um2[])/eps;
         }
       }
       //  B: base modification due to quadratic nonlinear interaction
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       um2[] = um[];
       um3[] = vH(0, XMh, tgv = -10);
-      beta = -0.5*J(uma[], um3[]);
+      beta = 0.5*J(uma[], um3[]);
     }
     else {
       for (int k = 0; k < paramnames.n; ++k){

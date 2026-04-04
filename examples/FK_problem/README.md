@@ -55,8 +55,8 @@ ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi "$guess" -fo cylinder
 done
 ````
 Example output:
- alpha[Da] = 2.6252,
- beta = 0.91967,
+ alpha[Da] = -2.6252,
+ beta = -0.91967,
  Da = 2.00227,
  Tmax = 1.386.
 

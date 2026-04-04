@@ -246,8 +246,8 @@ if (mpirank==0){
     real omega1, omega2;
     real[int] sym1(sym.n), sym2(sym.n);
     complex[string] alpha1, alpha2;
-    complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
-    ubg[] = loadhoho(fileroot, meshin, u1mg[], u1mag[], u2mg[], u2mag[], sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+    complex beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
+    ubg[] = loadhoho(fileroot, meshin, u1mg[], u1mag[], u2mg[], u2mag[], sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
     cout << "  Saving '" + fileout + "_hoho_[base,dirmode1,adjmode1,dirmode2,adjmode2].vtu' in '" + workdir + "'." << endl;
     real[int] qpv = ubg[];
     complex[int] q1mpv = u1mg[], q1mapv = u1mag[], q2mpv = u2mg[], q2mapv = u2mag[];
