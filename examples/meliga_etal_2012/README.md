@@ -84,3 +84,4 @@ ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDHadapt -fi vor
 ```sh
 ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDHadapt21res -fi vortexDHadapt.hoho -param S -param2 1/Re -res1x 2
 ```
+NOTE: the resonant coefficients $\gamma_{12}$ and $\gamma_{22}$ differ from the original paper by unit-magnitude phase offset due to a different phase reference condition used by `ff-bifbox`.
