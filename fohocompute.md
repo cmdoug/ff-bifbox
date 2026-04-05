@@ -53,7 +53,7 @@ string param = getARGV("-param", "");
 string param2 = getARGV("-param2", "");
 string adaptto = getARGV("-adaptto", "b");
 real eps = getARGV("-eps", 1e-7);
-real eps2 = getARGV("-eps2", 1e-7);
+real eps2 = getARGV("-eps2", eps);
 string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
 real TGV = getARGV("-tgv", -1);
 real[int] sym1(sym.n);

@@ -56,7 +56,7 @@ string param = getARGV("-param", "");
 string param2 = getARGV("-param2", "");
 string adaptto = getARGV("-adaptto", "b");
 real eps = getARGV("-eps", 1e-7);
-real eps2 = getARGV("-eps2", 1e-7);
+real eps2 = getARGV("-eps2", eps);
 string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
 real TGV = getARGV("-tgv", -1);
 real[int] sym1(sym.n), sym2(sym.n);
@@ -581,12 +581,13 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
   if(mpirank == 0) paramvals = qa(J.n:Ja.n-1).re;
   broadcast(processor(0), paramvals);
-  updateparam(param, paramvals(0) + eps);
+  updateparam(param, paramvals(0));
   omega1 = zerofreq ? 0.0 : paramvals(1-zerofreq);
   updateparam(param2, paramvals(2-zerofreq));
   omega2 = zerofreq2 ? 0.0 : paramvals(3-zerofreq-zerofreq2);
   ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
   sym = sym1;
+  ik.im = sym1;
   um2[] = vM(0, XMh, tgv = 0);
   phaserefl = um2[].sum;
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
@@ -601,6 +602,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   ChangeNumbering(J, uma[], q1ma);
   ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
   sym = sym2;
+  ik.im = sym2;
   um2[] = vM(0, XMh, tgv = 0);
   phaserefl = um2[].sum;
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
@@ -674,9 +676,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     //  difference harmonic
     ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
     um2[] = conj(um2[]);
-    ik.im = sym1;
     ik2.im = -sym2;
-    iomega = 1i*omega1;
     iomega2 = -1i*omega2;
     sym = sym1 - sym2;
     um3[] = vH(0, XMh, tgv = -10);
@@ -690,16 +690,16 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       gamma22 = 0.0;
     }
     else {
-      ChangeNumbering(J, um[], q2ma, inverse = true, exchange = true);
+      um[] = conj(um2[]);
       um2[] = vM(0, XMh, tgv = -10);
       ChangeNumbering(J, um2[], p1P);
       matrix<complex> tempPms = [[p1P]]; // dense array to sparse matrix
-      ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
-      ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+      ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
+      ChangeNumbering(J, um[], q2ma, inverse = true, exchange = true);
       um2[] = vM(0, XMh, tgv = -10);
       ChangeNumbering(J, um2[], p1P);
       tempPms = [[p1P]]; // dense array to sparse matrix
-      ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
+      ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
       q2P.resize(Ja.n);
       if(mpirank == 0) q2P(Ja.n-1) = 0.0;
       KSPSolve(Ja, q2P, q2P);
@@ -761,7 +761,6 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       ChangeNumbering(J, um2[], tempP);
       tempPms = [[tempP]]; // dense array to sparse matrix
       ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
-      Ja = [[J, qPM], [pPM', 0]]; // make dummy Jacobian
       qBB.resize(Ja.n);
       if(mpirank == 0) qBB(Ja.n-1) = 0.0;
       KSPSolve(Ja, qBB, qBB);

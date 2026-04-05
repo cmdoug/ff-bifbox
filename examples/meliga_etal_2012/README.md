@@ -47,29 +47,40 @@ FreeFem++-mpi -v 0 examples/meliga_etal_2012/vortex.md -mo $workdir/vortex
 ```sh
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi vortex.msh -fo vortex -1/Re 0.005 -S 0
 ```
+
 2. Continue base state along the parameter $S$ with adaptive remeshing
 ```sh
 ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi vortex.base -fo vortex -param S -h0 1 -scount 4 -maxcount 40 -mo vortexadapt
 ```
 
 ### Unsteady 3-D dynamics
-1. Compute base state near the double Hopf point
+1. Compute the $m=-1$ Hopf point along $S=1$
+```sh
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi vortex.msh -fo vortexS1m1 -1/Re 0.0061 -S 1
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fo vortexS1m1 -fi vortexS1m1.base -sym -1 -eps_target 0.1+1.1i -eps_pos_gen_non_hermitian
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fo vortexS1m1 -fi vortexS1m1.mode -nf 0 -param 1/Re
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fo vortexS1m1 -fi vortexS1m1.mode -adaptto bda -mo vortexS1m1 -param 1/Re
+```
+
+2. Compute base state near the double Hopf point
 ```sh
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi vortex.msh -fo vortexDH -1/Re 0.0139 -S 1
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi vortexDH.base -fo vortexDH -S 1.44
 ```
-2. Compute near-critical modes
+
+3. Compute near-critical modes
 ```sh
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fo vortexm1 -fi vortexDH.base -sym -1 -eps_target 0+1i -eps_pos_gen_non_hermitian
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fo vortexm2 -fi vortexDH.base -sym -2 -eps_target 0+2i -eps_pos_gen_non_hermitian
 ```
-3. Compute Hopf-Hopf point assuming non-resonant interaction
+
+4. Compute Hopf-Hopf point assuming non-resonant interaction
 ```sh
 ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDH -fi vortexm2.mode -fi2 vortexm1.mode -param S -param2 1/Re -nf 0
 ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDHadapt -fi vortexDH.hoho -param S -param2 1/Re -adaptto bda -mo vortexm1m2adapt
 ```
 
-4. Compute Hopf-Hopf point assuming $2:1$ resonant interaction
+5. Compute Hopf-Hopf point assuming $2:1$ resonant interaction
 ```sh
 ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fo vortexDHadapt21res -fi vortexDHadapt.hoho -param S -param2 1/Re -res1x 2
 ```
