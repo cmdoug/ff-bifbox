@@ -24,13 +24,11 @@
 // Boundary conditions
   macro BoundaryConditions(u, U)
     on(BCinflow, u = U - 1.0, u#y = U#y, u#z = U#z - params["S"]*((y <= 1.0)*y*(2.0 - y^2) + (y > 1.0)/(y+(y == 0))))
-    + on(BCslip, u#y = U#y, u#z = U#z)
-    + on(BCaxis, u#y = U#y, u#z = U#z)
+    + on(BCslip, BCaxis, u#y = U#y, u#z = U#z)
   // EOM
   macro HomBoundaryConditions(u)
     on(BCinflow, u = 0, u#y = 0, u#z = 0)
-    + on(BCslip, u#y = 0, u#z = 0)
-    + on((abs(int(sym(0))) != 1)*BCaxis, u#y = 0, u#z = 0)
+    + on(BCslip, (abs(int(sym(0))) != 1)*BCaxis, u#y = 0, u#z = 0)
     + on((abs(int(sym(0))) >  0)*BCaxis, u = 0)
   // EOM
 // RESIDUAL OPERATOR

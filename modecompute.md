@@ -88,9 +88,9 @@ else if(fileext == "hoho") {
   real[int] sym1(sym.n), sym2(sym.n);
   real omega1, omega2;
   complex[string] alpha1, alpha2;
-  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
   complex[int] q1m, q1ma, q2m, q2ma;
-  ub[] = loadhoho(fileroot, meshin, q1m, q1ma, q2m, q2ma, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadhoho(fileroot, meshin, q1m, q1ma, q2m, q2ma, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
 }
 else if(fileext == "tdns") {
   real time;

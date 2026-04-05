@@ -80,13 +80,13 @@ else if (fileext == "foho") {
 else if(fileext == "hoho") {
   real omegaN;
   complex[string] alpha, alphaN;
-  complex beta, betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex beta, betaN, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
   complex[int] qma, qNm, qNma;
   if(select == 1){
-    ub[] = loadhoho(fileroot, meshin, um[], qma, qNm, qNma, sym0, sym, omega, omegaN, alpha, alphaN, beta, betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+    ub[] = loadhoho(fileroot, meshin, um[], qma, qNm, qNma, sym0, sym, omega, omegaN, alpha, alphaN, beta, betaN, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
   }
   else if(select == 2){
-    ub[] = loadhoho(fileroot, meshin, qNm, qNma, um[], qma, sym, sym0, omegaN, omega, alphaN, alpha, betaN, beta, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+    ub[] = loadhoho(fileroot, meshin, qNm, qNma, um[], qma, sym, sym0, omegaN, omega, alphaN, alpha, betaN, beta, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
   }
   uh(:, 0) = um[];
 }
@@ -143,9 +143,9 @@ else if(basefileext == "hoho") {
   real[int] sym2(sym.n);
   real omega1, omega2;
   complex[string] alpha1, alpha2;
-  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
   complex[int] q1m, q1ma, q2m, q2ma;
-  ub[] = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
 }
 else if(basefileext == "tdns") {
   real time;

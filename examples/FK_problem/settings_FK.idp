@@ -35,12 +35,11 @@ string ParaviewDataNamefc = "forcing_r forcing_i";
 int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
 int[int] ParaviewOrderfc = [ParaviewOrderf, ParaviewOrderf];
 // Initial conditions (if no file)
-macro InitialConditions() 1// EOM
+macro InitialConditions() 0// EOM
 // Boundary labels 
 int BCnull = 0;
 int BCwall = 1;
 // Define solution monitors to extract: here maximum temperature in the domain
 macro getmonitors() {
-    real Tmax = ubg[].max;
-    monitors["Tmax"] = Tmax;
+    monitors["Tmax"] = ubg[].max;
 }// EOM

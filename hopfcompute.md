@@ -6,7 +6,7 @@ This script computes the normal form at a non-degenerate Hopf point.
 The normal form is written for the complex amplitude $Z = A \exp(\mathrm{i} \omega t)$ as:
 
 $$
-\frac{dZ}{dt} = \alpha \cdot \delta\lambda Z + \mathrm{i} \omega Z + \beta Z |Z|^2
+\frac{dA}{dt} + \alpha \cdot \delta\lambda A + \beta A |A|^2 = 0
 $$
 
 where:
@@ -14,7 +14,7 @@ where:
 - $\delta\lambda$ are the parameter increments,
 - $\beta$ is the coefficient for the term from harmonic interactions.
 
-Using this convention, the bifurcation is supercritical for $\Re(\beta) < 0$, and subcritical for $\Re(\beta) > 0$.
+Using this convention, the bifurcation is supercritical for $\Re(\beta) > 0$, and subcritical for $\Re(\beta) < 0$.
 
 #### RESIDUAL EVALUATION IN MINIMALLY AUGMENTED FORMULATION
 We can directly compute the residual using the varf `vR()`.
@@ -263,13 +263,13 @@ else if (fileext == "foho") {
 else if(fileext == "hoho") {
   real omegaN;
   complex[string] alphaN;
-  complex betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex betaN, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
   complex[int] qNm, qNma;
   if(select == 1){
-    ub[].re = loadhoho(fileroot, meshin, um[], uma[], qNm, qNma, sym1, sym, omega, omegaN, alpha, alphaN, beta, betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+    ub[].re = loadhoho(fileroot, meshin, um[], uma[], qNm, qNma, sym1, sym, omega, omegaN, alpha, alphaN, beta, betaN, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
   }
   else if(select == 2){
-    ub[].re = loadhoho(fileroot, meshin, qNm, qNma, um[], uma[], sym, sym1, omegaN, omega, alphaN, alpha, betaN, beta, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+    ub[].re = loadhoho(fileroot, meshin, qNm, qNma, um[], uma[], sym, sym1, omegaN, omega, alphaN, alpha, betaN, beta, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
   }
 }
 else if (fileext == "mode") {
@@ -329,9 +329,9 @@ else if(basefileext == "hoho") {
   real[int] sym2(sym.n);
   real omega1, omega2;
   complex[string] alpha1, alpha2;
-  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
   complex[int] q1m, q1ma, q2m, q2ma;
-  ub[].re = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+  ub[].re = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
 }
 else if(basefileext == "tdns") {
   real time;
@@ -637,7 +637,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
         updateparam(paramnames[k], paramval);
         um2[] -= R;
         um3[] += um2[]/eps;
-        alpha[paramnames[k]] = -J(uma[], um3[]);
+        alpha[paramnames[k]] = J(uma[], um3[]);
       }
     }
     IFMACRO(cubic)
@@ -670,7 +670,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um2[], pP, inverse = true, exchange = true);
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
-    beta = -J(uma[], R);
+    beta = J(uma[], R);
     if(wnlsave){
       complex[int] val(1);
       XMh<complex>[int] defu(vec)(1);

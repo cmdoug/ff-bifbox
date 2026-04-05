@@ -7,8 +7,8 @@ The normal form is written for the complex amplitudes $Y = A_1 \exp(\mathrm{i} \
 
 $$
 \begin{align*}
-\frac{dY}{dt} &= \alpha_1 \cdot \delta\lambda Y + \mathrm{i} \omega_1 Y + \beta_1 Y |Y|^2 + \gamma_{11} Y |Z|^2 + \gamma_{12} Z^2 + \gamma_{13} Z^3 \\
-\frac{dZ}{dt} &= \alpha_2 \cdot \delta\lambda Z + \mathrm{i} \omega_2 Z + \beta_2 Z |Z|^2 + \gamma_{21} Z |Y|^2 + \gamma_{22} Y Z^{\ast} + \gamma_{23} Y (Z^{\ast})^2
+\frac{dA_1}{dt} + \alpha_1 \cdot \delta\lambda A_1 + \beta_1 A_1 |A_1|^2 + \gamma_{11} A_1 |A_2|^2 + \gamma_{12} A_2^2 + \gamma_{13} A_2^3 &= 0\\
+\frac{dA_2}{dt} + \alpha_2 \cdot \delta\lambda A_2 + \beta_2 A_2 |A_2|^2 + \gamma_{21} A_2 |A_1|^2 + \gamma_{22} A_1 A_2^{\ast} + \gamma_{23} A_1 (A_2^{\ast})^2 &= 0
 \end{align*}
 $$
 
@@ -56,13 +56,13 @@ string param = getARGV("-param", "");
 string param2 = getARGV("-param2", "");
 string adaptto = getARGV("-adaptto", "b");
 real eps = getARGV("-eps", 1e-7);
-real eps2 = getARGV("-eps2", 1e-7);
+real eps2 = getARGV("-eps2", eps);
 string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
 real TGV = getARGV("-tgv", -1);
 real[int] sym1(sym.n), sym2(sym.n);
 real omega, omega1, omega2;
 complex[string] alpha1, alpha2;
-complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+complex beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
 // Load mesh, make FE basis
 string fileroot1, fileext1 = parsefilename(filein, fileroot1); //extract file name and extension
 string fileroot2, fileext2 = parsefilename(filein2, fileroot2); //extract file name and extension
@@ -90,13 +90,13 @@ else if (fileext2 == "foho") {
 else if (fileext2 == "hoho") {
   real omegaN;
   complex[string] alphaN;
-  complex betaN, gammaN, gamma12, gamma13, gamma22, gamma23;
+  complex betaN, gammaN1, gammaN2, gammaN3;
   complex[int] qNm, qNma;
   if(select2 == 1){
-    ub[].re = loadhoho(fileroot2, meshin, um2[], um3[], qNm, qNma, sym2, sym, omega2, omegaN, alpha2, alphaN, beta2, betaN, gammaN, gamma2, gamma12, gamma13, gamma22, gamma23);
+    ub[].re = loadhoho(fileroot2, meshin, um2[], um3[], qNm, qNma, sym2, sym, omega2, omegaN, alpha2, alphaN, beta2, betaN, gamma21, gamma22, gamma23, gammaN1, gammaN2, gammaN3);
   }
   else if(select2 == 2){
-    ub[].re = loadhoho(fileroot2, meshin, qNm, qNma, um2[], um3[], sym, sym2, omegaN, omega2, alphaN, alpha2, betaN, beta2, gamma2, gammaN, gamma12, gamma13, gamma22, gamma23);
+    ub[].re = loadhoho(fileroot2, meshin, qNm, qNma, um2[], um3[], sym, sym2, omegaN, omega2, alphaN, alpha2, betaN, beta2, gammaN1, gammaN2, gammaN3, gamma21, gamma22, gamma23);
   }
 }
 else if (fileext2 == "mode") {
@@ -129,18 +129,18 @@ else if(fileext2 == "floq") {
 }
 else if (fileext2 != "") assert(false); // invalid input filetype
 if (fileext1 == "hoho" && fileext2 == "") {
-  ub[].re = loadhoho(fileroot1, meshin, um[], uma[], um2[], um3[], sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+  ub[].re = loadhoho(fileroot1, meshin, um[], uma[], um2[], um3[], sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
 }
 else if (fileext1 == "hoho" && fileext2 != "") {
   real omegaN;
   complex[string] alphaN;
-  complex betaN, gammaN, gamma12, gamma13, gamma22, gamma23;
+  complex betaN, gammaN1, gammaN2, gammaN3;
   complex[int] qNm, qNma;
   if(select == 1){
-    ub[].re = loadhoho(fileroot1, meshin, um[], uma[], qNm, qNma, sym1, sym, omega1, omegaN, alpha1, alphaN, beta1, betaN, gamma1, gammaN, gamma12, gamma13, gamma22, gamma23);
+    ub[].re = loadhoho(fileroot1, meshin, um[], uma[], qNm, qNma, sym1, sym, omega1, omegaN, alpha1, alphaN, beta1, betaN, gamma11, gamma12, gamma13, gammaN1, gammaN2, gammaN3);
   }
   else if(select == 2){
-    ub[].re = loadhoho(fileroot1, meshin, qNm, qNma, um[], uma[], sym, sym1, omegaN, omega1, alphaN, alpha1, betaN, beta1, gammaN, gamma1, gamma12, gamma13, gamma22, gamma23);
+    ub[].re = loadhoho(fileroot1, meshin, qNm, qNma, um[], uma[], sym, sym1, omegaN, omega1, alphaN, alpha1, betaN, beta1, gammaN1, gammaN2, gammaN3, gamma11, gamma12, gamma13);
   }
 }
 else if (fileext1 == "foho") {
@@ -212,9 +212,9 @@ else if(basefileext == "hoho") {
   real[int] symN(sym.n);
   real omega1, omega2;
   complex[string] alpha1, alpha2;
-  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
   complex[int] q1m, q1ma, q2m, q2ma;
-  ub[].re = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, symN, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+  ub[].re = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, symN, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
 }
 else if(basefileext == "tdns") {
   real time;
@@ -581,12 +581,13 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
   if(mpirank == 0) paramvals = qa(J.n:Ja.n-1).re;
   broadcast(processor(0), paramvals);
-  updateparam(param, paramvals(0) + eps);
+  updateparam(param, paramvals(0));
   omega1 = zerofreq ? 0.0 : paramvals(1-zerofreq);
   updateparam(param2, paramvals(2-zerofreq));
   omega2 = zerofreq2 ? 0.0 : paramvals(3-zerofreq-zerofreq2);
   ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
   sym = sym1;
+  ik.im = sym1;
   um2[] = vM(0, XMh, tgv = 0);
   phaserefl = um2[].sum;
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
@@ -601,6 +602,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   ChangeNumbering(J, uma[], q1ma);
   ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
   sym = sym2;
+  ik.im = sym2;
   um2[] = vM(0, XMh, tgv = 0);
   phaserefl = um2[].sum;
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
@@ -665,8 +667,8 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     iomega = 1i*omega1;
     iomega2 = -iomega;
     um2[] = conj(um[]);
+    um[] *= -1.0;
     um3[] = vH(0, XMh, tgv = -10);
-    um3[].re *= -1.0; // -2.0/2.0
     um3[].im = 0.0;
     ChangeNumbering(J, um3[], q1P); // FreeFEM to PETSc
     KSPSolve(J, q1P, q1P);
@@ -674,33 +676,33 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     //  difference harmonic
     ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
     um2[] = conj(um2[]);
-    ik.im = sym1;
     ik2.im = -sym2;
-    iomega = 1i*omega1;
     iomega2 = -1i*omega2;
     sym = sym1 - sym2;
     um3[] = vH(0, XMh, tgv = -10);
-    um3[] *= -1.0; // -2.0/2.0
     ChangeNumbering(J, um3[], q2P); // FreeFEM to PETSc
     ik.im = sym;
     iomega = 1i*(omega1 - omega2);
     J = vJ(XMh, XMh, tgv = TGV);
-    if (res1x != 2) KSPSolve(J, q2P, q2P);
+    if (res1x != 2) {
+      KSPSolve(J, q2P, q2P);
+      gamma22 = 0.0;
+    }
     else {
-      ChangeNumbering(J, um[], q2ma, inverse = true, exchange = true);
+      um[] = conj(um2[]);
       um2[] = vM(0, XMh, tgv = -10);
       ChangeNumbering(J, um2[], p1P);
       matrix<complex> tempPms = [[p1P]]; // dense array to sparse matrix
-      ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
-      ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+      ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
+      ChangeNumbering(J, um[], q2ma, inverse = true, exchange = true);
       um2[] = vM(0, XMh, tgv = -10);
       ChangeNumbering(J, um2[], p1P);
       tempPms = [[p1P]]; // dense array to sparse matrix
-      ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
+      ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
       q2P.resize(Ja.n);
       if(mpirank == 0) q2P(Ja.n-1) = 0.0;
       KSPSolve(Ja, q2P, q2P);
-      if(mpirank == 0) gamma22 = q2P(Ja.n-1);
+      if(mpirank == 0) gamma22 = -q2P(Ja.n-1);
       broadcast(processor(0), gamma22);
       q2P.resize(J.n);
     }
@@ -742,24 +744,26 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ik.im = sym;
     iomega = 2i*omega2;
     J = vJ(XMh, XMh, tgv = TGV);
-    if (res1x != 2) KSPSolve(J, qBB, qBB);
+    if (res1x != 2) {
+      KSPSolve(J, qBB, qBB);
+      gamma12 = 0.0;
+    }
     else {
-      ChangeNumbering(J, um[], q1ma, inverse = true, exchange = true);
+      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
       um2[] = vM(0, XMh, tgv = -10);
       complex[int] tempP(J.n);
       ChangeNumbering(J, um2[], tempP);
       matrix<complex> tempPms = [[tempP]]; // dense array to sparse matrix
-      ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
-      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+      ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
+      ChangeNumbering(J, um[], q1ma, inverse = true, exchange = true);
       um2[] = vM(0, XMh, tgv = -10);
       ChangeNumbering(J, um2[], tempP);
       tempPms = [[tempP]]; // dense array to sparse matrix
-      ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
-      Ja = [[J, qPM], [pPM', 0]]; // make dummy Jacobian
+      ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
       qBB.resize(Ja.n);
       if(mpirank == 0) qBB(Ja.n-1) = 0.0;
       KSPSolve(Ja, qBB, qBB);
-      if(mpirank == 0) gamma12 = qBB(Ja.n-1);
+      if(mpirank == 0) gamma12 = -qBB(Ja.n-1);
       broadcast(processor(0), gamma12);
       qBB.resize(J.n);
     }
@@ -784,7 +788,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
         updateparam(paramnames[k], paramval);
         um2[] -= R;
         um3[] += um2[]/eps;
-        alpha1[paramnames[k]] = -J(uma[], um3[]);
+        alpha1[paramnames[k]] = J(uma[], um3[]);
       }
     }
     // B
@@ -804,7 +808,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
         updateparam(paramnames[k], paramval);
         um2[] -= R;
         um3[] += um2[]/eps;
-        alpha2[paramnames[k]] = -J(uma[], um3[]);
+        alpha2[paramnames[k]] = J(uma[], um3[]);
       }
     }
     // A|A|^2
@@ -843,7 +847,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um2[], p1P, inverse = true, exchange = true); // FreeFEM to PETSc
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
-    beta1 = -J(uma[], R);
+    beta1 = J(uma[], R);
 
     // B|B|^2
     //  B: fundamental modification due to cubic self-interaction of fundamental
@@ -881,7 +885,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um2[], qBB, inverse = true, exchange = true); // FreeFEM to PETSc
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
-    beta2 = -J(uma[], R);
+    beta2 = J(uma[], R);
 
     // A|B|^2
     //  B: fundamental modification due to cubic self-interaction of fundamental
@@ -927,7 +931,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um2[], qAB, inverse = true, exchange = true); // FreeFEM to PETSc
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
-    gamma1 = -J(uma[], R);
+    gamma11 = J(uma[], R);
 
 
     // B|A|^2
@@ -975,7 +979,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um2[], qAB, inverse = true, exchange = true); // FreeFEM to PETSc
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
-    gamma2 = -J(uma[], R);
+    gamma21 = J(uma[], R);
 
     if (res1x == 3){
       // B^3
@@ -1006,7 +1010,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       IFMACRO(!cubic)
       R = vH(0, XMh, tgv = -10);
       ENDIFMACRO
-      gamma13 = -J(uma[], R);
+      gamma13 = J(uma[], R);
 
       // A*(B^*)^2
       //  B: fundamental modification due to cubic self-interaction of fundamental
@@ -1049,7 +1053,11 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       um3[] = vH(0, XMh, tgv = -10);
       R += um3[];
 
-      gamma23 = -J(uma[], R);
+      gamma23 = J(uma[], R);
+    }
+    else {
+      gamma13 = 0.0;
+      gamma23 = 0.0;
     }
     if(wnlsave){
       complex[int] val(1);
@@ -1093,11 +1101,11 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     }
     beta1 = 0.0;
     beta2 = 0.0;
-    gamma1 = 0.0;
-    gamma2 = 0.0;
+    gamma11 = 0.0;
     gamma12 = 0.0;
-    gamma22 = 0.0;
     gamma13 = 0.0;
+    gamma21 = 0.0;
+    gamma22 = 0.0;
     gamma23 = 0.0;
   }
   if(mpirank==0 && adapt) { // Save adapted mesh
@@ -1109,6 +1117,6 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   ChangeNumbering(J, uma[], q1ma, inverse = true);
   ChangeNumbering(J, um2[], q2m, inverse = true);
   ChangeNumbering(J, um3[], q2ma, inverse = true);
-  savehoho(fileout, "", meshout, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23, true, true);
+  savehoho(fileout, "", meshout, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23, true, true);
 }
 ```

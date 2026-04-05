@@ -88,13 +88,13 @@ if (count == 0){
   else if(fileext == "hoho") {
     real omegaN;
     complex[string] alphaN;
-    complex betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+    complex betaN, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
     complex[int] qNm, qNma;
     if(select == 1){
-      ub[].re = loadhoho(fileroot, meshin, um[], uma[], qNm, qNma, sym1, sym, omega, omegaN, alpha, alphaN, beta, betaN, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+      ub[].re = loadhoho(fileroot, meshin, um[], uma[], qNm, qNma, sym1, sym, omega, omegaN, alpha, alphaN, beta, betaN, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
     }
     else if(select == 2){
-      ub[].re = loadhoho(fileroot, meshin, qNm, qNma, um[], uma[], sym, sym1, omegaN, omega, alphaN, alpha, betaN, beta, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+      ub[].re = loadhoho(fileroot, meshin, qNm, qNma, um[], uma[], sym, sym1, omegaN, omega, alphaN, alpha, betaN, beta, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
     }
   }
   savehopf(filein, (savecount > 0 ? fileout : ""), meshin, sym1, omega, alpha, beta, false, false);
@@ -514,7 +514,7 @@ while (!stopflag){
           updateparam(paramnames[k], paramval);
           um2[] -= temp;
           um3[] += um2[]/eps;
-          alpha[paramnames[k]] = -J(uma[], um3[]);
+          alpha[paramnames[k]] = J(uma[], um3[]);
         }
       }
       IFMACRO(cubic)
@@ -547,7 +547,7 @@ while (!stopflag){
       ChangeNumbering(J, um2[], pP, inverse = true, exchange = true); // FreeFEM to PETSc
       um3[] = vH(0, XMh, tgv = -10);
       temp += um3[];
-      beta = -J(uma[], temp);
+      beta = J(uma[], temp);
       ik2 = 0.0;
       iomega2 = 0.0;
       if(wnlsave){

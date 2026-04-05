@@ -67,7 +67,7 @@ ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi swirljet100.base -fo
 5. Compute backward and forward fold bifurcations from steady solution branch on base-adapted mesh
 ```sh
 cd $workdir && declare -a foldguesslist=(*specialpt.base) && cd -
-//note some shells may index from 1 and 2 instead of 0 and 1
+#note some shells may index from 1 and 2 instead of 0 and 1
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi ${foldguesslist[0]} -fo swirljet100_B -param S -mo swirljet100_B -adaptto b -thetamax 1 -nf 0
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi ${foldguesslist[1]} -fo swirljet100_F -param S -mo swirljet100_F -adaptto b -thetamax 1 -nf 0
 ```

@@ -6,14 +6,13 @@ This script computes the normal form at a non-degenerate fold point.
 The normal form is written for the real amplitude $A$ as:
 
 $$
-\frac{dA}{dt} = \alpha \cdot \delta\lambda + \beta A^2
+\frac{dA}{dt} + \alpha \cdot \delta\lambda + \beta A^2 = 0
 $$
 
 where:
 - $\alpha$ is the coefficient for the term from parameter changes,
 - $\delta\lambda$ are the parameter increments,
 - $\beta$ is the coefficient for the term from harmonic interactions.
-
 
 ## EXAMPLE USAGE:
 ### Initialize with fold guess from base file, solve on same mesh
@@ -99,9 +98,9 @@ else if(fileext == "hoho") {
   real[int] sym1(sym.n), sym2(sym.n);
   real omega1, omega2;
   complex[string] alpha1, alpha2;
-  complex beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23;
+  complex beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
   complex[int] q1m, q1ma, q2m, q2ma;
-  ub[] = loadhoho(fileroot, meshin, q1m, q1ma, q2m, q2ma, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadhoho(fileroot, meshin, q1m, q1ma, q2m, q2ma, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
 }
 else if(fileext == "tdns") {
   real time;
@@ -306,14 +305,14 @@ if (ret > 0) { // Save solution if solver converged and output file is given
         um2[] = vR(0, XMh, tgv = TGV);
         updateparam(paramnames[k], paramval);
         um2[] -= R;
-        alpha[paramnames[k]] = -J(uma[], um2[])/eps;
+        alpha[paramnames[k]] = J(uma[], um2[])/eps;
       }
     }
     //  B: base modification due to quadratic nonlinear interaction
     ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
     um2[] = um[];
     um3[] = vH(0, XMh, tgv = -10);
-    beta = -0.5*J(uma[], um3[]);
+    beta = 0.5*J(uma[], um3[]);
   }
   else {
     for (int k = 0; k < paramnames.n; ++k){

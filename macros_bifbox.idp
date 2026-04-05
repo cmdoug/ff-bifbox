@@ -1897,7 +1897,7 @@ macro savetdns(tdnsfileout, statsfile, meshfile, ICfile, time, saveflag, monitor
   }
 }//EOM
 
-macro savehoho(hohofileout, statsfile, meshfile, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma1, gamma2, gamma12, gamma13, gamma22, gamma23, saveflag, monitorflag){
+macro savehoho(hohofileout, statsfile, meshfile, sym1, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23, saveflag, monitorflag){
   IFMACRO(getmonitors)
     XMhg defu(tempu), defu(ubg), defu(umg), defu(umag);
     tempu[](restu) = ub[].re;
@@ -1921,7 +1921,7 @@ macro savehoho(hohofileout, statsfile, meshfile, sym1, sym2, omega1, omega2, alp
         cout << "], alpha[" + paramnames[k] + "] = [" + alpha1[paramnames[k]] + "; " + alpha2[paramnames[k]];
       }
     }
-    cout << "], beta = [" + beta1 + "; " + beta2 << "], gamma = [" + gamma1 + "," + gamma12 + "," + gamma13 + "; " + gamma2 + "," + gamma22 + "," + gamma23 +  "]";
+    cout << "], beta = [" + beta1 + "; " + beta2 << "], gamma = [" + gamma11 + ", " + gamma12 + ", " + gamma13 + "; " + gamma21 + ", " + gamma22 + ", " + gamma23 + "]";
     if(paramnames[0] != "" ) cout << ", " << listparams(paramnames, params);
     if(monitornames[0] != "") cout << ", " << listparams(monitornames, monitors);
     cout << "." << endl;
@@ -1939,7 +1939,7 @@ macro savehoho(hohofileout, statsfile, meshfile, sym1, sym2, omega1, omega2, alp
           file << "\t" << alpha1[paramnames[k]] << "\t" << alpha2[paramnames[k]];
         }
       }
-      file << "\t" << beta1 << "\t" << beta2 << "\t" << gamma1 << "\t" << gamma2 << "\t" << gamma12 << "\t" << gamma13 << "\t" << gamma22 << "\t" << gamma23;
+      file << "\t" << beta1 << "\t" << beta2 << "\t" << gamma11 << "\t" << gamma12 << "\t" << gamma13 << "\t" << gamma21 << "\t" << gamma22 << "\t" << gamma23;
       if(paramnames[0] != ""){
         for (int k = 0; k < paramnames.n; ++k){
           file << "\t" << params[paramnames[k]];
@@ -1982,7 +1982,7 @@ macro savehoho(hohofileout, statsfile, meshfile, sym1, sym2, omega1, omega2, alp
           }
         }
         file << "beta\t" << beta1 << "\t" << beta2 << endl;
-        file << "gamma\t" << gamma1 << "\t" << gamma12 << "\t" << gamma13 << "\t" << gamma2 << "\t" << gamma22 << "\t" << gamma23 << endl;
+        file << "gamma\t" << gamma11 << "\t" << gamma12 << "\t" << gamma13 << "\t" << gamma21 << "\t" << gamma22 << "\t" << gamma23 << endl;
         if(paramnames[0] != ""){
           for (int k = 0; k < paramnames.n; ++k){
             file << paramnames[k] << "\t" << params[paramnames[k]] << endl;
@@ -2817,7 +2817,7 @@ func complex[int] loadtdls(string inputfilename, string meshfilename, real[int] 
     }
 
 func real[int] loadhoho(string inputfilename, string meshfilename, complex[int] & q1mlocal, complex[int] & q1malocal, complex[int] & q2mlocal, complex[int] & q2malocal,
-                        real[int] & sym1, real[int] & sym2, real & omega1, real & omega2, complex[string] & alpha1, complex[string] & alpha2, complex & beta1, complex & beta2, complex & gamma1, complex & gamma2, complex & gamma12, complex & gamma13, complex & gamma22, complex & gamma23) {
+                        real[int] & sym1, real[int] & sym2, real & omega1, real & omega2, complex[string] & alpha1, complex[string] & alpha2, complex & beta1, complex & beta2, complex & gamma11, complex & gamma12, complex & gamma13, complex & gamma21, complex & gamma22, complex & gamma23) {
       XMhg defu(ubg);
       XMhg<complex> defu(u1mg), defu(u1mag), defu(u2mg), defu(u2mag);
       if (mpirank == 0) cout << "  Loading '" + inputfilename + ".hoho' on '" + meshfilename + "' from '" + workdir + "'." << endl;
@@ -2831,7 +2831,7 @@ func real[int] loadhoho(string inputfilename, string meshfilename, complex[int] 
         }
       }
       file >> dummy >> beta1 >> beta2;
-      file >> dummy >> gamma1 >> gamma12 >> gamma13 >> gamma2 >> gamma22 >> gamma23;
+      file >> dummy >> gamma11 >> gamma12 >> gamma13 >> gamma21 >> gamma22 >> gamma23;
       if(paramnames[0] != ""){
         for (int k = 0; k < paramnames.n; ++k){
           file >> paramnames[k] >> params[paramnames[k]];
@@ -2852,7 +2852,7 @@ func real[int] loadhoho(string inputfilename, string meshfilename, complex[int] 
             cout << "], alpha[" + paramnames[k] + "] = [" + alpha1[paramnames[k]] + "; " + alpha2[paramnames[k]];
           }
         }
-        cout << "], beta = [" + beta1 + "; " + beta2 + "], gamma = [" + gamma1 + ", " + gamma12 + ", " + gamma13 + "; " + gamma2 + ", " + gamma22 + ", " + gamma23 + "]";
+        cout << "], beta = [" + beta1 + "; " + beta2 + "], gamma = [" + gamma11 + ", " + gamma12 + ", " + gamma13 + "; " + gamma21 + ", " + gamma22 + ", " + gamma23 + "]";
         if(paramnames[0] != "") cout << ", " + listparams(paramnames, params);
         if(monitornames[0] != "") cout << ", " + listparams(monitornames, monitors);
         cout << "." << endl;
