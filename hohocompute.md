@@ -667,8 +667,8 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     iomega = 1i*omega1;
     iomega2 = -iomega;
     um2[] = conj(um[]);
+    um[] *= -1.0;
     um3[] = vH(0, XMh, tgv = -10);
-    um3[].re *= -1.0; // -2.0/2.0
     um3[].im = 0.0;
     ChangeNumbering(J, um3[], q1P); // FreeFEM to PETSc
     KSPSolve(J, q1P, q1P);
@@ -680,7 +680,6 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     iomega2 = -1i*omega2;
     sym = sym1 - sym2;
     um3[] = vH(0, XMh, tgv = -10);
-    um3[] *= -1.0; // -2.0/2.0
     ChangeNumbering(J, um3[], q2P); // FreeFEM to PETSc
     ik.im = sym;
     iomega = 1i*(omega1 - omega2);
