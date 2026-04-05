@@ -749,17 +749,17 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       gamma12 = 0.0;
     }
     else {
-      ChangeNumbering(J, um[], q1ma, inverse = true, exchange = true);
+      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
       um2[] = vM(0, XMh, tgv = -10);
       complex[int] tempP(J.n);
       ChangeNumbering(J, um2[], tempP);
       matrix<complex> tempPms = [[tempP]]; // dense array to sparse matrix
-      ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
-      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+      ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
+      ChangeNumbering(J, um[], q1ma, inverse = true, exchange = true);
       um2[] = vM(0, XMh, tgv = -10);
       ChangeNumbering(J, um2[], tempP);
       tempPms = [[tempP]]; // dense array to sparse matrix
-      ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
+      ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
       qBB.resize(Ja.n);
       if(mpirank == 0) qBB(Ja.n-1) = 0.0;
       KSPSolve(Ja, qBB, qBB);
