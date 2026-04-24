@@ -9,7 +9,7 @@
   macro diff(v, u) (dx(v)*dx(u) + dy(v)*dy(u)) //EOM
 
 // Define KSP parameters
-  string KSPparams = "-ksp_type preonly -pc_type lu -mat_mumps_icntl_13 1";
+  string KSPparams = "-ksp_type preonly -pc_type lu";
 
 // Boundary conditions
   macro BoundaryConditions(u, U)
