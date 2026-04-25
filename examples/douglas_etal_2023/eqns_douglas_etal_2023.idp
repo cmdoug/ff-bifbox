@@ -106,7 +106,7 @@ varf vM(defu(dum), defu(v))
 
 // FORCING/RESPONSE OPERATORS
 varf vMq(defu(dum), defu(v))
-      = int2d(Th)( (gdotf(vY, dumY) + gdotf(vT, dumT) + vdotu(v, dum))/ubT );
+      = int2d(Th)( (gdotf(vY, dumY) + gdotf(vT, dumT) + vdotu(v, dum))/ubT )
       + int2d(Th)( (gdotf(vY, umY) + gdotf(vT, umT) + vdotu(v, um))/ubT )
       + HomBoundaryConditions(dum);
 
