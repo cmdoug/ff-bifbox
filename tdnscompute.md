@@ -36,7 +36,7 @@ int savecount = getARGV("-scount", 1);
 int maxcount = getARGV("-maxcount", 100);
 string tstype = getARGV("-ts_type", "bdf");
 int tsmaxsnesfailures = getARGV("-ts_max_snes_failures", -1);
-real tsdt = getARGV("-ts_dt", 0.01);
+real tstimestep = getARGV("-ts_time_step", 0.01);
 string tsadapttype = getARGV("-ts_adapt_type", "none");
 string sneslinesearchtype = getARGV("-snes_linesearch_type", "basic");
 real TGV = getARGV("-tgv", -1);
@@ -261,9 +261,9 @@ func int funcJ(real t, real[int]& qPETSc, real[int]& qdotPETSc, real a) {
 // Function to monitor solution progress
 func int funcMon(int s, real t, real[int]& in) {
     if(s > 0){
-      tsdt = t - time;
+      tstimestep = t - time;
       count++;
-      if(mpirank == 0) cout << "  " << ((adapt && adaptflag) ? "A" : "") << count + ":\tdt = " + tsdt + ",\ttime = " + t << endl;
+      if(mpirank == 0) cout << "  " << ((adapt && adaptflag) ? "A" : "") << count + ":\tdt = " + tstimestep + ",\ttime = " + t << endl;
       if( adapt ? (adaptflag ? false : (count % savecount != 0)) : true){
         qp = in;
         ChangeNumbering(J, ub[], in, inverse = true);
@@ -283,7 +283,7 @@ while (count < maxcount){
   TSSolve(J, funcJ, funcF, q, monitor = funcMon, reason = ret, sparams = " -ts_init_time " + time
                                                        + " -ts_type " + tstype
                                                        + " -ts_max_snes_failures " + tsmaxsnesfailures
-                                                       + " -ts_dt " + tsdt
+                                                       + " -ts_time_step " + tstimestep
                                                        + " -ts_max_steps " + (adapt ? min(maxcount-count,savecount-(count % (savecount))) : (maxcount-count))
                                                        + " -ts_adapt_type " + tsadapttype
                                                        + " -snes_linesearch_type " + sneslinesearchtype
@@ -339,11 +339,11 @@ while (count < maxcount){
     ChangeNumbering(J, um[], q);
     adaptflag = 1;
     count--;
-    time -= tsdt;
+    time -= tstimestep;
     TSSolve(J, funcJ, funcF, q, monitor = funcMon, reason = ret, sparams = " -ts_init_time " + time
                                                        + " -ts_type " + tstype
                                                        + " -ts_max_snes_failures " + tsmaxsnesfailures
-                                                       + " -ts_dt " + tsdt
+                                                       + " -ts_time_step " + tstimestep
                                                        + " -snes_linesearch_type " + sneslinesearchtype
                                                        + " -ts_max_steps 1 -ts_adapt_type none -options_left no "
                                                        );
