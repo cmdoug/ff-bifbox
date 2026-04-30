@@ -30,7 +30,7 @@ int savecount = getARGV("-scount", 1);
 int maxcount = getARGV("-maxcount", 100);
 string tstype = getARGV("-ts_type", "bdf");
 int tsmaxsnesfailures = getARGV("-ts_max_snes_failures", -1);
-real tsdt = getARGV("-ts_dt", 0.01);
+real tstimestep = getARGV("-ts_time_step", 0.01);
 string tsadapttype = getARGV("-ts_adapt_type", "none");
 string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
 
@@ -215,9 +215,9 @@ func int funcJ(real t, PetscScalar[int]& qPETSc, PetscScalar[int]& qdotPETSc, re
 // Function to monitor solution progress
 func int funcMon(int s, real t, PetscScalar[int]& in) {
     if(s > 0){
-      tsdt = t - time;
+      tstimestep = t - time;
       count++;
-      if(mpirank == 0) cout << "  " << count + ":\tdt = " + tsdt + ",\ttime = " + t << endl;
+      if(mpirank == 0) cout << "  " << count + ":\tdt = " + tstimestep + ",\ttime = " + t << endl;
       ChangeNumbering(J, um[], in, inverse = true);
       savetdls(fileout + "_" + count, ((savecount > 0) ? fileout : ""), meshin, basefilein, filein, sym, t, (count % savecount == 0))
     }
@@ -230,7 +230,7 @@ set(J, IFMACRO(Jsetargs) Jsetargs, ENDIFMACRO sparams = KSPparams);
 TSSolve(J, funcJ, funcF, qc, monitor = funcMon, sparams = " -ts_init_time " + time
                                                        + " -ts_type " + tstype
                                                        + " -ts_max_snes_failures " + tsmaxsnesfailures
-                                                       + " -ts_dt " + tsdt
+                                                       + " -ts_time_step " + tstimestep
                                                        + " -ts_max_steps " + (maxcount-count)
                                                        + " -ts_adapt_type " + tsadapttype
                                                        + " -snes_linesearch_type " + sneslinesearchtype

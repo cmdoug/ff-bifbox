@@ -109,6 +109,6 @@ ff-mpirun -np $nproc rslvcompute.md -v 0 -dir $workdir -fi U03p4.base -fo Re2586
 ```sh
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi U02p6.base -fo Re1978flametip -eps_target 1+600i -pv 1
 ff-mpirun -np 1 examples/wang_etal_2024/moderescale.md -v 0 -dir $workdir -fi Re1978flametip.mode -fo Re1978flametip_scaled
-ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir -bfi U02p6.base -fi Re1978flametip_scaled.mode -fo Re1978perturbation20perc -amp 0.2 -ts_dt 0.0001 -ts_adapt none -scount 2 -maxcount 6000 -mo Re1978perturbation20perc
-ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir -bfi U02p6.base -fi Re1978flametip_scaled.mode -fo Re1978perturbation50perc -amp 0.5 -ts_dt 0.0001 -ts_adapt none -scount 2 -maxcount 6000 -mo Re1978perturbation50perc
+ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir -bfi U02p6.base -fi Re1978flametip_scaled.mode -fo Re1978perturbation20perc -amp 0.2 -ts_time_step 0.0001 -ts_adapt none -scount 2 -maxcount 6000 -mo Re1978perturbation20perc
+ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir -bfi U02p6.base -fi Re1978flametip_scaled.mode -fo Re1978perturbation50perc -amp 0.5 -ts_time_step 0.0001 -ts_adapt none -scount 2 -maxcount 6000 -mo Re1978perturbation50perc
 ```
