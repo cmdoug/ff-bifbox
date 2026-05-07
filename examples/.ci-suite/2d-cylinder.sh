@@ -9,13 +9,15 @@ ln -sf examples/.ci-suite/2d-cylinder_settings.idp settings.idp
 FreeFem++-mpi -v 0 examples/.ci-suite/2d-cylinder_mesh.md -mo $workdir/cylinder_0
 # compute and continue base state
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi cylinder_0.msh -1/Re 1 -fo cylinder_0
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder_0.base -fo cylinder -h0 -1 -param 1/Re -paramtarget 0.01 -maxcount -1 -mo cylinder -scount 1
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_10.base -1/Re 0.021 -fo cylinder50
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder_0.base -fo cylinder -h0 -1 -param 1/Re -paramtarget 0.021 -maxcount -1 -mo cylinder -scount 1
+cd $workdir && export lastfile=$(printf '%s\n' cylinder_*.base | sort -t_ -k2,2n | tail -1) && cd -
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -1/Re 0.021 -fo cylinder50
 # stability analysis
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi cylinder50.base -fo cylinder50 -eps_target 0.1+0.8i -sym 1 -eps_pos_gen_non_hermitian
 # find Hopf point
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder50.mode -fo cylinder -param 1/Re -nf 0
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinderadapt -mo cylinderhopf -adaptto bo -param 1/Re -thetamax 5 -wnl 1 
 # trace periodic orbit
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinderNh1 -Nh 1 -param 1/Re -h0 -1 -scount 1 -maxcount 8
-ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi cylinderNh1_8.porb -mo cylinder50porb -fo cylinder50Nh2 -Nh 2 -1/Re 0.02 -blocks 2
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinderNh1 -Nh 1 -param 1/Re -h0 -1 -scount 1 -maxcount -1 -paramtarget 0.02
+cd $workdir && export lastfile=$(printf '%s\n' cylinderNh1_*.porb | sort -t_ -k2,2n | tail -1) && cd -
+ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi $lastfile -mo cylinder50porb -fo cylinder50Nh2 -Nh 2 -1/Re 0.02 -blocks 2

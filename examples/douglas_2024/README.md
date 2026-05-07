@@ -108,8 +108,8 @@ ln -sf examples/douglas_2024/eqns_douglas_2024_freeout.idp eqns.idp
 ln -sf examples/douglas_2024/settings_douglas_2024_freeout.idp settings.idp
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi G2.msh -fo freeoutS0p5 -Re 200 -S 0.5 -snes_rtol 0
 ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi freeoutS0p5.base -fo freeout -param S -h0 10 -paramtarget 0.85 -maxcount -1 -scount 25
-# replace `freeout_125.base` with `freeout_XXX.base` where `XX` is the last index of the continuation.
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi freeout_125.base -fo freeoutS0p85 -S 0.85 -snes_rtol 0 -pv 1
+cd $workdir && export lastfile=$(printf '%s\n' freeout_*.base | sort -t_ -k2,2n | tail -1) && cd -
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo freeoutS0p85 -S 0.85 -snes_rtol 0 -pv 1
 FreeFem++-mpi -v 0 examples/douglas_2024/computebaseerror.md -fi freeout -ci S0p85 -fo freeoutS0p85err -dir $workdir -pv 1
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi freeoutS0p85.base -fo freeoutS0p9 -S 0.9 -snes_rtol 0
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi freeoutS0p9.base -fo freeoutS1 -S 1 -snes_rtol 0 -pv 1
