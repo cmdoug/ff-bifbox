@@ -53,7 +53,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi annularjet.msh -fo an
 
 2. Continue base state along the parameter $1/Re$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi annularjet.base -fo annularjet -param 1/Re -h0 -100 -scount 2 -maxcount 10 -mo annularjet -thetamax 1
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi annularjet.base -fo annularjet -param 1/Re -h0 -100 -scount 2 -maxcount -1 -paramtarget 0.002095 -mo annularjet -thetamax 1
 ```
 
 3. Compute base state at $Re=100$ with guess from $1/Re$ continuation
@@ -68,10 +68,9 @@ ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi annularjet100.base -
 
 5. Compute backward and forward fold bifurcations from steady solution branch on base-adapted mesh
 ```sh
-cd $workdir && declare -a foldguesslist=(*specialpt.base) && cd -
-//note some shells may index from 1 and 2 instead of 0 and 1
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi ${foldguesslist[0]} -fo annularjet100_B -param S -mo annularjet100_B -adaptto b -thetamax 1 -nf 0
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi ${foldguesslist[1]} -fo annularjet100_F -param S -mo annularjet100_F -adaptto b -thetamax 1 -nf 0
+cd "$workdir" && set -- swirljet100_*specialpt.base && export B="$1" && export F="$2" && cd -
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo annularjet100_B -param S -mo annularjet100_B -adaptto b -thetamax 1 -nf 0
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo annularjet100_F -param S -mo annularjet100_F -adaptto b -thetamax 1 -nf 0
 ```
 
 6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for Paraview
@@ -89,7 +88,7 @@ ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi annularjet100_B.fold
 ### Steady 3D dynamics
 8. Compute base state at $Re\sim480$ with guess from $1/Re$ continuation
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi annularjet_10.base -fo annularjet480 -1/Re 0.002095
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo annularjet480 -1/Re 0.002095
 ```
 
 9. Compute leading $|m|=1$ eigenvalue

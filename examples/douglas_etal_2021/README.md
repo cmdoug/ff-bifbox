@@ -51,12 +51,13 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi swirljet.msh -fo swir
 
 2. Continue base state along the parameter $1/Re$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi swirljet.base -fo swirljet -param 1/Re -h0 -50 -scount 2 -maxcount 4 -mo swirljet -thetamax 1
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi swirljet.base -fo swirljet -param 1/Re -h0 -50 -scount 2 -maxcount -1 -paramtarget 0.01 -mo swirljet -thetamax 1
 ```
 
 3. Compute base state at $Re=100$ with guess from $1/Re$ continuation
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi swirljet_4.base -fo swirljet100 -1/Re 0.01
+cd $workdir && export lastfile=$(printf '%s\n' swirljet_*.base | sort -t_ -k2,2n | tail -1) && cd -
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo swirljet100 -1/Re 0.01
 ```
 
 4. Continue base state at $Re=100$ along the parameter $S$ with adaptive remeshing
@@ -66,10 +67,9 @@ ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi swirljet100.base -fo
 
 5. Compute backward and forward fold bifurcations from steady solution branch on base-adapted mesh
 ```sh
-cd $workdir && declare -a foldguesslist=(*specialpt.base) && cd -
-#note some shells may index from 1 and 2 instead of 0 and 1
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi ${foldguesslist[0]} -fo swirljet100_B -param S -mo swirljet100_B -adaptto b -thetamax 1 -nf 0
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi ${foldguesslist[1]} -fo swirljet100_F -param S -mo swirljet100_F -adaptto b -thetamax 1 -nf 0
+cd "$workdir" && set -- swirljet100_*specialpt.base && export B="$1" && export F="$2" && cd -
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo swirljet100_B -param S -mo swirljet100_B -adaptto b -thetamax 1 -nf 0
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo swirljet100_F -param S -mo swirljet100_F -adaptto b -thetamax 1 -nf 0
 ```
 
 6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for Paraview
@@ -121,22 +121,24 @@ ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi swirljetm2m1.hoho -fo
 
 14. Compute the fold-Hopf point where the $|m|=1$ curve intersects the fold curve
 ```sh
-cd $workdir && declare -a fohoguesslist=(*specialpt.hopf) && cd -
-ff-mpirun -np $nproc fohocompute.md -v 0 -dir $workdir -fi ${fohoguesslist[1]} -fo swirljetm1 -param S -param2 1/Re -snes_divergence_tolerance 1e10
+cd "$workdir" && set -- swirljetm1_*specialpt.hopf && export fohoguess="$2" && cd -
+ff-mpirun -np $nproc fohocompute.md -v 0 -dir $workdir -fi $fohoguess -fo swirljetm1 -param S -param2 1/Re -snes_divergence_tolerance 1e10
 ```
 
 ### Periodic 3D dynamics
 15. Continue periodic solutions along $S$ from their initial Hopf points using the harmonic balance method with $N_h=2$.
 ```sh
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm1.hopf -fo swirljetm1 -Nh 2 -mo swirljetm1porb -param S -thetamax 1 -h0 0.5 -scount 4 -maxcount 12
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm2.hopf -fo swirljetm2 -Nh 2 -mo swirljetm2porb -param S -thetamax 1 -h0 -0.5 -scount 4 -maxcount 16
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm1.hopf -fo swirljetm1 -Nh 2 -mo swirljetm1porb -param S -thetamax 1 -h0 0.5 -scount 4 -maxcount -1 -paramtarget 1.9
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm2.hopf -fo swirljetm2 -Nh 2 -mo swirljetm2porb -param S -thetamax 1 -h0 -0.5 -scount 4 -maxcount -1 -paramtarget 1.8
 ```
 NOTE: in the actual paper, $N_h=4$ to $6$ was used to accurately resolve the periodic orbits. $N_h=2$ is used here to reduce computational cost.
 
 16. Compute periodic solutions at $S=1.9$ ($|m|=1$) and $S=1.8$ ($|m|=2$) with $N_h=3$ using a block preconditioner.
 ```sh
-ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi swirljetm1_12.porb -fo swirljetm1 -Nh 3 -S 1.9 -blocks 3
-ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi swirljetm2_16.porb -fo swirljetm2 -Nh 3 -S 1.8 -blocks 3
+cd $workdir && export m1file=$(printf '%s\n' swirljetm1_*.porb | sort -t_ -k2,2n | tail -1) && cd -
+ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi $m1file -fo swirljetm1 -Nh 3 -S 1.9 -blocks 3
+cd $workdir && export m2file=$(printf '%s\n' swirljetm2_*.porb | sort -t_ -k2,2n | tail -1) && cd -
+ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi $m2file -fo swirljetm2 -Nh 3 -S 1.8 -blocks 3
 ```
 
 ### Bifurcations to aperiodic 3D dynamics
