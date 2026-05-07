@@ -6,6 +6,7 @@ Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.dougla
 ```sh
 ff-mpirun -np 4 basecomputeaug.md -Re 1 -Pe 1 -Le 1 -mi <FILEIN> -fo <FILEOUT>
 ```
+
 ### Initialize with guess from file, solve on same mesh
 ```sh
 ff-mpirun -np 4 basecomputeaug.md -Re 1 -Pe 1 -Le 1 -fi <FILEIN> -fo <FILEOUT>
@@ -15,12 +16,15 @@ ff-mpirun -np 4 basecomputeaug.md -Re 1 -Pe 1 -Le 1 -fi <FILEIN> -fo <FILEOUT>
 ```sh
 ff-mpirun -np 4 basecomputeaug.md -mi <MESHIN> -fi <FILEIN> -fo <FILEOUT>
 ```
+
 ### Initialize with guess from file, adapt mesh/solution
 ```sh
 ff-mpirun -np 4 basecomputeaug.md -fi <FILEIN> -fo <FILEOUT> -mo <MESHOUT>
 ```
 
 NOTE: This file should not be changed unless you know what you're doing.
+
+SEE ALSO: [basecontinue.md](../../basecontinue.md), [basedeflate.md](../../basedeflate.md), [modecompute.md](../../modecompute.md)
 
 ```freefem
 load "iovtk"
@@ -33,10 +37,11 @@ string meshout = getARGV("-mo", ""); // output mesh without extension
 string filein = getARGV("-fi", ""); // input file with extension
 string fileout = getARGV("-fo", ""); // output file without extension
 string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
+real TGV = getARGV("-tgv", -1.);
 
 string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension
 parsefilename(fileout, fileout); // trim extension from output file, if given
-if(fileext == "mode" || fileext == "resp" || fileext == "rslv" || fileext == "tdls" || fileext == "floq") {
+if(fileext == "mode" || fileext == "resp" || fileext == "rslv" || fileext == "tdls" || fileext == "floq"){
   filein = readbasename(workdir + filein);
   fileext = parsefilename(filein, fileroot);
 }
@@ -119,7 +124,7 @@ else { // if output meshfile is given, adapt mesh
       Thg = adaptmesh(Thg, adaptu(uG), adaptmeshoptions);
     ENDIFMACRO
     IFMACRO(dimension,3)
-      cout << "NOTE: 3D mesh adaptation is still under development." << endl;
+      //NOTE: 3D mesh adaptation is still under development.
       load "mshmet"
       load "mmg"
       real anisomax = getARGV("-anisomax",1.0);
@@ -153,7 +158,7 @@ func real[int] funcR(real[int]& qPETSc) {
     ChangeNumbering(J, ub[], qPETSc(0:qPETSc.n - (mpirank == 0 ? 2 : 1)), inverse = true, exchange = true);
     if(mpirank == 0) c = qPETSc(qPETSc.n-1);
     broadcast(processor(0), c);
-    real[int] RPETSc, R = vR(0, XMh, tgv = -1);
+    real[int] RPETSc, R = vR(0, XMh, tgv = TGV);
     ChangeNumbering(J, R, RPETSc);
     ub[] .*= J.D;
     real pavg, pavgl = int2d(Th)( y*ubp );
@@ -169,7 +174,7 @@ func int funcJ(real[int]& qPETSc) {
     ChangeNumbering(J, ub[], qPETSc(0:qPETSc.n - (mpirank == 0 ? 2 : 1)), inverse = true, exchange = true);
     if(mpirank == 0) c = qPETSc(qPETSc.n-1);
     broadcast(processor(0), c);
-    J = vJ(XMh, XMh, tgv = -1);
+    J = vJ(XMh, XMh, tgv = TGV);
     real[int] vP, vaug = vJp(0, XMh, tgv = -10);
     ChangeNumbering(J, vaug, vP); // FreeFEM to PETSc
     matrix tempPms = [[vP]]; // dense array to sparse matrix

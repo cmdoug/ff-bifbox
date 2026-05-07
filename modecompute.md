@@ -6,6 +6,7 @@ Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.dougla
 ```sh
 ff-mpirun -np 4 modecompute.md -eps_target 0.1+1.0i -eps_nev 10 -fi <FILEIN> -so <VALFILE>
 ```
+
 ### Solve eigenvalue problem, store eigenvalue spectrum and eigenvectors:
 ```sh
 ff-mpirun -np 4 modecompute.md -eps_target 0.1+1.0i -eps_nev 4 -fi <FILEIN> -fo <VECFILE> -so <VALFILE>

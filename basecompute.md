@@ -2,7 +2,7 @@
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
 ## EXAMPLE USAGE:
-###  Initialize without file:
+### Initialize without file:
 ```sh
 ff-mpirun -np 4 basecompute.md -Re 1 -Pe 1 -Le 1 -mi <FILEIN> -fo <FILEOUT>
 ```
@@ -22,7 +22,7 @@ ff-mpirun -np 4 basecompute.md -mi <MESHIN> -fi <FILEIN> -fo <FILEOUT>
 ff-mpirun -np 4 basecompute.md -fi <FILEIN> -fo <FILEOUT> -mo <MESHOUT>
 ```
 
- NOTE: This file should not be changed unless you know what you're doing.
+NOTE: This file should not be changed unless you know what you're doing.
 
 SEE ALSO: [basecontinue.md](./basecontinue.md), [basedeflate.md](./basedeflate.md), [modecompute.md](./modecompute.md)
 
