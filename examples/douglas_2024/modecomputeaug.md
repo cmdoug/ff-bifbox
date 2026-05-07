@@ -145,7 +145,7 @@ complex shiftf = string2complex(targetf);
   M = vM(XMh, XMh, tgv = -20);
   complex[int] vP, vaug = vJp(0, XMh, tgv = -20);
   ChangeNumbering(J, vaug, vP); // FreeFEM to PETSc
-  tempMx = [[vP]]; // dense array to sparse matrix
+  matrix<complex> tempMx = [[vP]]; // dense array to sparse matrix
   ChangeOperator(Jp, tempMx); // send to Mat
   tempMx = [[0]];
   ChangeOperator(ZZ, tempMx); // send to Mat
