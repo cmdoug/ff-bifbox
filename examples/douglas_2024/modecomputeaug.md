@@ -24,7 +24,6 @@ ff-mpirun -np 4 modecomputeaug.md -eps_target 0.1+0.2i -ntarget 10 -targetf 0.1+
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-
 SEE ALSO: [basecomputeaug.md](./basecomputeaug.md), [basecompute.md](../../basecompute.md), [basecontinue.md](../../basecontinue.md), [basedeflate.md](../../basedeflate.md), [foldcompute.md](../../foldcompute.md), [hopfcompute.md](../../hopfcompute.md)
 
 ```freefem
@@ -159,10 +158,12 @@ for (int n = 0; n < ntarget; ++n){
   IFMACRO(Jprecon) Jprecon(-shift); ENDIFMACRO
   int k = EPSSolve(Ja, Ma, larray = lveca, array = veca, values = val, IFMACRO(Jsetargs) Jsetargs, ENDIFMACRO
                  sparams = "-st_type sinvert -options_left no -eps_monitor_conv -prefix_push st_ " + KSPparams + " -prefix_pop -eps_target " + string(shift));
-  if (strictnev) {
-    val.resize(min(k, epsnev));
-    vec.resize(val.n);
-    if(epstwosided) lvec.resize(val.n);
+  if (strictnev) val.resize(min(k, epsnev));
+  vec.resize(val.n);
+  veca.resize(J.n, k);
+  if(epstwosided) {
+    lvec.resize(val.n);
+    lveca.resize(J.n, k);
   }
   for (int ii = 0; ii < val.n; ++ii) {
     ChangeNumbering(J, vec[ii][], veca(:, ii), inverse = true);

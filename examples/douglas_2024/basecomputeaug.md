@@ -24,7 +24,7 @@ ff-mpirun -np 4 basecomputeaug.md -fi <FILEIN> -fo <FILEOUT> -mo <MESHOUT>
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [basecontinue.md](../../basecontinue.md), [basedeflate.md](../../basedeflate.md), [modecompute.md](../../modecompute.md)
+SEE ALSO: [modecomputeaug.md](./modecomputeaug.md), [basecompute.md](../../basecompute.md), [basecontinue.md](../../basecontinue.md), [basedeflate.md](../../basedeflate.md), [modecompute.md](../../modecompute.md)
 
 ```freefem
 load "iovtk"
