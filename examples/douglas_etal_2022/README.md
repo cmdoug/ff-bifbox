@@ -68,7 +68,7 @@ ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi annularjet100.base -
 
 5. Compute backward and forward fold bifurcations from steady solution branch on base-adapted mesh
 ```sh
-cd "$workdir" && set -- swirljet100_*specialpt.base && export B="$1" && export F="$2" && cd -
+cd "$workdir" && set -- annularjet100_*specialpt.base && export B="$1" && export F="$2" && cd -
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo annularjet100_B -param S -mo annularjet100_B -adaptto b -thetamax 1 -nf 0
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo annularjet100_F -param S -mo annularjet100_F -adaptto b -thetamax 1 -nf 0
 ```
@@ -88,6 +88,7 @@ ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi annularjet100_B.fold
 ### Steady 3D dynamics
 8. Compute base state at $Re\sim480$ with guess from $1/Re$ continuation
 ```sh
+cd $workdir && export lastfile=$(printf '%s\n' annularjet_*.base | sort -t_ -k2,2n | tail -1) && cd -
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo annularjet480 -1/Re 0.002095
 ```
 
