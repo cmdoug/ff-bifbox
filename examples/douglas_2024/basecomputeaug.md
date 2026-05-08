@@ -151,8 +151,9 @@ sym = 0;
 real[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
 real iomega = 0.0, iomega2 = 0.0, iomega3 = 0.0;
 include "eqns.idp" // load equations
-Mat Jp(J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
-Ja = [[J,Jp],[Jp',0]]; // make dummy Jacobian
+real[int] Jp, vaug = vJp(0, XMh, tgv = -10);
+ChangeNumbering(J, vaug, Jp);
+Ja = [[J, Jp], [Jp', 0]];
 // Function to build residual operator in PETSc numbering
 func real[int] funcR(real[int]& qPETSc) {
     ChangeNumbering(J, ub[], qPETSc(0:qPETSc.n - (mpirank == 0 ? 2 : 1)), inverse = true, exchange = true);
@@ -160,9 +161,7 @@ func real[int] funcR(real[int]& qPETSc) {
     broadcast(processor(0), c);
     real[int] RPETSc, R = vR(0, XMh, tgv = TGV);
     ChangeNumbering(J, R, RPETSc);
-    ub[] .*= J.D;
-    real pavg, pavgl = int2d(Th)( y*ubp );
-    mpiAllReduce(pavgl, pavg, mpiCommWorld, mpiSUM);
+    real pavg = J(vaug, ub[]);
     if(mpirank == 0) {
         RPETSc.resize(RPETSc.n+1); // Append 0 to residual vector on proc 0
         RPETSc(RPETSc.n-1) = pavg;
@@ -175,10 +174,6 @@ func int funcJ(real[int]& qPETSc) {
     if(mpirank == 0) c = qPETSc(qPETSc.n-1);
     broadcast(processor(0), c);
     J = vJ(XMh, XMh, tgv = TGV);
-    real[int] vP, vaug = vJp(0, XMh, tgv = -10);
-    ChangeNumbering(J, vaug, vP); // FreeFEM to PETSc
-    matrix tempPms = [[vP]]; // dense array to sparse matrix
-    ChangeOperator(Jp, tempPms, parent = Ja); // send to Mat
     return 0;
 }
 // set up Mat parameters
