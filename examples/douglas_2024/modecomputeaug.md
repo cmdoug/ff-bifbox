@@ -122,7 +122,6 @@ if (filein == "" && meshin != "") {
   ub[] = um[].re;
   filein = fileout + ".base";
 }
-Mat<complex> Jp(J.n, mpirank == 0 ? 1 : 0), ZZ(mpirank == 0 ? 1 : 0, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
 
 sym = parsesymstr(symstr);
 complex[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
@@ -144,14 +143,8 @@ complex shiftf = string2complex(targetf);
   M = vM(XMh, XMh, tgv = -20);
   complex[int] vP, vaug = vJp(0, XMh, tgv = -20);
   ChangeNumbering(J, vaug, vP); // FreeFEM to PETSc
-  matrix<complex> tempMx = [[vP]]; // dense array to sparse matrix
-  ChangeOperator(Jp, tempMx); // send to Mat
-  tempMx = [[0]];
-  ChangeOperator(ZZ, tempMx); // send to Mat
-  Mat<complex> Jatemp = [[J, Jp], [Jp', 0]]; // make dummy Jacobian
-  Mat<complex> Matemp = [[M, 0], [0, ZZ]]; // make dummy Jacobian
-  MatConvert(Jatemp, Ja);
-  MatConvert(Matemp, Ma);
+  Ja = [[J, vP], [vP', 0]];
+  Ma = [[M, 0], [0, 0]];
 }
 for (int n = 0; n < ntarget; ++n){
   if (ntarget > 1) shift = shifts + (shiftf - shifts)*real(n)/real(ntarget - 1);
