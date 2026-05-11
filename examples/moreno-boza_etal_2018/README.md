@@ -2,7 +2,7 @@
 This example shows how to use `ff-bifbox` to compute the steady axisymmetric base flow and the leading global modes of the low-Mach-number round pool-fire problem considered by Moreno-Boza et al. (2018) in: 
 
 ```tex
-@article{moreno2018critical,
+@article{moreno-boza_etall_2018,
   title={On the critical conditions for pool-fire puffing},
   author={Moreno-Boza, Daniel and Coenen, Wilfried and Carpio, Jaime and S{\'a}nchez, Antonio L and Williams, Forman A},
   journal={Combustion and Flame},
