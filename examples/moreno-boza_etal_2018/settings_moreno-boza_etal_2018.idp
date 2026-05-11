@@ -1,0 +1,69 @@
+//
+// settings_moreno-boza_etal_2018.idp
+// Chris Douglas
+// christopher.douglas@duke.edu
+// Daniel Moreno-Boza
+// damoreno@ing.uc3m.es
+//
+// Set dimension macro for 'macro_ddm.idp' (2)
+  macro dimension()2//EOM
+// Load hpddm macros
+  include "macro_ddm.idp"
+  verbosity = getARGV("-v", 0);
+// Define parameter and monitor names
+  string[int] paramnames = ["Ra", "Pr", "sigma", "LeF", "S", "WFoWA", "TB", "lv", "qoS", "isotherm"]; // set parameter names
+  string[int] monitornames = ["Tmax", "Lf"]; // set monitor names
+// Define fuel/air-specific parameters:
+  macro alph() ((params["lv"] + params["TB"])/(params["qoS"] + 1.0 - params["TB"])) //EOM
+  macro Le() ((params["S"] + 1.0)/(params["S"]/params["LeF"] + 1.0)) //EOM
+  macro Zs() (1.0/(1.0 + params["S"])) //EOM
+  macro Zts() (1.0/(params["S"]/params["LeF"] + 1.0)) //EOM
+// Declare symmetries
+  real[int] sym(0);
+// Define state vector and FE space
+  macro defu(u)[u, u#y, u#Zt, u#H, u#p, u#ps]//EOM
+  macro initu(i)[i, i, i, i, i, i]//EOM
+  func Pk = [P2, P2, P2, P2, P1, P1];
+// Define forcing vector and FE space (for resolvent analysis)
+  macro deff(f)[f, f#y]//EOM
+  macro initf(i)[i, i]//EOM
+  func Pkf = [P2, P2];
+// Define quantities for mesh adaptation and plotting in Paraview
+  macro Zfrom(U) ( Zs*min(real(U#Zt)/Zts, 1.0) + max(real(U#Zt) - Zts, 0.0)/(1.0 - Zts)*(1.0 - Zs) ) // EOM
+  macro Tfrom(U) ( 1.0 + (params["TB"] - 1.0 - params["qoS"])*U#H + params["qoS"]*min(1.0, real(U#Zt)/Zts) ) // EOM
+  macro adaptu(u)[u, u#y], u#Zt, u#H, Tfrom(u), Zfrom(u), u#p //EOM
+  macro adaptf(f)[f, f#y] //EOM
+// Name and order for real Paraview outputs  
+  macro paraviewu(u)[u, u#y, u*0], u#Zt, u#H, Tfrom(u), Zfrom(u), u#p //EOM
+  string ParaviewDataName = "velocity Ztilde enthalpy temperature Z pressure";
+  string ParaviewDataNamef = "momentum";
+  int[int] ParaviewOrder = [1, 1, 1, 1, 1, 1];
+  int[int] ParaviewOrderf = [1];
+// Name and order for complex Paraview outputs
+  string ParaviewDataNamec = "velocity_r Ztilde_r enthalpy_r temperature_r Z_r pressure_r velocity_i Ztilde_i enthalpy_i temperature_i Z_i pressure_i";
+  string ParaviewDataNamefc = "momentum_r momentum_i";
+  int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
+  int[int] ParaviewOrderfc = [ParaviewOrderf, ParaviewOrderf];
+  // Initial conditions (if no file)
+  macro InitialConditions()[0, 0, 0, 1, 0, 0]//EOM
+// Boundary labels
+  int BCnull = 0;
+  int BCaxis = 1;
+  int BCout = 2;
+  int BClat = 3;
+  int BCinflow = 4;
+  int BCwall = 5;
+// Define solution monitors to extract:
+  macro getmonitors() {
+    fespace Xh1(Thg, P2);
+    Xh1 Tmax = Tfrom(ubg), Zdiff = abs(ubgZt - Zts), Xpoints = x;
+    monitors["Tmax"] = Tmax[].max;  
+    varf Onaxis(Zdiff, VX) = on(BCaxis, Zdiff = 1);
+    real[int] onaxis = Onaxis(0, Xh1, tgv = 1);
+    int[int] indices(onaxis.sum);
+    for(int i=0, j=0; i<Xh1.ndof; ++i) if(onaxis[i]) {indices[j] = i; ++j;}
+    real[int] Zdiffonaxis(indices.n);
+    for(int i=0; i<indices.n; ++i) Zdiffonaxis[i] = Zdiff[][indices[i]];
+    real Zdiffmin = Zdiffonaxis.min;
+    for(int i=0; i<indices.n; ++i) if(abs(Zdiffonaxis[i] - Zdiffmin) < 1e-12) {monitors["Lf"] = Xpoints[][indices[i]]; break;}
+  }  // EOM
