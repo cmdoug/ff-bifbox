@@ -58,9 +58,9 @@ Note: this example does not make use of adaptive meshing.
 ```sh
 FreeFem++-mpi -v 0 examples/douglas_2024/grabowski.md -mo $workdir/G
 ```
-## Run the standalone serial FreeFEM code provided in the Supplementary Materials
+## Run the code provided in the Supplementary Materials
 ```sh
-FreeFem++ -v 0 examples/douglas_2024/example1_suppmat.md
+FreeFem++-mpi -v 0 examples/douglas_2024/example1_suppmat.md
 ```
 
 ## Perform parallel computations for Grabowski--Berger vortex flow using `ff-bifbox`
