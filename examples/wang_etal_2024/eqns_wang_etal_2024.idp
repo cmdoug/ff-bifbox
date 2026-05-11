@@ -22,8 +22,8 @@
   macro ugradu(v, U, u) ( y*(v  *(U*dx(u  ) + U#y*dy(u  ))
                            + v#y*(U*dx(u#y) + U#y*dy(u#y))) ) // scaled convection term
 
-  macro visc(v, u) ( 2.*y*dx(v)*dx(u)               +     y*dy(v)*(dx(u#y) + dy(u))
-                      + y*dx(v#y)*(dx(u#y) + dy(u)) + 2.*(y*dy(v#y)*dy(u#y) + v#y*u#y/y) ) // EOM
+  macro visc(v, u) ( 2.*dx(v)*(y*dx(u) - div(u)/3.) + y*(dy(v) + dx(v#y))*(dx(u#y) + dy(u))
+                   + 2.*(dy(v#y)*(y*dy(u#y) - div(u)/3.) + v#y*(u#y/y - div(u)/3.)) ) // EOM
 
   macro diff(g, f) ( y*(dx(g)*dx(f) + dy(g)*dy(f)) ) // EOM
 
