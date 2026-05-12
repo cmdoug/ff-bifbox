@@ -64,7 +64,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi bl_target_adapt.base 
 ff-mpirun -np $nproc rslvcompute.md -v 0 -dir $workdir -fi bl_Re6e5.base -so bl_Re6e5 -omega 12 -omegaf 120 -nomega 13 -eps_nev 1
 ```
 
-5. Compute optimal and first suboptimal forcing and response modes at $Re=6\times10^5$ for $\omega = 60$ (i.e. $F = 100$)
+5. Compute optimal and first suboptimal forcing and response modes at $Re=6\times10^5$ for $\omega = 60$ (i.e. $F = 100$). The resulting gains (respectively, $197$ and $2.1$) are separated by two orders of magnitude, in good agreement with Sipp and Marquet's results ($198.7$ and $2.1$, respectively).
 ```sh
 ff-mpirun -np $nproc rslvcompute.md -v 0 -dir $workdir -fi bl_Re6e5.base -so bl_Re6e5 -fo bl_Re6e5 -omega 60.0 -eps_nev 2 -pv 1
 ```
