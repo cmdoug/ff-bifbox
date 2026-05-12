@@ -1,0 +1,60 @@
+//
+// settings_douglas_jolivet_2026_cylinder.idp
+// Chris Douglas
+// christopher.douglas@duke.edu
+//
+// Set dimension macro for 'macro_ddm.idp' (2)
+  macro dimension()2//EOM
+// Declare that a cubic nonlinear term exists and its "Tressian" operator is defined
+  macro cubic()//EOM
+// Load hpddm macros
+  include "macro_ddm.idp"
+  verbosity = getARGV("-v",0);
+// Define parameter and monitor names
+  string[int] paramnames = ["1/Re", "1/Pr", "Ma^2", "gamma"]; // set parameter names
+  string[int] monitornames = ["uxmin", "Fx", "Fy", "Re", "Ma"]; // set monitor names
+// Declare symmetries
+  real[int] sym(1);
+// Define state vector and FE space
+  macro defu(u)[u, u#y, u#T, u#p]//EOM
+  macro initu(i)[i, i, i, i]//EOM
+  func Pk = [P2, P2, P2, P1];
+// Define forcing vector and FE space (for resolvent analysis)
+  macro deff(f)[f, f#y, f#T, f#p]//EOM
+  macro initf(i)[i, i, i, i]//EOM
+  func Pkf = [P2, P2, P2, P1];
+// Define quantities for mesh adaptation and plotting in Paraview
+  macro adaptu(u)[u, u#y], u#T, u#p//EOM
+  macro adaptf(f)[f, f#y], u#T, u#p//EOM
+  macro paraviewu(u)[u, u#y, 0*u], u#T, u#p//EOM
+  macro paraviewf(f)[f, f#y, 0*f], f#T, f#p//EOM
+// Name and order for real Paraview outputs
+  string ParaviewDataName = "velocity temperature pressure";
+  string ParaviewDataNamef = "momentum energy mass";
+  int[int] ParaviewOrder = [1, 1, 1];
+  int[int] ParaviewOrderf = [1, 1, 1];
+// Name and order for complex Paraview outputs
+  string ParaviewDataNamec = "velocity_r temperature_r pressure_r velocity_i temperature_i pressure_i";
+  string ParaviewDataNamefc = "momentum_r energy_r mass_r momentum_i energy_i mass_i";
+  int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
+  int[int] ParaviewOrderfc = [ParaviewOrderf, ParaviewOrderf];
+  // Initial conditions (if no file)
+  macro InitialConditions()[1, 0, 1, 0]//EOM
+// Boundary labels
+  int BCnull = 0;
+  int BCsym = 1;
+  int BCout = 2;
+  int BCin = 3;
+  int BCwall = 4;
+  int BClat = 5;
+// Define solution monitors to extract: here x and y forces on BCwall
+  macro getmonitors(){
+    fespace Xh1(Thg, P2);
+    Xh1 UX = ubg;
+    monitors["uxmin"] = UX[].min;
+    monitors["Fx"] = int1d(Thg, BCwall)(ubgp*N.x - params["1/Re"]*(N.x*(dx(ubg) - dy(ubgy)) + N.y*(dx(ubgy) + dy(ubg))));
+    monitors["Fy"] = int1d(Thg, BCwall)(ubgp*N.y - params["1/Re"]*(N.x*(dx(ubgy) + dy(ubg)) + N.y*(dy(ubgy) - dx(ubg))));
+    monitors["Re"] = 1.0/params["1/Re"];
+    monitors["Ma"] = sqrt(params["Ma^2"]);
+  }
+  // EOM
