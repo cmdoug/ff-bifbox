@@ -86,7 +86,7 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder_21.hopf -fo 
 7. Continue the branches of periodic solutions emanating from the Hopf points along $Re$ and $Ma$.
 ```sh
 for Ma in 0 4 6 8; do
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder_Ma0p"$Ma".hopf -fo cylinder_Ma0p"$Ma" -mo cyl_Ma0p"$Ma" -thetamax 0.1 -hmin 1e-5 -hmax 2 -param 1/Re -h0 1 -scount 4 -maxcount -1 -paramtarget 0.01 -Nh 3 -fieldsplit_0_fieldsplit_0_mat_mumps_icntl_35 1 -fieldsplit_0_fieldsplit_0_mat_mumps_cntl_7 1.0e-8
+  ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder_Ma0p"$Ma".hopf -fo cylinder_Ma0p"$Ma" -mo cyl_Ma0p"$Ma" -thetamax 0.1 -hmin 1e-5 -hmax 2 -param 1/Re -h0 1 -scount 4 -maxcount -1 -paramtarget 0.01 -Nh 3 -fieldsplit_0_fieldsplit_0_mat_mumps_icntl_35 1 -fieldsplit_0_fieldsplit_0_mat_mumps_cntl_7 1.0e-8
 done
 for Re in 50 70 90; do
 ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder_Re"$Re".hopf -fo cylinder_Re"$Re" -mo cyl_Re"$Re" -thetamax 0.1 -hmin 1e-5 -hmax 2 -param Ma^2 -h0 1 -scount 4 -maxcount -1 -paramtarget 0.01 -Nh 3 -fieldsplit_0_fieldsplit_0_mat_mumps_icntl_35 1 -fieldsplit_0_fieldsplit_0_mat_mumps_cntl_7 1.0e-8
