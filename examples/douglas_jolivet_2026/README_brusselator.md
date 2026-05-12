@@ -1,10 +1,14 @@
-# Examples: Douglas & Jolivet (202x)
+# Examples: Douglas & Jolivet (2026)
 This file shows an example `ff-bifbox` workflow for reproducing the results of the study:
 ```tex
 @article{douglas_jolivet_2026,
   title={ff-bifbox: A scalable, open-source toolbox for bifurcation analysis of nonlinear PDEs},
-  author={Douglas, Christopher M. and Jolivet, Pierre R.},
+  author={Douglas, Christopher M. and Jolivet, Pierre},
   year={2026},
+  journal={Computer Physics Communications},
+  publisher={Elsevier},
+  notes={Accepted manuscript},
+  doi={10.48550/arXiv.2509.18429}
 }
 ```
 The commands below illustrate how to perform a bifurcation analysis of the Brusselator in 3-D using `ff-bifbox`.
