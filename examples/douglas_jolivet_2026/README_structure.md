@@ -134,7 +134,7 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi structure_HyA2.mode -
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi structure_Hy_34.base -fo structure_HyA3 -eps_target 0+0i -eps_nev 1 -strict 1 -eps_gen_hermitian -sym 1,1
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi structure_HyA3.mode -fo structure_HyA3 -param P -tgv -2 -zero 1
 ```
-- Bifurcations from $R_z$ to $A$ state:
+- Bifurcations from $R_z$ to $A$ states:
 ```sh
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi structure_Rz_23.base -fo structure_RzA -eps_target 0+0i -eps_nev 1 -strict 1 -eps_gen_hermitian -sym 1,1
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi structure_RzA.mode -fo structure_RzA -param P -tgv -2 -zero 1
