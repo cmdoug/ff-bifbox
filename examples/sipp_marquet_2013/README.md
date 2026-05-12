@@ -24,7 +24,7 @@ cd ~/your/path/to/ff-bifbox/
 2. Export working directory and number of processors for easy reference.
 ```sh
 export workdir=examples/sipp_marquet_2013/data
-export nproc=10
+export nproc=4
 ```
 3. Create symbolic links for governing equations and solver settings.
 ```sh
