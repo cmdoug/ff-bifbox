@@ -20,17 +20,17 @@ string fileout = getARGV("-fo", filein);
 paraviewflag = getARGV("-pv", 1); // indicate whether solution is saved for Paraview
 
 assert(filein.rfind(".") > 0); // assert that filein includes extension
-string fileext = filein(filein.rfind(".")+1:filein.length-1); // get file extension
-string fileroot = filein(0:filein.rfind(".")-1); // get file root
-if (fileout.rfind(".") > 0) fileout = fileout(0:fileout.rfind(".")-1); // trim extension
+string fileroot, fileext = parsefilename(filein, fileroot);
+parsefilename(fileout, fileout); // trim extension from output file, if given
 
 if (mpirank==0){
   if(meshin == "") meshin = readmeshname(workdir + filein);
   Thg = readmeshN(workdir + meshin);
   meshN Thgpv;
+  restu = 0:XMhg.ndof-1;
+  restf = 0:Xhg.ndof-1;
   if (fileext == "base"){
     XMhg defu(ubg);
-    restu = 0:XMhg.ndof-1;
     ubg[] = loadbase(fileroot, meshin);
     cout << "  Saving '" + fileout + "_base.vtu' in '" + workdir + "'." << endl;
     real[int] qpv = ubg[];
@@ -50,7 +50,6 @@ if (mpirank==0){
   }
   else if (fileext == "mode"){
     XMhg<complex> defu(umg);
-    restu = 0:XMhg.ndof-1;
     complex eigenvalue;
     umg[] = loadmode(fileroot, meshin, sym, eigenvalue);
     cout << "  Saving '" + fileout + "_mode.vtu' in '" + workdir + "'." << endl;
@@ -72,7 +71,6 @@ if (mpirank==0){
   }
   else if (fileext == "resp"){
     XMhg<complex> defu(umg);
-    restu = 0:XMhg.ndof-1;
     real omega;
     umg[] = loadresp(fileroot, meshin, sym, omega);
     cout << "  Saving '" + fileout + "_resp.vtu' in '" + workdir + "'." << endl;
@@ -95,8 +93,6 @@ if (mpirank==0){
   else if (fileext == "rslv"){
     Xhg<complex> deff(fmg);
     XMhg<complex> defu(umg);
-    restf = 0:Xhg.ndof-1;
-    restu = 0:XMhg.ndof-1;
     real omega;
     real gain;
     umg[] = loadrslv(fileroot, meshin, fmg[], sym, omega, gain);
@@ -128,7 +124,6 @@ if (mpirank==0){
   }
   else if (fileext == "fold"){
     XMhg defu(ubg), defu(umg), defu(umag);
-    restu = 0:XMhg.ndof-1;
     real[string] alpha;
     real beta;
     ubg[] = loadfold(fileroot, meshin, umg[], umag[], alpha, beta);
@@ -161,7 +156,6 @@ if (mpirank==0){
   else if (fileext == "hopf"){
     XMhg defu(ubg);
     XMhg<complex> defu(umg), defu(umag);
-    restu = 0:XMhg.ndof-1;
     real omega;
     complex[string] alpha;
     complex beta;
@@ -197,7 +191,6 @@ if (mpirank==0){
   }
   else if (fileext == "tdns"){
     XMhg defu(ubg);
-    restu = 0:XMhg.ndof-1;
     real time;
     ubg[] = loadtdns(fileroot, meshin, time);
     cout << "  Saving '" + fileout + "_tdns.vtu' in '" + workdir + "'." << endl;
@@ -218,7 +211,6 @@ if (mpirank==0){
   }
   else if (fileext == "tdls"){
     XMhg<complex> defu(umg);
-    restu = 0:XMhg.ndof-1;
     real time;
     umg[] = loadtdls(fileroot, meshin, sym, time);
     cout << "  Saving '" + fileout + "_tdls.vtu' in '" + workdir + "'." << endl;
@@ -242,7 +234,6 @@ if (mpirank==0){
   else if (fileext == "hoho"){
     XMhg defu(ubg);
     XMhg<complex> defu(u1mg), defu(u1mag), defu(u2mg), defu(u2mag);
-    restu = 0:XMhg.ndof-1;
     real omega1, omega2;
     real[int] sym1(sym.n), sym2(sym.n);
     complex[string] alpha1, alpha2;
@@ -292,7 +283,6 @@ if (mpirank==0){
   else if (fileext == "foho"){
     XMhg defu(ubg), defu(u2mg), defu(u2mag);
     XMhg<complex> defu(u1mg), defu(u1mag);
-    restu = 0:XMhg.ndof-1;
     real omega;
     complex[string] alpha1;
     real[string] alpha2;
@@ -343,7 +333,6 @@ if (mpirank==0){
   else if (fileext == "porb"){
     XMhg defu(ubg);
     XMhg<complex> defu(umg);
-    restu = 0:XMhg.ndof-1;
     int Nh=0;
     real omega;
     complex[int, int] uhg(umg[].n, Nh);
@@ -380,7 +369,6 @@ if (mpirank==0){
   }
   else if (fileext == "floq"){
     XMhg<complex> defu(umg);
-    restu = 0:XMhg.ndof-1;
     int Nh=0;
     real omega;
     complex[int, int] qh(umg[].n, Nh);  
