@@ -28,3 +28,5 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi buckling_B.mode -fo b
 ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi buckling_B.hopf -fo buckling_B.hopf -param P -param2 nu -tgv -2 -snes_atol 1e-10 -maxcount -1 -param2target 0.49 -zero 1
 # deflation
 ff-mpirun -np $nproc basedeflate.md -v 0 -dir $workdir -fi buckling_A.base -fo buckling_branch -ndeflate 3 -tgv -2 -snes_linesearch_linesearch l2 -snes_rtol 0 -defp 1 -P 0.04 -snes_divergence_tolerance 1e15 -snes_max_it 1000
+# test printparaview.md for failures
+ff-mpirun -np $nproc printparaview.md -v 0 -dir $workdir -fi buckling_A.hopf -fo testprint
