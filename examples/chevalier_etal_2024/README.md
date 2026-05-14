@@ -58,7 +58,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi S0p0Re10lg.base -fo j
 
 3. Continue base state along the parameter $1/Re$. NOTE: This problem becomes very poorly scaled at high $Re$, meaning numerical issues may arise and require workarounds.
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi jet_adapt_0.base -fo jet_adapt -param 1/Re -h0 -1 -scount 4 -maxcount 100 -mo nozzle_adapt -err 0.1 -anisomax 3 -thetamax 0.01 -snes_max_it 50 -hmin 1e-5
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi jet_adapt_0.base -fo jet_adapt -param 1/Re -h0 -1 -scount 4 -maxcount 100 -mo nozzle_adapt -err 0.1 -anisomax 3 -thetamax 0.01 -snes_max_it 50
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi jet_adapt_100.base -fo jet_adapt_101 -mi nozzle_lg.msh -1/Re 5.0e-5
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi jet_adapt_101.base -fo jet_adapt_102 -1/Re 3.0e-5
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi jet_adapt_102.base -fo jet_adapt_103 -1/Re 1.0e-5

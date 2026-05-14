@@ -24,7 +24,7 @@ Point(4) = {-R, H, 0, 1000*r};
 // Actual nozzle
 Point(5) = {-R, R,   0, r};
 Point(6) = {-R, R+h, 0, r};
-Point(60) = {0, R+hh,   0, r};
+Point(60) = {0, R,   0, r};
 Point(7) = {0, R,   0, r};
 // Most refined area
 Point(8)  = {-w*R,      R,   0, r};
