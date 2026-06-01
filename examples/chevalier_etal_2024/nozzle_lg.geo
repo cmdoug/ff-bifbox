@@ -24,7 +24,6 @@ Point(4) = {-R, H, 0, 1000*r};
 // Actual nozzle
 Point(5) = {-R, R,   0, r};
 Point(6) = {-R, R+h, 0, r};
-Point(60) = {0, R,   0, r};
 Point(7) = {0, R,   0, r};
 // Most refined area
 Point(8)  = {-w*R,      R,   0, r};
@@ -58,8 +57,7 @@ Line(5) = {5, 1};
 Line(6)  = {6,  21};
 Line(7)  = {21, 15};
 Line(8)  = {15,  9};
-Line(9)  = {9,  60};
-Line(90) = {60,  7};
+Line(9)  = {9,   7};
 Line(10) = {7,   8};
 Line(11) = {8,  14};
 Line(12) = {14, 20};
@@ -88,11 +86,11 @@ Physical Line ("AXIS") = {1};
 Physical Line ("OPEN") = {2};
 Physical Line ("LAT") = {3};
 Physical Line ("IN2") = {4};
-Physical Line ("WALL") = {6:9,90,10:13};
+Physical Line ("WALL") = {6:9,10:13};
 Physical Line ("IN1") = {5};
 
 // Surfaces
-Line Loop(1) = {1:4,6:9,90,10:13,5};
+Line Loop(1) = {1:4,6:9,10:13,5};
 Plane Surface(1) = {1};
 Line {14:28} In Surface{1};
 

@@ -27,7 +27,6 @@ Point(6) = {L-R, H, 0, 750*r};
 // Actual nozzle
 Point(9)  = {-R, R,   0, r};
 Point(10) = {-R, R+h, 0, r};
-Point(110) = {0, R,   0, r};
 Point(11) = {0, R,   0, r};
 // Most refined area (left)
 Point(12) = {-w*R,      R,   0, r};
@@ -77,14 +76,13 @@ Line(25) = {15,16};
 Line(26) = {16,17};
 Line(27) = {17,25};
 // Tiny Loop
-Line(28) = {17,110};
-Line(280) = {110,11};
+Line(28) = {17,11};
 Line(29) = {11,12};
 // Verticals
 Line(30) = {2, 22};
 Line(31) = {22,14};
 Line(32) = {14,11};
-Line(33) = {110,15};
+Line(33) = {11,15};
 Line(34) = {15,23};
 Line(35) = {23, 3};
 Line(36) = {5, 6};
@@ -94,11 +92,11 @@ Physical Line ("AXIS") = {1,2};
 Physical Line ("OPEN") = {36};
 Physical Line ("LAT") = {6,7};
 Physical Line ("IN2") = {8};
-Physical Line ("WALL") = {9,17,27,19,28,29,280};
+Physical Line ("WALL") = {9,17,27,19,28,29};
 Physical Line ("IN1") = {18};
 
 // Surfaces
-Line Loop(1) = {1,2,36,6:9,-27,28,280,29,-19,17,18};
+Line Loop(1) = {1,2,36,6:9,-27,28,29,-19,17,18};
 Plane Surface(1) = {1};
 Line {10:16,20:26,30:35} In Surface{1};
 
