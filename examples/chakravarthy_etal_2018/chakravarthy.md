@@ -1,12 +1,9 @@
-```freefem
-//
-// chakravarthy.geo
-// Gretchen Schulke
-// gretchen.schulke@duke.edu
-//
-// This file can be used with FreeFem to create a mesh
-//
+# chakravarthy.md
+Author: Gretchen Schulke ([@gretchen-s](https://github.com/gretchen-s)) [gretchen.schulke@duke.edu](mailto:gretchen.schulke@duke.edu)
 
+This file can be used with FreeFEM to create a mesh for the laminar jet as in [R. Chakravarthy, L. Lesshafft, & P. Huerre. JFM, (2018)].
+
+```freefem
 assert(mpisize == 1); // Must be run with 1 processor
 include "settings.idp"
 real n0 = getARGV("-n0", 5);
