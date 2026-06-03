@@ -47,7 +47,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-`ff-bifbox` is a package of scalable and cross-compatible FreeFEM scripts designed for numerical continuation, bifurcation analysis, resolvent analysis, and time-integration of large-scale time-dependent nonlinear PDEs on adaptively refined meshes. The project is built on top of [FreeFEM](https://freefem.org/), a free, open-source finite-element software, and [PETSc](https://petsc.org/), a scalable scientific computing library. Further details about `ff-bifbox` are available here: [arXiv:2509.18429](https://arxiv.org/abs/2509.18429).
+`ff-bifbox` is a package of scalable and cross-compatible FreeFEM scripts designed for numerical continuation, bifurcation analysis, resolvent analysis, and time-integration of large-scale time-dependent nonlinear PDEs on adaptively refined meshes. The project is built on top of [FreeFEM](https://freefem.org/), a free, open-source finite-element software, and [PETSc](https://petsc.org/), a scalable scientific computing library. Further details about `ff-bifbox` are available in the paper: [published version (Comput. Phys. Commun.)](https://doi.org/10.1016/j.cpc.2026.110221) or [preprint (arXiv)](https://arxiv.org/abs/2509.18429).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -85,10 +85,15 @@ If you use `ff-bifbox` for research, please cite the following:
 ```bibtex
 @article{douglas_ff-bifbox_2026,
 author = {Douglas, Christopher M. and Jolivet, Pierre},
-title = {ff-bifbox: A scalable, open-source toolbox for bifurcation analysis of nonlinear PDEs},
+title = {{f}f-bifbox: {A} scalable, open-source toolbox for bifurcation analysis of nonlinear {PDE}s},
+journal = {Computer Physics Communications},
+volume = {326},
+pages = {110221},
 year = {2026},
-doi = {10.48550/arXiv.2509.18429},
-url = {https://arxiv.org/abs/2509.18429},
+issn = {0010-4655},
+doi = {10.1016/j.cpc.2026.110221},
+url = {https://doi.org/10.1016/j.cpc.2026.110221},
+arxiv = {https://arxiv.org/abs/2509.18429},
 }
 ```
 
