@@ -1,0 +1,54 @@
+//
+// settings_chakravarthy_etal_2018.idp
+// Gretchen Schulke
+// gretchen.schulke@duke.edu
+//
+// NOTE: When starting a project this is one of the main files that should be edited
+//
+// Set dimension macro for 'macro_ddm.idp' (2)
+  macro dimension()2//EOM
+// Load hpddm macros
+  include "macro_ddm.idp"
+  verbosity = getARGV("-v",0);
+// Define parameter and monitor names
+  string[int] paramnames = ["Re","Pr","Ri","S"]; // set parameter names
+  string[int] monitornames = ["Tmax"]; // set monitor names
+// Declare symmetries
+  real[int] sym(1);
+// Define state vector and FE space
+  macro defu(u)[u, u#y, u#T, u#p]//EOM
+  macro initu(i)[i, i, i, i]//EOM
+  func Pk = [P2, P2, P2, P1];
+// Define forcing vector and FE space (for resolvent analysis)
+  macro deff(f)[f,f#y]//EOM
+  macro initf(i)[i, i]//EOM
+  func Pkf = [P2, P2];
+// Define quantities for mesh adaptation and plotting in Paraview
+  macro adaptf(u)[u, u#y]//EOM
+  macro adaptu(u)[u, u#y], u#T, u#p//EOM
+// Name and order for real Paraview outputs
+  string ParaviewDataName = "velocity temperature pressure";
+  string ParaviewDataNamef = "momentum";
+  int[int] ParaviewOrder = [1, 1, 1];
+  int[int] ParaviewOrderf = [1];
+// Name and order for complex Paraview outputs
+  string ParaviewDataNamec = "velocity_r temperature_r pressure_r";
+  ParaviewDataNamec = ParaviewDataNamec + " velocity_i temperature_i pressure_i";
+  string ParaviewDataNamefc = "momentum_r momentum_i";
+  int[int] ParaviewOrderc = [ParaviewOrder,ParaviewOrder];
+  int[int] ParaviewOrderfc = [ParaviewOrderf,ParaviewOrderf];
+  // Initial conditions (if no file)
+  macro Uinlet()( (y == 0) ? 1.0 : (0.5 + 0.5*tanh(2.5*(1/(y + (y==0)) - y))) ) // EOM
+  macro InitialConditions()[Uinlet, 0, 1, 0]//EOM
+// Boundary labels
+  int BCnull = 0;
+  int BCinflow = 1;
+  int BCaxis = 2;
+  int BCoutlet = 3;
+  int BCwall = 4;
+// Define solution monitors to extract: here maximum temperature in the domain
+  macro getmonitors() {
+    fespace Xh1(Thg, P2);
+    Xh1 Tfield = ubgT;
+    monitors["Tmax"] = Tfield[].max;
+}// EOM
