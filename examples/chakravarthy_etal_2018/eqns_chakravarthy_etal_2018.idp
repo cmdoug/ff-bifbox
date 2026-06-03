@@ -1,0 +1,132 @@
+// 
+// eqns_chakravarthy_etal_2018.idp
+// Chris Douglas
+// christopher.douglas@duke.edu
+// Gretchen Schulke
+// gretchen.schulke@duke.edu
+//
+// Define KSP parameters
+  string KSPparams = "-ksp_type preonly -pc_type lu";
+
+// term macros 
+  macro ndotu(u) ( N.x*u + N.y*u#y )//EOM
+
+  macro gdotf(f, g) ( y*(g)*(f) )//EOM
+
+  macro vdotu(v, u) ( y*(v*u + v#y*u#y) ) //EOM
+
+  macro div(u) ( y*(dx(u) + dy(u#y)) + u#y ) // velocity divergence
+
+  macro ugradu(v, U, u) ( y*(v*(U*dx(u) + U#y*dy(u)) + v#y*(U*dx(u#y) + U#y*dy(u#y))) ) // scaled convection term
+
+  macro diff(g, f) ( y*(dx(g)*dx(f) + dy(g)*dy(f)) ) // EOM
+
+  macro ugradf(U, f) ( y*(U*dx(f) + U#y*dy(f)) ) // EOM
+
+  macro ndotgrads(s) ( y*( N.x*dx(s) + N.y*dy(s))) // EOM
+
+  macro divdiv(v, u) ( y*(dx(v) + dy(v#y)) + v#y )*( (dx(u) + dy(u#y)) + u#y/y ) // EOM
+
+  macro visc(v, u) ( dx(v)*(y*dx(u) + div(u)/3.0) + y*(dy(v)*dy(u) + dx(v#y)*dx(u#y)) + dy(v#y)*(y*dy(u#y) + div(u)/3.0) + v#y*(dx(u) + dy(u#y) + 4.*u#y/y)/3.0 ) // EOM
+
+  macro visc2(v, T, u) ( dx(T)*v*(y*dx(u) + div(u)/3.0) + y*(dy(T)*v*dy(u) + dx(T)*v#y*dx(u#y)) + dy(T)*v#y*(y*dy(u#y) + div(u)/3.0) ) // EOM
+
+  macro ubv() (1.0 + (params["S"] - 1.0)*ubT) // EOM //specific volume macro
+
+ // Boundary Conditions 
+  macro BoundaryConditions(u, U)
+      on(BCinflow, u = U - Uinlet, u#y = U#y, u#T = U#T - Uinlet/(params["S"] - (params["S"] - 1.0)*Uinlet))
+    + on(BCwall, u#T = U#T) 
+    + on(BCaxis, u#y = U#y) //EOM
+
+   macro HomBoundaryConditions(u)
+      on(BCinflow, u = 0, u#y = 0, u#T = 0)
+    + on(BCwall, u#T = 0)
+    + on(BCaxis, u#y = 0) //EOM
+
+ // RESIDUAL OPERATOR 
+    varf vR(defu(um), defu(v))
+    = int2d(Th)(
+      ugradu(v, ub, ub) - (((params["S"] - 1.0)*ugradf(v, ubT)) + ubv*div(v))*ubp/params["S"] - params["Ri"]*gdotf(v, ubT) 
+      + (ubv*visc(v, ub) + (params["S"] - 1.0)*visc2(v, ubT, ub))/(params["Re"]*params["S"])
+
+      + vT*ugradf(ub, ubT) + (ubv*diff(vT, ubT) + (params["S"] - 1.0)*vT*diff(ubT, ubT))/(params["Pr"]*params["Re"]*params["S"] )
+
+      + vp*((params["S"] - 1.0)*ugradf(ub, ubT) - ubv*div(ub))  
+    )
+    - int1d(Th)(
+      ndotu(v)*ubv*div(ub)/(3.0*params["Re"]*params["S"])
+    )
+    + BoundaryConditions(um, ub);
+
+ // JACOBIAN OPERATOR 
+    varf vJ(defu(dum), defu(v))
+    = int2d(Th)(
+      iomega*(vdotu(v, dum) + gdotf((params["S"] - 1.0)*vp + vT, dumT))
+      + ugradu(v, dum, ub) + ugradu(v, ub, dum) - (params["S"] - 1.0)*(ugradf(v, dumT) + dumT*div(v))*ubp/params["S"] - ((params["S"] - 1.0)*ugradf(v, ubT) + ubv*div(v))*dump/params["S"] - params["Ri"]*gdotf(v, dumT) 
+      + ((params["S"] - 1.0)*dumT*visc(v, ub) + ubv*visc(v, dum) + (params["S"] - 1.0)*(visc2(v, dumT, ub) + visc2(v, ubT, dum)))/(params["Re"]*params["S"])
+      
+      + vT*(ugradf(dum, ubT) + ugradf(ub, dumT))
+      + (ubv*diff(vT, dumT) + (params["S"] - 1.0)*(dumT*diff(vT, ubT) + 2.0*vT*diff(ubT, dumT)))/(params["Pr"]*params["Re"]*params["S"])
+
+      + vp*((params["S"] - 1.0)*(ugradf(dum, ubT) + ugradf(ub, dumT) - dumT*div(ub)) - ubv*div(dum))
+    )
+    - int1d(Th)(
+      ndotu(v)*((params["S"] - 1.0)*dumT*div(ub) + ubv*div(dum))/(3.0*params["Re"]*params["S"])
+    )
+    + int2d(Th)(
+      iomega*(vdotu(v, um) + gdotf((params["S"] - 1.0)*vp + vT, umT))
+      + ugradu(v, um, ub) + ugradu(v, ub, um) - (params["S"] - 1.0)*(ugradf(v, umT) + umT*div(v))*ubp/params["S"] - ((params["S"] - 1.0)*ugradf(v, ubT) + ubv*div(v))*ump/params["S"] - params["Ri"]*gdotf(v, umT) 
+      + ((params["S"] - 1.0)*umT*visc(v, ub) + ubv*visc(v, um) + (params["S"] - 1.0)*(visc2(v, umT, ub) + visc2(v, ubT, um)))/(params["Re"]*params["S"])
+      
+      + vT*(ugradf(um, ubT) + ugradf(ub, umT))
+      + (ubv*diff(vT, umT) + (params["S"] - 1.0)*(umT*diff(vT, ubT) + 2.0*vT*diff(ubT, umT)))/(params["Pr"]*params["Re"]*params["S"])
+
+      + vp*((params["S"] - 1.0)*(ugradf(um, ubT) + ugradf(ub, umT) - umT*div(ub)) - ubv*div(um))
+    )
+    - int1d(Th)(
+      ndotu(v)*((params["S"] - 1.0)*umT*div(ub) + ubv*div(um))/(3.0*params["Re"]*params["S"])
+    )
+    + HomBoundaryConditions(dum);
+
+ // MASS OPERATOR 
+  varf vM(defu(dum), defu(v))
+    = int2d(Th)( vdotu(v, dum) + gdotf((params["S"] - 1.0)*vp + vT, dumT))
+    + int2d(Th)( vdotu(v, um) + gdotf((params["S"] - 1.0)*vp + vT, umT));
+
+ // FORCING/RESPONSE OPERATORS
+  varf vMq(defu(dum), defu(v))
+    = int2d(Th)( vdotu(v, dum) )
+    + HomBoundaryConditions(dum);
+
+  varf vMf(deff(dum), deff(v))
+    = int2d(Th)( vdotu(v, dum) );
+
+  varf vP(deff(fm), defu(v))
+    = int2d(Th)( vdotu(v, fm) );
+
+ // HESSIAN OPERATOR
+    varf vH(defu(dum), defu(v))
+    = int2d(Th)(
+      ugradu(v, dum, um) + ugradu(v, um, dum) - (params["S"] - 1.0)/params["S"]*((umT*div(v) + ugradf(v, umT))*dump + (dumT*div(v)
+      + ugradf(v, dumT))*ump) + (params["S"] - 1.0)*(umT*visc(v, dum) + dumT*visc(v, um) + visc2(v, umT, dum) + visc2(v, dumT, um))/(params["Re"]*params["S"])
+      
+      + vT*(ugradf(dum, umT) + ugradf(um, dumT)) + (params["S"] - 1.0)*(umT*diff(vT, dumT) + dumT*diff(vT, umT) + 2.0*vT*diff(dumT, umT))/(params["Pr"]*params["Re"]*params["S"]) 
+      
+      + vp*(params["S"] - 1.0)*(ugradf(dum, umT) + ugradf(um, dumT) - umT*div(dum) - dumT*div(um))
+    )
+    - int1d(Th)(
+      ndotu(v)*(params["S"] - 1.0)*(umT*div(dum) + dumT*div(um))/(3.0*params["Re"]*params["S"])
+    )
+    + int2d(Th)(
+      ugradu(v, um2, um) + ugradu(v, um, um2) - (params["S"] - 1.0)/params["S"]*((umT*div(v) + ugradf(v, umT))*um2p + (um2T*div(v)
+      + ugradf(v, um2T))*ump) + (params["S"] - 1.0)*(umT*visc(v, um2) + um2T*visc(v, um) + visc2(v, umT, um2) + visc2(v, um2T, um))/(params["Re"]*params["S"])
+      
+      + vT*(ugradf(um2, umT) + ugradf(um, um2T)) + (params["S"] - 1.0)*(umT*diff(vT, um2T) + um2T*diff(vT, umT) + 2.0*vT*diff(um2T, umT))/(params["Pr"]*params["Re"]*params["S"]) 
+      
+      + vp*(params["S"] - 1.0)*(ugradf(um2, umT) + ugradf(um, um2T) - umT*div(um2) - um2T*div(um))
+    )
+    - int1d(Th)(
+      ndotu(v)*(params["S"] - 1.0)*(umT*div(um2) + um2T*div(um))/(3.0*params["Re"]*params["S"])
+    )
+    + HomBoundaryConditions(dum);    
