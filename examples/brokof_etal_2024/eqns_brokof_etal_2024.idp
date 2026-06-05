@@ -8,7 +8,7 @@
 // term macros ------------------------------------------------------
   macro ndotu(u) (N.x*u + N.y*dXdx*u#y) //EOM
 
-  macro gdotf(g, f) ( g*f )//EOM
+  macro gdotf(g, f) ( (g)*(f) )//EOM
 
   macro vdotu(v, u) ( v*u + v#y*u#y ) //EOM
 
@@ -25,17 +25,15 @@
 // sound speed macro
   macro ubc() (sqrt(ubT)/params["Ma"]) // EOM
   macro dubcdT() (0.5/(sqrt(ubT)*params["Ma"])) // EOM
-  macro d2ubcdT2() (-0.25/(ubT^(3.0/2.0)*params["Ma"])) // EOM
+  macro d2ubcdT2() (-0.25/(ubT^1.5*params["Ma"])) // EOM
 // density macro
   macro ubrho() ( (params["gamma"]*params["Ma^2"]*ubp + 1.0)/ubT ) // derived density
-  macro drho(du) ( params["gamma"]*params["Ma^2"]*du#p/ubT - (params["gamma"]*params["Ma^2"]*ubp + 1.0)/ubT^2*du#T ) // EOM
-  macro d2rho(du, d2u) ( 2.0*(params["gamma"]*params["Ma^2"]*ubp + 1.0)/ubT^3*du#T*d2u#T - params["gamma"]*params["Ma^2"]*(du#p*d2u#T + d2u#p*du#T)/ubT^2 ) // EOM
-  macro d3rho(du, d2u, d3u) ( 2.0*params["gamma"]*params["Ma^2"]*((du#p*d2u#T + d2u#p*du#T)*d3u#T + d3u#p*du#T*d2u#T)/ubT^3 - 6.0*(params["gamma"]*params["Ma^2"]*ubp + 1.0)/ubT^4*du#T*d2u#T*d3u#T ) // EOM
+  macro drho(du) ( params["gamma"]*params["Ma^2"]*du#p/ubT - (params["gamma"]*params["Ma^2"]*ubp + 1.0)/ubT^2.0*du#T ) // EOM
+  macro d2rho(du, d2u) ( 2.0*(params["gamma"]*params["Ma^2"]*ubp + 1.0)/ubT^3.0*du#T*d2u#T - params["gamma"]*params["Ma^2"]*(du#p*d2u#T + d2u#p*du#T)/ubT^2.0 ) // EOM
 // Arrhenius reaction rate macro
-  macro ubArr() ( params["Da"]*exp(params["Ze"]/params["dT"]*(1.0 + params["dT"] - (1.0 + params["dT"])^2./ubT)) ) // EOM
+  macro ubArr() ( params["Da"]*exp(params["Ze"]/params["dT"]*(1.0 + params["dT"] - (1.0 + params["dT"])^2.0/ubT)) ) // EOM
   macro dubArrdT() ( (params["Ze"]/params["dT"]*(1.0 + params["dT"])^2.0/ubT^2.0)*ubArr ) // EOM
   macro d2ubArrdT2() ( (-2.0*params["Ze"]/params["dT"]*(1.0 + params["dT"])^2.0/ubT^3.0 + (params["Ze"]/params["dT"]*(1.0 + params["dT"])^2.0/ubT^2.0)^2.0)*ubArr ) // EOM
-  macro d3ubArrdT3() ( (6.0*params["Ze"]/params["dT"]*(1.0 + params["dT"])^2.0/ubT^4.0 + (params["Ze"]/params["dT"]*(1.0 + params["dT"])^2.0/ubT^2.)^3.0 + 3.0*(params["Ze"]/params["dT"]*(1.0 + params["dT"])^2.0/ubT^2.0)*(-2.0*params["Ze"]/params["dT"]*(1.0 + params["dT"])^2.0/ubT^3.0))*ubArr ) // EOM
 // Boundary conditions
   macro BoundaryConditions(u, U)
     on(BCwall, u = U, u#y = U#y)
@@ -72,7 +70,7 @@ varf vJ(defu(dum), defu(v))
       = int2d(Th)(
         Jinv*(
       // Unsteady terms for all equations
-        iomega*(params["Ma"]^2.0*gdotf(vT, dump) + ubrho*(gdotf(vY, dumY) + vdotu(v, dum)) + drho(dum)*(gdotf(vY, ub) + vdotu(v, ub)) + vp*drho(dum))
+        iomega*(params["Ma"]^2.0*gdotf(vT, dump) + ubrho*(gdotf(vY, dumY) + vdotu(v, dum)) + drho(dum)*(gdotf(vY, ubY) + vdotu(v, ub)) + gdotf(vp, drho(dum)))
       // Continuity equation with Gauss' Divergence Theorem applied (note boundary integral term below)
         - ubrho*ugradf(dum, vp) - drho(dum)*ugradf(ub, vp)
       // Species equation
@@ -104,18 +102,53 @@ varf vJ(defu(dum), defu(v))
           + v*N.x*0.5*(drho(dum) + ubrho/ubc*dum)*((ubc + ub)^2.0 + (ub - ubc)^2.0*params["Rout"])
         )
       )
+      + int2d(Th)(
+        Jinv*(
+      // Unsteady terms for all equations
+        iomega*(params["Ma"]^2.0*gdotf(vT, ump) + ubrho*(gdotf(vY, umY) + vdotu(v, um)) + drho(um)*(gdotf(vY, ubY) + vdotu(v, ub)) + gdotf(vp, drho(um)))
+      // Continuity equation with Gauss' Divergence Theorem applied (note boundary integral term below)
+        - ubrho*ugradf(um, vp) - drho(um)*ugradf(ub, vp)
+      // Species equation
+        - (umY*ubrho + ubY*drho(um))*(ugradf(ub, vY) - vY*ubArr) - ubY*ubrho*(ugradf(um, vY) - vY*dubArrdT*umT) + diff(vY, umY)/params["Pe"]
+      // Momentum equation (if sym(0)==0, no Divergence Thm, else if abs(sym(0)>0), Divergence Thm with acoustic characteristic BCs enforced via boundary integrals)
+        - drho(um)*ugradu(ub, ub, v) - ubrho*(ugradu(um, ub, v) + ugradu(ub, um, v)) - div(v)*ump + visc(v, um)/params["Re"]
+      // Energy equation
+        + vT*(params["Ma"]^2.0*(ugradf(um, ubp) + ugradf(ub, ump)) + params["gamma"]*params["Ma"]^2.0*ump*div(ub) + (params["gamma"]*params["Ma"]^2.0*ubp + 1.0)*div(um) - params["dT"]*((drho(um)*ubY + ubrho*umY)*ubArr + ubrho*ubY*(dubArrdT*umT)) - (params["gamma"] - 1.0)*params["Ma"]^2.0/params["Re"]*(visc(um, ub) + visc(ub, um))) + diff(vT, umT)/params["Pe"]
+        )
+      )
+      + int1d(Th, BCaxis, BCsym, BCwall)(
+        (drho(um)*ndotu(ub) + ubrho*ndotu(um))*(vp + ubY*vY + vdotu(ub, v)) + ubrho*ndotu(ub)*(umY*vY + vdotu(um, v))
+      )
+      + int1d(Th, BCin)(
+        (drho(um)*ndotu(ub) + ubrho*ndotu(um))*(ubY*vY + uby*vy) + ubrho*ndotu(ub)*(umY*vY + umy*vy)
+        + (abs(int(sym(0))) == 0)*(
+          (drho(um)*ndotu(ub) + ubrho*ndotu(um))*(vp + ub*v) + ubrho*ndotu(ub)*um*v
+        ) + (abs(int(sym(0))) > 0)*(
+          vp*N.x*0.5*(drho(um) - ubrho/ubc*um)*((ubc + ub)*params["Rin"] + (ub - ubc))
+          + v*N.x*0.5*(drho(um) - ubrho/ubc*um)*((ubc + ub)^2.0*params["Rin"] + (ub - ubc)^2.0)
+        )
+      )
+      + int1d(Th, BCout)(
+        (drho(um)*ndotu(ub) + ubrho*ndotu(um))*(ubY*vY + uby*vy) + ubrho*ndotu(ub)*(umY*vY + umy*vy)
+        + (abs(int(sym(0))) == 0)*(
+          (drho(um)*ndotu(ub) + ubrho*ndotu(um))*(vp + ub*v) + ubrho*ndotu(ub)*um*v
+        ) + (abs(int(sym(0))) > 0)*(
+          vp*N.x*0.5*(drho(um) + ubrho/ubc*um)*((ubc + ub) + (ub - ubc)*params["Rout"])
+          + v*N.x*0.5*(drho(um) + ubrho/ubc*um)*((ubc + ub)^2.0 + (ub - ubc)^2.0*params["Rout"])
+        )
+      )
       + HomBoundaryConditions(dum);
 
 // MASS OPERATOR
 varf vM(defu(dum), defu(v))
       = int2d(Th)(
         Jinv*(
-          params["Ma"]^2.0*gdotf(vT, dump) + ubrho*(gdotf(vY, dumY) + vdotu(v, dum)) + drho(dum)*(gdotf(vY, ub) + vdotu(v, ub)) + vp*drho(dum)
+          params["Ma"]^2.0*gdotf(vT, dump) + ubrho*(gdotf(vY, dumY) + vdotu(v, dum)) + drho(dum)*(gdotf(vY, ubY) + vdotu(v, ub)) + gdotf(vp, drho(dum))
         )
       )
       + int2d(Th)(
         Jinv*(
-          params["Ma"]^2.0*gdotf(vT, ump) + ubrho*(gdotf(vY, umY) + vdotu(v, um)) + drho(um)*(gdotf(vY, ub) + vdotu(v, ub)) + vp*drho(um)
+          params["Ma"]^2.0*gdotf(vT, ump) + ubrho*(gdotf(vY, umY) + vdotu(v, um)) + drho(um)*(gdotf(vY, ubY) + vdotu(v, ub)) + gdotf(vp, drho(um))
         )
       ) 
       + HomBoundaryConditions(dum);
