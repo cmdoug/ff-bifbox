@@ -39,9 +39,7 @@ together with the boundary conditions:
 | Inlet, $\Gamma_i$ | $`u_x=\tanh\left[6\left(1-r^2\right)\right]`$, $u_r=0$, $u_{\theta}=Sr\tanh\left[6\left(1-r^2\right)\right]$, $\tilde{\nu}=10^{-6}$ |
 | Wall, $\Gamma_w$ | $u_x=u_r=u_{\theta}=\tilde{\nu}=0$ |
 | Co-flow, $\Gamma_c$ | $u_x=2\alpha\left(\frac{r-1-\epsilon}{19-\epsilon}\right)\left(1-\frac{r-1-\epsilon}{2\left(19-\epsilon\right)}\right)$, $u_r=u_{\theta}=0$, $\tilde{\nu}=10^{-6}$ |
-| Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=\frac{\partial \tilde{\nu}}{\partial r}=0$, if $m=0$ |
-| Axis, $\Gamma_a$| $u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=\tilde{\nu}=0$, if $\|m\|=1$ |
-| Axis, $\Gamma_a$| $u_x=u_r=u_{\theta}=\tilde{\nu}=0$, if $\|m\|>1$ |
+| Axis, $\Gamma_a$| $`\begin{cases}\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=\frac{\partial \tilde{\nu}}{\partial r}=0, & \text{if } m=0 \\\\ u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=\tilde{\nu}=0, & \text{if } \|m\|=1 \\\\ u_x=u_r=u_{\theta}=\tilde{\nu}=0, & \text{if } \|m\|>1\end{cases}`$ |
 | Open, $\Gamma_o$ | $\left(\frac{1}{Re}+\nu_t\right)\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)\hat{n}_j-p\hat{n}_i = \frac{\partial\tilde{\nu}}{\partial x_i}\hat{n}_i=0$ |
 
 The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_c+\Gamma_a+\Gamma_o$. Solutions $\vec{q}=\left(u_i,\tilde{\nu},p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{\tilde{\nu}},\check{p}\right)^T$,
@@ -54,7 +52,7 @@ $$
 \end{align*}
 $$
 
-Similarly, for the frozen viscosity flow (used for linear analysis), the same formulation is used, but with $\tilde{\nu}$ (and $\check{\tilde{\nu}}$) removed from the unknowns.
+Similarly, for the frozen viscosity flow (used for linear analysis), the same formulation is used, but with $\tilde{\nu}$ removed as an unknown (and the $\check{\tilde{\nu}}$ terms eliminated).
 
 These weak formulations have been implemented in the equations files for this example: [eqns_chevalier_etal_2024_baseflow.idp](./eqns_chevalier_etal_2024_baseflow.idp) and [eqns_chevalier_etal_2024_perturbations.idp](./eqns_chevalier_etal_2024_perturbations.idp).
 

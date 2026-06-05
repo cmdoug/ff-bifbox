@@ -60,10 +60,7 @@ $$
 $$
 
 The other terms are:
-- $`\left(\text{Other terms}\right)=\begin{cases}
-\left(\check{u}_i\hat{n}_j,\rho u_i u_j\right)_{\partial\Omega} + \left(\check{p}\hat{n}_i, \rho u_i\right)_{\partial\Omega}, & \text{ for base flow} \\\\
-\left(\check{u}_y\hat{n}_x,\rho u_y u_x\right)_{\partial\Omega} + \left(\check{u}_x\hat{n}_x,I_{x\text{mom},i}\right)_{\Gamma_i} + \left(\check{p}\hat{n}_x, I_{\text{mass},i}\right)_{\Gamma_i} \\\\ + \left(\check{u}_x\hat{n}_x,I_{x\text{mom},o}\right)_{\Gamma_o} + \left(\check{p}\hat{n}_x, I_{\text{mass},o}\right)_{\Gamma_o}, & \text{ for perturbations}
-\end{cases}`$
+- $`\left(\text{Other terms}\right)=\begin{cases} \left(\check{u}_i\hat{n}_j,\rho u_i u_j\right)_{\partial\Omega} + \left(\check{p}\hat{n}_i, \rho u_i\right)_{\partial\Omega}, & \text{ for base flow} \\\\ \left(\check{u}_y\hat{n}_x,\rho u_y u_x\right)_{\partial\Omega} + \left(\check{u}_x\hat{n}_x,I_{x\text{mom},i}\right)_{\Gamma_i} + \left(\check{p}\hat{n}_x, I_{\text{mass},i}\right)_{\Gamma_i} \\\\ + \left(\check{u}_x\hat{n}_x,I_{x\text{mom},o}\right)_{\Gamma_o} + \left(\check{p}\hat{n}_x, I_{\text{mass},o}\right)_{\Gamma_o}, & \text{ for perturbations} \end{cases}`$
 
 This weak formulation has been implemented in the equations file for this example: [eqns_brokof_etal_2024.idp](./eqns_brokof_etal_2024.idp).
 

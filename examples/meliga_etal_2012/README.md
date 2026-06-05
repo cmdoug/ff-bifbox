@@ -22,11 +22,7 @@ $$
 $$
 
 where:
-- $`\tilde{Re}(r,z)=\begin{cases}
-Re, & \text{if } r \leq r_{\max} \text{ and } x \leq x_{\max} \\\\
-Re+\left(Re_s-Re\right)\zeta\left(z, z_{\max}\right), & \text{if } r \leq r_{\max} \text{ and } x > x_{\max} \\\\
-\tilde{Re}\left(r_{\max}, x\right)+\left(Re_s-\tilde{Re}\left(r_{\max},x\right)\right)\zeta\left(r, r_{\max}\right), & \text{if } r > r_{\max}
-\end{cases}`$
+- $`\tilde{Re}(r,z)=\begin{cases} Re, & \text{if } r \leq r_{\max} \text{ and } x \leq x_{\max} \\\\ Re+\left(Re_s-Re\right)\zeta\left(z, z_{\max}\right), & \text{if } r \leq r_{\max} \text{ and } x > x_{\max} \\\\ \tilde{Re}\left(r_{\max}, x\right)+\left(Re_s-\tilde{Re}\left(r_{\max},x\right)\right)\zeta\left(r, r_{\max}\right), & \text{if } r > r_{\max} \end{cases}`$
 - $\zeta\left(a,b\right)=\frac{1}{2}=\frac{1}{2}\tanh\left\lbrace\tau\tan\left(-\frac{\pi}{2}+\pi\frac{\|a-b\|}{l}\right)\right\rbrace$.
 
 The boundary conditions are:

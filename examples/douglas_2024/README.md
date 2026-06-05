@@ -22,8 +22,8 @@ $$
 $$
 
 Depending on the chosen BC set, these are complemented by additional governing equations for the boundary variables:
-- $`\frac{\partial p_o}{\partial x_i}\hat{t}_i - \frac{u_{\theta}^2}{r}=0`$, with modified outflow BC
-- $`\frac{\partial^2 \phi_o}{\partial x_i^2} - \frac{\partial}{\partial x_i}\left(-\frac{u_{\theta}^2}{r}\hat{e}_r+\frac{u_ru_\theta}{r}\hat{e}_{\theta}\right)= 0`$, with balanced outflow BC
+- $`\frac{\partial p_o}{\partial x_i}\hat{t}_i - \frac{u_{\theta}^2}{r} = 0`$, with modified outflow BC
+- $`\frac{\partial^2 \phi_o}{\partial x_i^2} - \frac{\partial}{\partial x_i}\left(-\frac{u_{\theta}^2}{r}\hat{e}_r+\frac{u_ru_\theta}{r}\hat{e}_{\theta}\right) = 0`$, with balanced outflow BC
 
 together with the boundary conditions:
 
@@ -33,10 +33,7 @@ together with the boundary conditions:
 | Axis, $\Gamma_a$| $`\begin{cases}\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=\frac{\partial \phi_o}{\partial r}=0, & \text{if } m=0 \\\\ u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=\phi_o=0, & \text{if } \|m\|=1 \\\\ u_x=u_r=u_{\theta}=\phi_o=0, & \text{if } \|m\|>1\end{cases}`$ |
 | Open, $\Gamma_o$ | $`\begin{cases}\frac{1}{Re}\frac{\partial u_i}{\partial x}-p\hat{e}_x = 0, & \text{if free outflow BC} \\\\\frac{1}{Re}\frac{\partial u_i}{\partial x}-\left(p-p_o\right)\hat{e}_x = 0, &\text{if modified outflow BC} \\\\ \frac{1}{Re}\frac{\partial u_i}{\partial x}-\left(p-\phi_o\right)\hat{e}_x = 0, & \text{if balanced outflow BC} \\\\ \frac{\partial u_i}{\partial t}+c_j\frac{\partial u_i}{\partial x_j} = 0, & \text{if convective BC}\end{cases}`$ |
 
-where $`\Psi(r)=\begin{cases}
-r(2-r^2), & \text{if }r \leq 1 \\\\
-\frac{1}{r}, & \text{if } r > 1
-\end{cases}`$.
+where $`\Psi(r)=\begin{cases} r(2-r^2), & \text{if }r \leq 1 \\\\ \frac{1}{r}, & \text{if } r > 1 \end{cases}`$.
 
 The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_a+\Gamma_o$. Solutions $\vec{q}$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}$,
 
@@ -45,21 +42,10 @@ $$
 $$
 
 Here:
-- $`\vec{q}=\begin{cases}
-\left(u_i,p\right)^T, & \text{if free outflow BC} \\\\
-\left(u_i,p,p_o\right)^T, & \text{if modified outflow BC} \\\\
-\left(u_i,p,\phi_o\right)^T, & \text{if balanced outflow BC} \\\\
-\left(u_i,p,c\right)^T, & \text{if convective BC}
-\end{cases}`$
+- $`\vec{q}=\begin{cases}\left(u_i,p\right)^T, & \text{if free outflow BC} \\\\ \left(u_i,p,p_o\right)^T, & \text{if modified outflow BC} \\\\ \left(u_i,p,\phi_o\right)^T, & \text{if balanced outflow BC} \\\\ \left(u_i,p,c\right)^T, & \text{if convective BC}\end{cases}`$
 
 The "other terms" are:
-- $`\left(\text{Other terms}\right)=
-\begin{cases}
-\left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega}, & \text{if free outflow} \\\\
-\left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega}+\left(\check{u}_i,p_o\hat{n}_i\right)_{\Gamma_o} + \left(\check{p}_o,\frac{\partial p_o}{\partial x_i}\hat{t}_i-\frac{u_{\theta}^2}{r}\right)_{\Gamma_o}, & \text{if modified outflow} \\\\
-\left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\check{u}_i,\phi_o\hat{n}_i\right)_{\Gamma_o} + \left(\frac{\partial \check{\phi}_o}{\partial x_i},\frac{\partial \phi_o}{\partial x_i} + \frac{u_{\theta}^2}{r}\hat{e}_r - \frac{u_ru_\theta}{r}\hat{e}_{\theta}\right)_{\Gamma_o}, & \text{if balanced outflow} \\\\
-\left(\check{u}_i,\frac{\partial p}{\partial x_i}\right)_{\Omega} + \left(\check{p},c\right)_{\Omega} + \left(\check{c},\bar{p}\right)_{\Omega} + \left(\check{u}_i,\frac{1}{C_i\hat{n}_i Re}\frac{\partial \hat{u}_i}{\partial t}\right)_{\Gamma_o}, & \text{if convective}
-\end{cases}`$
+- $`\left(\text{Other terms}\right)=\begin{cases}\left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega}, & \text{if free outflow} \\\\ \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega}+\left(\check{u}_i,p_o\hat{n}_i\right)_{\Gamma_o} + \left(\check{p}_o,\frac{\partial p_o}{\partial x_i}\hat{t}_i-\frac{u_{\theta}^2}{r}\right)_{\Gamma_o}, & \text{if modified outflow} \\\\ \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\check{u}_i,\phi_o\hat{n}_i\right)_{\Gamma_o} + \left(\frac{\partial \check{\phi}_o}{\partial x_i},\frac{\partial \phi_o}{\partial x_i} + \frac{u_{\theta}^2}{r}\hat{e}_r - \frac{u_ru_\theta}{r}\hat{e}_{\theta}\right)_{\Gamma_o}, & \text{if balanced outflow} \\\\ \left(\check{u}_i,\frac{\partial p}{\partial x_i}\right)_{\Omega} + \left(\check{p},c\right)_{\Omega} + \left(\check{c},\bar{p}\right)_{\Omega} + \left(\check{u}_i,\frac{1}{C_i\hat{n}_i Re}\frac{\partial \hat{u}_i}{\partial t}\right)_{\Gamma_o}, & \text{if convective} \end{cases}`$
 
 These weak formulations have been implemented in the equations files for this example: [eqns_douglas_2024_freeout.idp](./eqns_douglas_2024_freeout.idp), [eqns_douglas_2024_modified.idp](./eqns_douglas_2024_modified.idp), [eqns_douglas_2024_balanced.idp](./eqns_douglas_2024_balanced.idp), [eqns_douglas_2024_convect.idp](./eqns_douglas_2024_convect.idp).
 
