@@ -18,7 +18,7 @@ In strong form, the governing equations are given as:
 
 $$
 \begin{align*} 
-\frac{\partial \tilde{\nu}}{\partial t} + u_j\frac{\partial \tilde{\nu}}{\partial x_j} - c_{b1}\tilde{S}\tilde{\nu} + c_{w1}f_w\frac{\tilde{\nu}^2}{d^2} - \frac{1}{\sigma}\left\{\frac{\partial }{\partial x_i}\left[\left(\frac{1}{Re} + \tilde{\nu}\right)\frac{\partial \tilde{\nu}}{\partial x_i}\right] + c_{b2}\frac{\partial \tilde{\nu}}{\partial x_i}\frac{\partial \tilde{\nu}}{\partial x_i}\right\} &= 0 \\
+\frac{\partial \tilde{\nu}}{\partial t} + u_j\frac{\partial \tilde{\nu}}{\partial x_j} - c_{b1}\tilde{S}\tilde{\nu} + c_{w1}f_w\frac{\tilde{\nu}^2}{d^2} - \frac{1}{\sigma}\left\lbrace\frac{\partial }{\partial x_i}\left[\left(\frac{1}{Re} + \tilde{\nu}\right)\frac{\partial \tilde{\nu}}{\partial x_i}\right] + c_{b2}\frac{\partial \tilde{\nu}}{\partial x_i}\frac{\partial \tilde{\nu}}{\partial x_i}\right\rbrace &= 0 \\
 \frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{\partial}{\partial x_j}\left[\left(\frac{1}{Re} + \nu_t\right)\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)\right] &= 0 \\
 \frac{\partial u_i}{\partial x_i} &= 0 
 \end{align*}
@@ -54,7 +54,7 @@ $$
 \end{align*}
 $$
 
-Similarly, for the frozen viscosity flow (used for linear analysis), the same formulation is used, but with $\tilde{\nu}$ (and $\check{\tilde{\nu}$) removed from the unknowns.
+Similarly, for the frozen viscosity flow (used for linear analysis), the same formulation is used, but with $\tilde{\nu}$ (and $\check{\tilde{\nu}}$) removed from the unknowns.
 
 These weak formulations have been implemented in the equations files for this example: [eqns_chevalier_etal_2024_baseflow.idp](./eqns_chevalier_etal_2024_baseflow.idp) and [eqns_chevalier_etal_2024_perturbations.idp](./eqns_chevalier_etal_2024_perturbations.idp).
 

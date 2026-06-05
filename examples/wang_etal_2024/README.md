@@ -34,7 +34,7 @@ where:
 1 + \left(\alpha-1\right)\zeta\left(x,x_{sg}\right) & \text{if } r \leq r_{sg} \text{ and } x > x_{sg}\\
 sg\left(r_{sg}, x\right) + \left[\alpha-sg\left(r_{sg},x\right)\right]\zeta\left(r,r_{sg}\right) & \text{if } r > r_{sg}
 \end{cases}$
-- $\zeta\left(a,b\right)=\frac{1}{2}+\frac{1}{2}\tanh\left\{\tan\left(-\frac{\pi}{2}+\pi\frac{|a-b|}{l}\right)\right\}$
+- $\zeta\left(a,b\right)=\frac{1}{2}+\frac{1}{2}\tanh\left\lbrace\tan\left(-\frac{\pi}{2}+\pi\frac{|a-b|}{l}\right)\right\rbrace$
 - $\mathcal{Q}=A_r\left(\rho\frac{Y_{\mathrm{CH}_4}}{W_{\mathrm{CH}_4}}\right)^{n_{\mathrm{CH}_4}}\left(\rho\frac{Y_{\mathrm{O}_2}}{W_{\mathrm{O}_2}}\right)^{n_{\mathrm{O}_2}}\exp\left(-\frac{T_a}{T}\right)$.
 
 The boundary conditions are:

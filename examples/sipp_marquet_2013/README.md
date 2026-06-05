@@ -36,7 +36,6 @@ The present implementation is based on a weak formulation of these equations. Te
 
 $$
 \left(\check{u}_i,\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\frac{1}{Re}\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\check{p},\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0.
-
 $$
 
 This weak formulation has been implemented in the equations file for this example: [eqns_sipp_marquet_2013.idp](./eqns_sipp_marquet_2013.idp).
