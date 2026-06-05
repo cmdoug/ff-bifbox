@@ -29,43 +29,36 @@ string meshout3 = meshout + "3.msh"; // add extension if not provided
 //  4                                                   |
 //  |                                  3                |
 //  |                                                   |
-//  o-------------9-------------o                       2
+//  o-------------3-------------o                       2
 //  |                           |                       |
-//  4                           9                       |
+//  4                           2                       |
 //  |                2          |                       |
-//  o-----6-----o               o                       |
-//  4     1     5               9                       |
+//  o-----3-----o               o                       |
+//  4     1     2               2                       |
 //  o-----1-----o-------1-------o------------1----------o
 //  0           L1              L2                      L3
 // Assemble mesh
 border C01(t=0, 1){x=L1 + (L2-L1)*t; y=0; label=BCaxis;}
-border C02a(t=0, 1){x=L2; y=W1*t; label=9;}
-border C02b(t=0, 1){x=L2; y=W1+(W2-W1)*t; label=9;}
-border C03(t=0, 1){x=L2*(1-t); y=W2; label=9;}
+border C02a(t=0, 1){x=L2; y=W1*t; label=BCopen;}
+border C02b(t=0, 1){x=L2; y=W1+(W2-W1)*t; label=BCopen;}
+border C03(t=0, 1){x=L2*(1-t); y=W2; label=BCopen;}
 border C04(t=0, 1){x=0; y=W2 - (W2-W1)*t; label=BCinflow;}
-border C05(t=0, 1){x=L1*t; y=W1; label=3;}
-border C06(t=0, 1){x=L1; y=W1*(1-t); label=2;}
+border C03r(t=0, 1){x=L1*t; y=W1;}
+border C02r(t=0, 1){x=L1; y=W1*(1-t);}
 border C001(t=0, 1){x=L2 + (L3-L2)*t; y=0; label=BCaxis;}
 border C002(t=0, 1){x=L3; y=W3*t; label=BCopen;}
 border C003(t=0, 1){x=L3*(1-t); y=W3; label=BClat;}
 border C004(t=0, 1){x=0; y=W3 - (W3-W2)*t; label=BCinflow;}
-border C005(t=0, 1){x=L2*t; y=W2; label=9;}
-border C006a(t=0, 1){x=L2; y=W1+(W2-W1)*(1-t); label=9;}
-border C006b(t=0, 1){x=L2; y=W1*(1-t); label=9;}
-int[int] labs=[1, 5, 6, 4];
-mesh Th1g = square(L1*n1+1, W1*n1+1, [L1*x, W1*y], label = labs);
-mesh Th2g = buildmesh(C01((L2-L1)*n1+1) + C02a(W1*n1+1) + C02b((W2-W1)*n2+1) + C03(L2*n2+1) + C04((W2-W1)*n2+1) + C05(L1*n1+1) + C06(W1*n1+1), fixedborder = true);
-mesh Th3g = buildmesh(C001((L3-L2)*n2+1) + C002(W3+1) + C003(L3+1) + C004((W3-W2)*n3+1) + C005(L2*n2+1) + C006a((W2-W1)*n2+1) + C006b(W1*n1+1), fixedborder = true);
+border C003r(t=0, 1){x=L2*t; y=W2;}
+border C002a(t=0, 1){x=L2; y=W1+(W2-W1)*(1-t);}
+border C002b(t=0, 1){x=L2; y=W1*(1-t);}
+mesh Th1g = square(L1*n1+1, W1*n1+1, [L1*x, W1*y]);
+mesh Th2g = buildmesh(C01((L2-L1)*n1+1) + C02a(W1*n1+1) + C02b((W2-W1)*n2+1) + C03(L2*n2+1) + C04((W2-W1)*n2+1) + C03r(L1*n1+1) + C02r(W1*n1+1), fixedborder = true);
+mesh Th3g = buildmesh(C001((L3-L2)*n2+1) + C002(W3+1) + C003(L3+1) + C004((W3-W2)*n3+1) + C003r(L2*n2+1) + C002a((W2-W1)*n2+1) + C002b(W1*n1+1), fixedborder = true);
 Th3g = Th3g + Th2g + Th1g;
 Th2g = Th2g + Th1g;
-int[int] r1 = [5, BCopen, 6, BCopen];
-Th1g = change(Th1g, label=r1);
-r1 = [9, BCopen];
-Th2g = change(Th2g, label=r1);
-r1 = [5, 9, 6, 9];
-Th2g = change(Th2g, label=r1);
-r1 = [5, 9, 6, 9];
-Th3g = change(Th3g, label=r1);
+Th2g = change(Th2g, rmInternalEdges = true);
+Th3g = change(Th3g, rmInternalEdges = true);
 cout << "\tMesh 1: " << Th1g.nv << " vertices, " << Th1g.nt << " elements, " << Th1g.nbe << " boundary elements." << endl;
 cout << "\tMesh 2: " << Th2g.nv << " vertices, " << Th2g.nt << " elements, " << Th2g.nbe << " boundary elements." << endl;
 cout << "\tMesh 3: " << Th3g.nv << " vertices, " << Th3g.nt << " elements, " << Th3g.nbe << " boundary elements." << endl;
