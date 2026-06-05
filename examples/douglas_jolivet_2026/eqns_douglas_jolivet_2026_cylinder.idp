@@ -8,8 +8,8 @@
   macro vdotu(v, u) ( v*u + v#y*u#y ) // velocity inner product
   macro div(u) ( dx(u) + dy(u#y) ) // velocity divergence
   macro ugradu(v, U, u) ( v*(U*dx(u) + U#y*dy(u)) + v#y*(U*dx(u#y) + U#y*dy(u#y)) ) // velocity advection term
-  macro visc(v, u) ( (dx(v) - dy(v#y))*(dx(u) - dy(u#y)) + (dy(v) + dx(v#y))*(dx(u#y) + dy(u)) ) // viscous term
-  macro visc2(v, T, u) ( (dx(T)*v - dy(T)*v#y)*(dx(u) - dy(u#y)) + (dy(T)*v + dx(T)*v#y)*(dx(u#y) + dy(u)) ) // other viscous term
+  macro visc(v, u) ( 2.0*(dx(v)*(dx(u) - div(u)/3.0) + dy(v#y)*(dy(u#y) - div(u)/3.0)) + (dy(v) + dx(v#y))*(dx(u#y) + dy(u)) ) // viscous term
+  macro visc2(v, T, u) ( 2.0*(dx(T)*v*(dx(u) - div(u)/3.0) + dy(T)*v#y*(dy(u#y) - div(u)/3.0)) + (dy(T)*v + dx(T)*v#y)*(dx(u#y) + dy(u)) ) // other viscous term
   macro diff(g, f) ( dx(g)*dx(f) + dy(g)*dy(f) ) // scalar diffusion term
   macro ugradf(U, f) ( U*dx(f) + U#y*dy(f) ) // scalar advection term
 

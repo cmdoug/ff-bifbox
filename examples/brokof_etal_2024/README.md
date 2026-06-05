@@ -27,7 +27,7 @@ $$
 $$
 
 where:
-- $`\epsilon_{ij}=\mu\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\delta_{ij}\frac{\partial u_k}{\partial x_k}\right)`$
+- $`\epsilon_{ij}=\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\frac{2}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}`$
 - $`\rho = \frac{1+\gamma Ma^2 p}{T}`$
 - $`\dot{\omega}_Y=Da\rho Y \exp\left(\frac{-\left(1+\Delta T\right)^2Ze}{\Delta T T}\right)`$
 - $`h_s = \frac{\gamma}{\gamma-1}T`$

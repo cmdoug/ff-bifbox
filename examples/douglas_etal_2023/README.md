@@ -25,27 +25,27 @@ $$
 \end{align*}
 $$
 
-where $\dot{\omega}=Da \frac{Y}{T}\exp\left[Ze\left(1+\frac{1}{\Delta T}\right)\left(1-\frac{1+\Delta T}{T}\right)\right]$.
+where $`\dot{\omega}=Da \frac{Y}{T}\exp\left[Ze\left(1+\frac{1}{\Delta T}\right)\left(1-\frac{1+\Delta T}{T}\right)\right]`$.
 
 The boundary conditions are:
 
 | Boundary | Constraints |
 | :--- | :--- |
 | Inlet, $\Gamma_i$ | $u_x=2-8r^2$, $u_r=u_{\theta}=0$, $Y=T=1$ |
-| Wall, $\Gamma_w$ | $u_x=u_r=u_{\theta}=\frac{\partial Y}{\partial x_i}\hat{n}_i=0$, $T=1$ |
-| Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=\frac{\partial Y}{\partial r}=\frac{\partial T}{\partial r}=0$, if $m=0$ |
+| Wall, $\Gamma_w$ | $`u_x=u_r=u_{\theta}=\frac{\partial Y}{\partial x_i}\hat{n}_i=0`$, $T=1$ |
+| Axis, $\Gamma_a$| $`\`frac{\partial u_x}{\partial r}=u_r=u_{\theta}=\frac{\partial Y}{\partial r}=\frac{\partial T}{\partial r}=0`$, if $m=0$ |
 | Axis, $\Gamma_a$| $u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=Y=T=0$, if $\|m\|=1$ |
 | Axis, $\Gamma_a$| $u_x=u_r=u_{\theta}=Y=T=0$, if $\|m\|>1$ |
-| Open, $\Gamma_o$ | $\frac{T^{2/3}}{Re}\frac{\partial u_i}{\partial x_j}\hat{n}_j-p\hat{n}_i = \frac{\partial Y}{\partial x_i}\hat{n}_i=\frac{\partial T}{\partial x_i}\hat{n}_i=0$ |
+| Open, $\Gamma_o$ | $`\frac{T^{2/3}}{Re}\frac{\partial u_i}{\partial x_j}\hat{n}_j-p\hat{n}_i = \frac{\partial Y}{\partial x_i}\hat{n}_i=\frac{\partial T}{\partial x_i}\hat{n}_i=0`$ |
 
 The present implementation is based on a weak formulation of these equations. The equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_a+\Gamma_o$. Solutions $\vec{q}=\left(u_i,Y,T,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{Y},\check{T},\check{p}\right)^T$,
 
 $$
 \begin{align*}
 &\left(\check{u}_i,\frac{1}{T}\left[\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right]\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\frac{T^{2/3}}{Re}\left[\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right]\right)_{\Omega} - \left(\check{u}_i\hat{n}_j,\frac{T^{2/3}}{Re}\frac{\partial u_j}{\partial x_i}\right)_{\Gamma_o} \\
-&+ \left(\check{Y},\frac{1}{T}\left[\frac{\partial Y}{\partial t} + u_i\frac{\partial Y}{\partial x_i} + Da Y \exp\left\lbrace Ze\left(1+\frac{1}{\Delta T}\right)\left(1-\frac{1+\Delta T}{T}\right)\right\rbrace\right]\right)_{\Omega} + \left(\frac{\partial \check{Y}}{\partial x_i},\frac{T^{2/3}}{Re Pr Le}\frac{\partial Y}{\partial x_i}\right)_{\Omega} \\
-&+ \left(\check{T},\frac{1}{T}\left[\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i} - \Delta T Da Y\exp\left\lbrace Ze\left(1+\frac{1}{\Delta T}\right)\left(1-\frac{1+\Delta T}{T}\right)\right\rbrace\right]\right)_{\Omega} + \left(\frac{\partial \check{T}}{\partial x_i},\frac{T^{2/3}}{Re Pr}\frac{\partial T}{\partial x_i}\right)_{\Omega} \\
-&+ \left(\check{p},\frac{\partial u_i}{\partial x_i} - \Delta T Da \frac{Y}{T}\exp\left[Ze\left(1+\frac{1}{\Delta T}\right)\left(1-\frac{1+\Delta T}{T}\right)\right]\right)_{\Omega} + \left(\frac{\partial \check{p}}{\partial x_i},\frac{T^{2/3}}{Re Pr}\frac{\partial T}{\partial x_i}\right)_{\Omega} - \left(\check{p}\hat{n}_i,\frac{T^{2/3}}{Re Pr}\frac{\partial T}{\partial x_i}\right)_{\partial\Omega} = 0 
+&+ \left(\check{Y},\frac{1}{T}\left[\frac{\partial Y}{\partial t} + u_i\frac{\partial Y}{\partial x_i}\right] + \dot{\omega}\right)_{\Omega} + \left(\frac{\partial \check{Y}}{\partial x_i},\frac{T^{2/3}}{Re Pr Le}\frac{\partial Y}{\partial x_i}\right)_{\Omega} \\
+&+ \left(\check{T},\frac{1}{T}\left[\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i}\right] - \Delta T \dot{\omega}\right)_{\Omega} + \left(\frac{\partial \check{T}}{\partial x_i},\frac{T^{2/3}}{Re Pr}\frac{\partial T}{\partial x_i}\right)_{\Omega} \\
+&+ \left(\check{p},\frac{\partial u_i}{\partial x_i} - \Delta T \dot{\omega}\right)_{\Omega} + \left(\frac{\partial \check{p}}{\partial x_i},\frac{T^{2/3}}{Re Pr}\frac{\partial T}{\partial x_i}\right)_{\Omega} - \left(\check{p}\hat{n}_i,\frac{T^{2/3}}{Re Pr}\frac{\partial T}{\partial x_i}\right)_{\partial\Omega} = 0 
 \end{align*}
 $$
 

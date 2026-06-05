@@ -43,7 +43,7 @@ The boundary conditions are:
 | Annular channel wall, $\Gamma_w$ | $`u_x=u_r=\frac{\partial Y_{\mathrm{CH}_4}}{\partial r}=\frac{\partial T}{\partial r}=0`$ |
 | Dump plane wall, $\Gamma_{dp}$ | $`u_x=u_r= \frac{\partial Y_{\mathrm{CH}_4}}{\partial x}=0$, $T=300\text{ K}`$ |
 | Centrebody wall, $\Gamma_{cb}$ | $`u_x=u_r= \frac{\partial Y_{\mathrm{CH}_4}}{\partial x}=0`$, $`T=T_{cb}\text{ K}`$ |
-| Axis, $\Gamma_a$| $\`frac{\partial u_x}{\partial r}=u_r=\frac{\partial Y_{\mathrm{CH}_4}}{\partial r}=\frac{\partial T}{\partial r}=0`$ |
+| Axis, $\Gamma_a$| $`frac{\partial u_x}{\partial r}=u_r=\frac{\partial Y_{\mathrm{CH}_4}}{\partial r}=\frac{\partial T}{\partial r}=0`$ |
 | Lateral, $\Gamma_l$ | $`\frac{\partial u_x}{\partial r}=u_r=Y_{\mathrm{CH}_4}=0`$, $`T=300\text{ K}`$ |
 | Outlet, $\Gamma_o$ | $`\tau_{ix}-p\hat{e}_x = \frac{\partial Y_{\mathrm{CH}_4}}{\partial x} = \frac{\partial T}{\partial x} = 0`$ |
 

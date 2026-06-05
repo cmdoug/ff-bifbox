@@ -27,7 +27,7 @@ $$
 \end{align*}
 $$
 
-where $\tau_{ij}=\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\delta_{ij}\frac{\partial u_k}{\partial x_k}$.
+where $\tau_{ij}=\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\frac{2}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}$.
 
 The boundary conditions are:
 

@@ -10,7 +10,7 @@
   macro vdotu(v, u) ( v*u + v#y*u#y ) //EOM
   macro div(u) ( dX(u) + dy(u#y) ) // velocity divergence
   macro ugradu(v, U, u) ( v*(U*dX(u) + U#y*dy(u)) + v#y*(U*dX(u#y) + U#y*dy(u#y) ) ) // scaled convection term
-  macro visc(v, u) ( dX(v)*(dX(u) - dy(u#y)) + (dy(v) + dX(v#y))*(dX(u#y) + dy(u)) + dy(v#y)*(dy(u#y) - dX(u)) ) // EOM
+  macro visc(v, u) ( 2.0*(dX(v)*(dX(u) - div(u)/3.0) + dy(v#y)*(dy(u#y) - div(u)/3.0)) + (dy(v) + dX(v#y))*(dX(u#y) + dy(u)) ) // viscous term
   macro diff(g, f) ( dX(g)*dX(f) + dy(g)*dy(f) ) // EOM
   macro ugradf(U, f) ( U*dX(f) + U#y*dy(f) ) // EOM
 // sound speed macros
@@ -221,4 +221,3 @@ varf vH(defu(dum), defu(v))
         )
       )
       + HomBoundaryConditions(dum);
-      
