@@ -26,12 +26,10 @@ $$
 where:
 - $\tau_{ij}=\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\delta_{ij}\frac{\partial u_k}{\partial x_k}$
 - $\rho = \frac{1 + \gamma M^2p}{T}$
-- $\tilde{\beta}\left(x,y\right)=\begin{cases}
-0 & \text{if } x_3 \leq x \leq x_4 \text{ and } \|y\| \leq y_2\\
-\left|1-\frac{1}{M}\right|f\left(x_3,x\right) & \text{if } x < x_3 \text{ and } \|y\| \leq y_2\\
-\left|1+\frac{1}{M}\right|f\left(x,x_4\right) & \text{if } x > x_4 \text{ and } \|y\| \leq y_2\\
-\tilde{\beta}\left(x,y_2\right)+\left|\frac{1}{M}\right|f\left(y,y_4\right) & \text{if } \|y\| > y_2\\
-\end{cases}$
+- $\tilde{\beta}\left(x,y\right)=0 \text{ if } x_3 \leq x \leq x_4 \text{ and } \|y\| \leq y_2$
+- $\tilde{\beta}\left(x,y\right)=\left|1-\frac{1}{M}\right|f\left(x_3,x\right) \text{ if } x < x_3 \text{ and } \|y\| \leq y_2$
+- $\tilde{\beta}\left(x,y\right)=\left|1+\frac{1}{M}\right|f\left(x,x_4\right) \text{ if } x > x_4 \text{ and } \|y\| \leq y_2$
+- $\tilde{\beta}\left(x,y_2\right)+\left|\frac{1}{M}\right|f\left(y,y_4\right) \text{ if } \|y\| > y_2$
 - $f\left(a,b\right)=\frac{2\alpha}{l_s^2}\left(a-b\right)$.
 
 The boundary conditions are:
