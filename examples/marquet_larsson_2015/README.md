@@ -30,10 +30,8 @@ together with the boundary conditions:
 | :--- | :--- |
 | Inlet, $\Gamma_i$ | $u_x=1$, $u_y=u_z=0$ |
 | Wall, $\Gamma_w$ | $u_x=u_y=u_z=0$ |
-| xz-plane, $\Gamma_y$ | $`\frac{\partial u_x}{\partial y}=u_y=\frac{\partial u_z}{\partial y}=0`$ if symmetric |
-| xz-plane, $\Gamma_y$ | $`u_x=\frac{\partial u_y}{\partial y}=u_z=0`$ if asymmetric |
-| xy-plane, $\Gamma_z$ | $`\frac{\partial u_x}{\partial z}=\frac{\partial u_y}{\partial z}=u_z=0`$ if symmetric |
-| xy-plane, $\Gamma_z$ | $`u_x=u_y=\frac{\partial u_z}{\partial z}=0`$ if asymmetric |
+| xz-plane, $\Gamma_y$ | $`\begin{cases}\frac{\partial u_x}{\partial y}=u_y=\frac{\partial u_z}{\partial y}=0, & \text{if symmetric} \\\\ u_x=\frac{\partial u_y}{\partial y}=u_z=0, & \text{if asymmetric} \end{cases}`$ |
+| xy-plane, $\Gamma_z$ | $`\begin{cases}\frac{\partial u_x}{\partial z}=\frac{\partial u_y}{\partial z}=u_z=0, & \text{if symmetric} \\\\ u_x=u_y=\frac{\partial u_z}{\partial z}=0, & \text{if asymmetric}\end{cases}`$|
 | Slip, $\Gamma_s$ | $`u_i\hat{n}_i=\frac{\partial u_i}{\partial x_l}\epsilon_{ijk}\hat{n}_j\hat{n}_l=0`$ |
 | Outlet, $\Gamma_o$ | $`\frac{1}{Re}\frac{\partial u_i}{\partial x}-p\hat{e}_x= 0`$ |
 

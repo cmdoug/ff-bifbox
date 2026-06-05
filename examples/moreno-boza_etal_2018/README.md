@@ -38,8 +38,7 @@ The boundary conditions are:
 | Boundary | Constraints |
 | :--- | :--- |
 | Pool, $\Gamma_p$ | $-T_B^\sigma\frac{\partial\xi}{\partial x} = \alpha Ra \rho u_x$, $u_r=0$, $\xi=1$, $-T_B^\sigma\frac{\partial\tilde{Z}}{\partial x} =Le_F Ra \rho u_x\left(1-\tilde{Z}\right)$ |
-| Wall, $\Gamma_w$ | $u_x=u_r=\frac{\partial\tilde{Z}}{\partial x}=\frac{\partial\xi}{\partial x}=0$ if adiabatic |
-| Wall, $\Gamma_w$ | $u_x=u_r=\frac{\partial\tilde{Z}}{\partial x}=0$, $\xi=\frac{q/S}{q/S+1-T_B}\min\left(1,\frac{\tilde{Z}}{\tilde{Z}_S}\right)$ if isothermal |
+| Wall, $\Gamma_w$ | $`\begin{cases}u_x=u_r=\frac{\partial\tilde{Z}}{\partial x}=\frac{\partial\xi}{\partial x}=0, & \text{if adiabatic} \\\\ u_x=u_r=\frac{\partial\tilde{Z}}{\partial x}=0, \xi=\frac{q/S}{q/S+1-T_B}\min\left(1,\frac{\tilde{Z}}{\tilde{Z}_S}\right), & \text{if isothermal}\end{cases}`$ |
 | Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial r}=u_r=\frac{\partial \xi}{\partial r}=\frac{\partial \tilde{Z}}{\partial r}=0$ |
 | Lateral, $\Gamma_l$ | $\mu\left(\frac{\partial u_i}{\partial r}+\frac{\partial u_r}{\partial x_i}\right)-p\hat{e}_r = \xi = \tilde{Z} = 0$ |
 | Outlet, $\Gamma_o$ | $\mu\left(\frac{\partial u_i}{\partial x}+\frac{\partial u_x}{\partial x_i}\right)-p\hat{e}_x = \frac{\partial \xi}{\partial x} = \frac{\partial \tilde{Z}}{\partial x}=0$ |

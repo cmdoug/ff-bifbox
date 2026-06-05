@@ -29,9 +29,11 @@ where:
 - $`\tau_{ij}=\mu\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\frac{2}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}\right)`$
 - $`p_0 = R_s\rho T`$
 - $`\mu=\frac{1}{sg}\frac{A_sT^{1/2}}{1+T_s/T}`$
-- $`sg\left(r,x\right)=1 \text{ if } r \leq r_{sg} \text{ and } x \leq x_{sg}`$
-- $`sg\left(r,x\right)=1 + \left(\alpha-1\right)\zeta\left(x,x_{sg}\right) \text{ if } r \leq r_{sg} \text{ and } x > x_{sg}`$
-- $`sg\left(r,x\right)=sg\left(r_{sg}, x\right) + \left[\alpha-sg\left(r_{sg},x\right)\right]\zeta\left(r,r_{sg}\right) \text{ if } r > r_{sg}`$
+- $`sg\left(r,x\right)=\begin{cases}
+1, & \text{if } r \leq r_{sg} \text{ and } x \leq x_{sg} \\\\
+1 + \left(\alpha-1\right)\zeta\left(x,x_{sg}\right), & \text{if } r \leq r_{sg} \text{ and } x > x_{sg} \\\\
+sg\left(r_{sg}, x\right) + \left[\alpha-sg\left(r_{sg},x\right)\right]\zeta\left(r,r_{sg}\right), & \text{if } r > r_{sg}
+\end{cases}`$
 - $`\zeta\left(a,b\right)=\frac{1}{2}+\frac{1}{2}\tanh\left\lbrace\tan\left(-\frac{\pi}{2}+\pi\frac{|a-b|}{l}\right)\right\rbrace`$
 - $`\mathcal{Q}=A_r\left(\rho\frac{Y_{\mathrm{CH}_4}}{W_{\mathrm{CH}_4}}\right)^{n_{\mathrm{CH}_4}}\left(\rho\frac{Y_{\mathrm{O}_2}}{W_{\mathrm{O}_2}}\right)^{n_{\mathrm{O}_2}}\exp\left(-\frac{T_a}{T}\right)`$.
 
@@ -41,9 +43,9 @@ The boundary conditions are:
 | :--- | :--- |
 | Inlet, $\Gamma_i$ | $`u_x=93750(2r - 0.003)(0.011 - 2r)U_0\text{ m/s}`$, $`u_r=0`$, $`Y_{\mathrm{CH}_4}=0.04256`$, $`T=300\text{ K}`$ |
 | Annular channel wall, $\Gamma_w$ | $`u_x=u_r=\frac{\partial Y_{\mathrm{CH}_4}}{\partial r}=\frac{\partial T}{\partial r}=0`$ |
-| Dump plane wall, $\Gamma_{dp}$ | $`u_x=u_r= \frac{\partial Y_{\mathrm{CH}_4}}{\partial x}=0$, $T=300\text{ K}`$ |
+| Dump plane wall, $\Gamma_{dp}$ | $`u_x=u_r= \frac{\partial Y_{\mathrm{CH}_4}}{\partial x}=0`$, $`T=300\text{ K}`$ |
 | Centrebody wall, $\Gamma_{cb}$ | $`u_x=u_r= \frac{\partial Y_{\mathrm{CH}_4}}{\partial x}=0`$, $`T=T_{cb}\text{ K}`$ |
-| Axis, $\Gamma_a$| $`frac{\partial u_x}{\partial r}=u_r=\frac{\partial Y_{\mathrm{CH}_4}}{\partial r}=\frac{\partial T}{\partial r}=0`$ |
+| Axis, $\Gamma_a$| $`\frac{\partial u_x}{\partial r}=u_r=\frac{\partial Y_{\mathrm{CH}_4}}{\partial r}=\frac{\partial T}{\partial r}=0`$ |
 | Lateral, $\Gamma_l$ | $`\frac{\partial u_x}{\partial r}=u_r=Y_{\mathrm{CH}_4}=0`$, $`T=300\text{ K}`$ |
 | Outlet, $\Gamma_o$ | $`\tau_{ix}-p\hat{e}_x = \frac{\partial Y_{\mathrm{CH}_4}}{\partial x} = \frac{\partial T}{\partial x} = 0`$ |
 

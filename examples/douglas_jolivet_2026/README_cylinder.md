@@ -35,7 +35,7 @@ The boundary conditions are:
 | :--- | :--- |
 | Inlet, $\Gamma_i$ | $u_x=T=1$, $u_y=0$ |
 | Wall, $\Gamma_w$| $u_x=u_y=\frac{\partial T}{\partial x_i}\hat{n}_i=0$ |
-| Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial y}=u_y=\frac{\partial T}{\partial y}=0$|
+| Axis, $\Gamma_a$| $`\begin{cases}\frac{\partial u_x}{\partial y}=u_y=\frac{\partial T}{\partial y}=0, & \text{if symmetric} \\\\ u_x=\frac{\partial u_y}{\partial y}=T=0, & \text{if antisymmetric} \end{cases}`$ |
 | Lateral, $\Gamma_l$ | $\frac{\partial u_x}{\partial y}=u_y=\frac{\partial T}{\partial y}=0$ |
 | Outlet, $\Gamma_o$ | $\frac{1}{Re}\tau_{ix}-p\hat{e}_x = \frac{\partial T}{\partial x}=0$ |
 

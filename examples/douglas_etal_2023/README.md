@@ -33,9 +33,7 @@ The boundary conditions are:
 | :--- | :--- |
 | Inlet, $\Gamma_i$ | $u_x=2-8r^2$, $u_r=u_{\theta}=0$, $Y=T=1$ |
 | Wall, $\Gamma_w$ | $`u_x=u_r=u_{\theta}=\frac{\partial Y}{\partial x_i}\hat{n}_i=0`$, $T=1$ |
-| Axis, $\Gamma_a$| $`\`frac{\partial u_x}{\partial r}=u_r=u_{\theta}=\frac{\partial Y}{\partial r}=\frac{\partial T}{\partial r}=0`$, if $m=0$ |
-| Axis, $\Gamma_a$| $u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=Y=T=0$, if $\|m\|=1$ |
-| Axis, $\Gamma_a$| $u_x=u_r=u_{\theta}=Y=T=0$, if $\|m\|>1$ |
+| Axis, $\Gamma_a$| $`\begin{cases}\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=\frac{\partial Y}{\partial r}=\frac{\partial T}{\partial r}=0, & \text{if } m=0 \\\\ u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=Y=T=0, & \text{if } \|m\|=1 \\\\ u_x=u_r=u_{\theta}=Y=T=0, & \text{if } \|m\|>1\end{cases}`$ |
 | Open, $\Gamma_o$ | $`\frac{T^{2/3}}{Re}\frac{\partial u_i}{\partial x_j}\hat{n}_j-p\hat{n}_i = \frac{\partial Y}{\partial x_i}\hat{n}_i=\frac{\partial T}{\partial x_i}\hat{n}_i=0`$ |
 
 The present implementation is based on a weak formulation of these equations. The equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_a+\Gamma_o$. Solutions $\vec{q}=\left(u_i,Y,T,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{Y},\check{T},\check{p}\right)^T$,

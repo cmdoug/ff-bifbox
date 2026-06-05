@@ -36,16 +36,14 @@ The boundary conditions are:
 
 | Boundary | Constraints |
 | :--- | :--- |
-| Inlet, $`\Gamma_i`$ | $`u_x=\frac{2}{5}`$, $`u_y=0`$, $`Y=T=1`$ for base flow|
-| Inlet, $`\Gamma_i`$ | $`\rho u_x=I_{\text{mass},i}`$, $`\rho u_x^2=I_{x\text{mom},i}`$, $`u_y=Y=T=0`$ for perturbation|
+| Inlet, $`\Gamma_i`$ | $`\begin{cases}u_x=\frac{2}{5}, u_y=0, Y=T=1, & \text{for base flow} \\\\ \rho u_x=I_{\text{mass},i}, \rho u_x^2=I_{x\text{mom},i}, u_y=Y=T=0, & \text{for perturbations}\end{cases}`$|
 | Wall, $`\Gamma_w`$ | $`u_x=u_y=\frac{\partial Y}{\partial x_i}\hat{n}_i=\frac{\partial T}{\partial x_i}\hat{n}_i=0`$ |
 | Symmetry, $`\Gamma_s`$ | $\frac{\partial u_x}{\partial y}=u_y=\frac{\partial Y}{\partial y}=\frac{\partial T}{\partial y}=0$ |
-| Outlet, $`\Gamma_o`$ | $\epsilon_{ix}\hat{e}_x-p\hat{e}_x = \frac{\partial Y}{\partial x} = \frac{\partial T}{\partial x} = 0$ for base flow |
-| Outlet, $`\Gamma_o`$ | $`\rho u_x=I_{\text{mass},o}`$, $`\rho u_x^2=I_{x\text{mom},o}`$, $`\epsilon_{yx}\hat{e}_x = \frac{\partial Y}{\partial x} = \frac{\partial T}{\partial x}=0`$ for perturbation |
+| Outlet, $`\Gamma_o`$ | $`\begin{cases}\epsilon_{ix}\hat{e}_x-p\hat{e}_x = \frac{\partial Y}{\partial x} = \frac{\partial T}{\partial x} = 0, & \text{for base flow} \\\\ \rho u_x=I_{\text{mass},o}, \rho u_x^2=I_{x\text{mom},o}, \epsilon_{yx}\hat{e}_x = \frac{\partial Y}{\partial x} = \frac{\partial T}{\partial x}=0, & \text{for perturbations}\end{cases}`$ |
 
 where:
-- $`I_{\text{mass},i}=\frac{1}{2}\left(\rho-\frac{\bar{\rho}}{\bar{c}}u_x\right)\left[\left(\bar{c}+\bar{u}_x\right)R_{in}+\left(\bar{u}_x - \bar{c}\right)\right]`$
-- $`I_{x\text{mom},i}=\frac{1}{2}\left(\rho-\frac{\bar{\rho}}{\bar{c}}u_x\right)\left[\left(\bar{c}+\bar{u}_x\right)^2R_{in}+\left(\bar{u}_x - \bar{c}\right)^2\right]`$
+- $`I_{\text{mass},i}=-\frac{1}{2}\left(\rho-\frac{\bar{\rho}}{\bar{c}}u_x\right)\left[\left(\bar{c}+\bar{u}_x\right)R_{in}+\left(\bar{u}_x - \bar{c}\right)\right]`$
+- $`I_{x\text{mom},i}=-\frac{1}{2}\left(\rho-\frac{\bar{\rho}}{\bar{c}}u_x\right)\left[\left(\bar{c}+\bar{u}_x\right)^2R_{in}+\left(\bar{u}_x - \bar{c}\right)^2\right]`$
 - $`I_{\text{mass},o}=\frac{1}{2}\left(\rho+\frac{\bar{\rho}}{\bar{c}}u_x\right)\left[\left(\bar{c}+\bar{u}_x\right)+\left(\bar{u}_x - \bar{c}\right)R_{out}\right]`$
 - $`I_{x\text{mom},o}=\frac{1}{2}\left(\rho+\frac{\bar{\rho}}{\bar{c}}u_x\right)\left[\left(\bar{c}+\bar{u}_x\right)^2+\left(\bar{u}_x - \bar{c}\right)^2R_{out}\right]`$
 - $`c=\frac{\sqrt{\bar{T}}}{Ma}`$
@@ -62,10 +60,10 @@ $$
 $$
 
 The other terms are:
-- For base flow: $`
-\left(\text{Other terms}\right)=\left(\check{u}_i\hat{n}_j,\rho u_i u_j\right)_{\partial\Omega} + \left(\check{p}\hat{n}_i, \rho u_i\right)_{\partial\Omega}`$
-
-- For perturbations: $`\left(\text{Other terms}\right)=\left(\check{u}_y\hat{n}_x,\rho u_y u_x\right)_{\partial\Omega} + \left(\check{u}_x\hat{n}_x,I_{x\text{mom},i}\right)_{\Gamma_i} + \left(\check{p}\hat{n}_x, I_{\text{mass},i}\right)_{\Gamma_i} + \left(\check{u}_x\hat{n}_x,I_{x\text{mom},o}\right)_{\Gamma_o} + \left(\check{p}\hat{n}_x, I_{\text{mass},o}\right)_{\Gamma_o}`$
+- $`\left(\text{Other terms}\right)=\begin{cases}
+\left(\check{u}_i\hat{n}_j,\rho u_i u_j\right)_{\partial\Omega} + \left(\check{p}\hat{n}_i, \rho u_i\right)_{\partial\Omega}, & \text{ for base flow} \\\\
+\left(\check{u}_y\hat{n}_x,\rho u_y u_x\right)_{\partial\Omega} + \left(\check{u}_x\hat{n}_x,I_{x\text{mom},i}\right)_{\Gamma_i} + \left(\check{p}\hat{n}_x, I_{\text{mass},i}\right)_{\Gamma_i} \\\\ + \left(\check{u}_x\hat{n}_x,I_{x\text{mom},o}\right)_{\Gamma_o} + \left(\check{p}\hat{n}_x, I_{\text{mass},o}\right)_{\Gamma_o}, & \text{ for perturbations}
+\end{cases}`$
 
 This weak formulation has been implemented in the equations file for this example: [eqns_brokof_etal_2024.idp](./eqns_brokof_etal_2024.idp).
 
