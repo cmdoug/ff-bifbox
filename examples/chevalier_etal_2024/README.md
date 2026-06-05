@@ -1,6 +1,6 @@
 # "Turbulent" Swirling Jet Example: Chevalier etal, TCFD, (2024)
 This file shows an example `ff-bifbox` workflow for reproducing the results of the study:
-```tex
+```bibtex
 @article{chevalier_etal_2024,
   title={Resolvent analysis of a swirling turbulent jet},
   volume={38},
@@ -12,7 +12,51 @@ This file shows an example `ff-bifbox` workflow for reproducing the results of t
   pages={641-663}
 }
 ```
-The commands below illustrate how to perform a mean flow resolvent analysis of an incompressible swirling jet with modeled turbulence using `ff-bifbox`. The original codes used for the paper can be found on Quentin Chevalier's repository at [github.com/hawkspar](https://github.com/hawkspar).
+The commands below illustrate how to perform a mean flow resolvent analysis of an incompressible swirling jet with modeled turbulence (based on the Spalart–Allmaras turbulence model [SA-noft2](https://tmbwg.github.io/turbmodels/spalart.html#sanoft2)) using `ff-bifbox`. The original codes used for the paper can be found on Quentin Chevalier's repository at [github.com/hawkspar](https://github.com/hawkspar).
+
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial \tilde{\nu}}{\partial t} + u_j\frac{\partial \tilde{\nu}}{\partial x_j} - c_{b1}\tilde{S}\tilde{\nu} + c_{w1}f_w\frac{\tilde{\nu}^2}{d^2} - \frac{1}{\sigma}\left\{\frac{\partial }{\partial x_i}\left[\left(\frac{1}{Re} + \tilde{\nu}\right)\frac{\partial \tilde{\nu}}{\partial x_i}\right] + c_{b2}\frac{\partial \tilde{\nu}}{\partial x_i}\frac{\partial \tilde{\nu}}{\partial x_i}\right\} &= 0 \\
+\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{\partial}{\partial x_j}\left[\left(\frac{1}{Re} + \nu_t\right)\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)\right] &= 0 \\
+\frac{\partial u_i}{\partial x_i} &= 0 
+\end{align*}
+$$
+
+where:
+- $\nu_t=\tilde{\nu}f_{v1}$
+- $f_{v1}=\frac{\tilde{\nu}^3}{\tilde{\nu}^3+\left(\frac{c_{v1}}{Re}\right)^3}$
+- $\tilde{S}=\sqrt{\frac{1}{2}\left(\frac{\partial u_i}{\partial x_j}-\frac{\partial u_j}{\partial x_i}\right)\left(\frac{\partial u_i}{\partial x_j}-\frac{\partial u_j}{\partial x_i}\right)}+\frac{\tilde{\nu}}{\kappa^2 d^2}f_{v2}$
+- $f_{v2}=1-\frac{\tilde{\nu}}{\frac{1}{Re}+\tilde{\nu}f_{v1}}$
+- $f_w=g\left[\frac{1+c_{w3}^6}{g^6+c_{w3}^6}\right]^{1/6}$
+- $g=\left[1+c_{w2}\left(\min\left(\frac{\tilde{\nu}}{\tilde{S}\kappa^2d^2},10\right)^5-1\right)\right]\min\left(\frac{\tilde{\nu}}{\tilde{S}\kappa^2d^2},10\right)$
+
+together with the boundary conditions:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $u_x=\tanh\left[6\left(1-r^2\right)\right]$, $u_r=0$, $u_{\theta}=Sr\tanh\left[6\left(1-r^2\right)\right]$, $\tilde{\nu}=10^{-6}$ |
+| Wall, $\Gamma_w$ | $u_x=u_r=u_{\theta}=\tilde{\nu}=0$ |
+| Co-flow, $\Gamma_c$ | $u_x=2\alpha\left(\frac{r-1-\epsilon}{19-\epsilon}\right)\left(1-\frac{r-1-\epsilon}{2\left(19-\epsilon\right)}\right)$, $u_r=u_{\theta}=0$, $\tilde{\nu}=10^{-6}$ |
+| Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=\frac{\partial \tilde{\nu}}{\partial r}=0$, if $m=0$ |
+| Axis, $\Gamma_a$| $u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=\tilde{\nu}=0$, if $\|m\|=1$ |
+| Axis, $\Gamma_a$| $u_x=u_r=u_{\theta}=\tilde{\nu}=0$, if $\|m\|>1$ |
+| Open, $\Gamma_o$ | $\left(\frac{1}{Re}+\nu_t\right)\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)\hat{n}_j-p\hat{n}_i = \frac{\partial\tilde{\nu}}{\partial x_i}\hat{n}_i=0$ |
+
+The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_c+\Gamma_a+\Gamma_o$. Solutions $\vec{q}=\left(u_i,\tilde{\nu},p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{\tilde{\nu}},\check{p}\right)^T$,
+
+$$
+\begin{align*} 
+&\left(\check{u}_i,\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\left(\frac{1}{Re}+\frac{\tilde{\nu}^4}{\tilde{\nu}^3+\left(\frac{c_{v1}}{Re}\right)^3}\right)\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)\right)_{\Omega} \\
+&\left(\check{\tilde{\nu}},\frac{\partial \tilde{\nu}}{\partial t} + u_i\frac{\partial \tilde{\nu}}{\partial x_i} - c_{b1}\tilde{S}\tilde{\nu} + c_{w1}f_w\frac{\tilde{\nu}^2}{d^2} - \frac{c_{b2}}{\sigma}\frac{\partial \tilde{\nu}}{\partial x_i}\frac{\partial \tilde{\nu}}{\partial x_i}\right)_{\Omega} + \left(\frac{\partial \check{\tilde{\nu}}}{\partial x_i},\frac{1}{\sigma}\left(\frac{1}{Re}+\tilde{\nu}\right)\frac{\partial \tilde{\nu}}{\partial x_i}\right)_{\Omega} \\
+&- \left(\check{p},\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0.
+\end{align*}
+$$
+
+Similarly, for the frozen viscosity flow (used for linear analysis), the same formulation is used, but with $\tilde{\nu}$ (and $\check{\tilde{\nu}$) removed from the unknowns.
+
+These weak formulations have been implemented in the equations files for this example: [eqns_chevalier_etal_2024_baseflow.idp](./eqns_chevalier_etal_2024_baseflow.idp) and [eqns_chevalier_etal_2024_perturbations.idp](./eqns_chevalier_etal_2024_perturbations.idp).
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.

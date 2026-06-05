@@ -1,6 +1,6 @@
 # Buoyant Jets Chakravarthy etal. JFM (2018)
 This file shows an example `ff-bifbox` workflow for reproducing the results of the paper:
-```tex
+```bibtex
 @article{chakravarthy_etal_2018, 
   title={Global stability of buoyant jets and plumes}, 
   volume={835}, 
@@ -11,31 +11,41 @@ This file shows an example `ff-bifbox` workflow for reproducing the results of t
   pages={654–673}
 } 
 ```
-The paper considers a buoyant jet/plume in a cylindrical (axisymmetric) domain. In the original paper, the governing equations are given as:
+The commands below illustrate how to perform a bifurcation analysis of a buoyant jet/plume in a cylindrical (axisymmetric) domain using `ff-bifbox`.
+
+In strong form, the governing equations are given as:
 
 $$
 \begin{align*} 
 \rho\frac{\partial u_i}{\partial t} + \rho u_j\frac{\partial u_i}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{1}{Re S}\left[\frac{\partial^2u_i}{\partial x_j^2} + \frac{1}{3}\delta_{ij}\frac{\partial}{\partial x_j}\left(\frac{\partial u_k}{\partial x_k}\right)\right] - \frac{Ri}{S-1}\left(1-\rho\right)\hat{e}_x &= 0 \\
 \rho\frac{\partial T}{\partial t} + \rho u_i\frac{\partial T}{\partial x_i} - \frac{1}{Pr Re S}\frac{\partial^2T}{\partial x_i^2} &= 0\\
-\frac{\partial\rho}{\partial t} + \frac{\partial\left(\rho u_i\right)}{\partial x_i} &= 0\\
-\rho\left[1+\left(S-1\right)T\right] - 1 &= 0.
+\frac{\partial\rho}{\partial t} + \frac{\partial\left(\rho u_i\right)}{\partial x_i} &= 0
 \end{align*}
 $$
 
-In the implementation, we must instead make use of the weak form. First, we eliminate the density variable using the equation of state. Then, we introduce test functions and integrate over the domain $\Omega$. We then seek, in the appropriate spaces, solutions $\vec{q}=\left(u_i,T,p\right)^T$ such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{T},\check{p}\right)^T$,
+where $\rho\left[1+\left(S-1\right)T\right] = 1$
+
+together with the boundary conditions:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $u_x=\frac{1}{2}+\frac{1}{2}\tanh\left[\frac{5}{2}\left(\frac{1}{r}-r\right)\right]$, $u_r=0$, $\rho=1-\left(1-\frac{1}{S}\right)\left\{\frac{1}{2}+\frac{1}{2}\tanh\left[\frac{5}{2}\left(\frac{1}{r}-r\right)\right]\right\}$ |
+| Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial r}=u_r=\frac{\partial \rho}{\partial r}=0$, if $m=0$ |
+| Outlet, $\Gamma_o$ | $\frac{1}{Re}\frac{\partial u_i}{\partial x}-p\hat{e}_x = \frac{\partial \rho}{\partial x}=0$ |
+| Lateral, $\Gamma_l$ | $\frac{1}{Re}\frac{\partial u_i}{\partial r}-p\hat{e}_r = 0$, $\rho=1$ |
+
+The present implementation is based on a weak formulation of these equations. The density variable is eliminated using the equation of state, test functions are introduced, and the equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_a+\Gamma_o+\Gamma_l$. Solutions $\vec{q}=\left(u_i,T,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{T},\check{p}\right)^T$,
 
 $$
 \begin{align*} 
-&\left(\check{u}_i,\frac{\partial u_i}{\partial t}\right)_{\Omega} + \left(\check{u}_i,u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial}{\partial x_i}\left(\check{u}_i\left[1+\left(S-1\right)T\right]\right),\frac{p}{S}\right)_{\Omega} - \left(\check{u}_x,Ri T\right)_{\Omega} \\
+&\left(\check{u}_i,\frac{\partial u_i}{\partial t}+ u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial}{\partial x_i}\left(\check{u}_i\left[1+\left(S-1\right)T\right]\right),\frac{p}{S}\right)_{\Omega} - \left(\check{u}_x,Ri T\right)_{\Omega} \\
 &+ \left(\frac{\partial}{\partial x_j}\left(\check{u}_i\left[1+\left(S-1\right)T\right]\right),\frac{1}{Re S}\left[\frac{\partial u_i}{\partial x_j} + \frac{1}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}\right]\right)_{\Omega} - \left(\check{u}_i\hat{n}_i,\frac{1+\left(S-1\right)T}{3 Re S}\frac{\partial u_k}{\partial x_k}\right)_{\partial\Omega}\\
-&+ \left(\check{T},\frac{\partial T}{\partial t}\right)_{\Omega} + \left(\check{T},u_i\frac{\partial T}{\partial x_i}\right)_{\Omega} + \left(\frac{\partial}{\partial x_i}\left(\check{T}\left[1+\left(S-1\right)T\right]\right),\frac{1}{Pr Re S}\frac{\partial T}{\partial x_i}\right)_{\Omega} \\
-&+ \left(\check{p},\left(S-1\right)\frac{\partial T}{\partial t}\right)_{\Omega} - \left(\check{p},\left[1+\left(S-1\right)T\right]\frac{\partial u_i}{\partial x_i}\right)_{\Omega} + \left(\check{p},\left(S-1\right)\frac{\partial T}{\partial x_i}u_i\right)_{\Omega} = 0.
+&+ \left(\check{T},\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i}\right)_{\Omega} + \left(\frac{\partial}{\partial x_i}\left(\check{T}\left[1+\left(S-1\right)T\right]\right),\frac{1}{Pr Re S}\frac{\partial T}{\partial x_i}\right)_{\Omega} \\
+&+ \left(\check{p}\left(S-1\right),\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i}\right)_{\Omega} - \left(\check{p},\left[1+\left(S-1\right)T\right]\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0.
 \end{align*}
 $$
 
-This weak formulation has been implemented in this work.
-
-The commands below illustrate how to perform a weakly nonlinear analysis of the 2D incompressible flow around a cylinder and an open cavity using `ff-bifbox`.
+This weak formulation has been implemented in the equations file for this example: [eqns_chakravarthy_etal_2018.idp](./eqns_chakravarthy_etal_2018.idp).
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.

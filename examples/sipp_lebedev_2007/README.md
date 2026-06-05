@@ -1,6 +1,6 @@
 # 2D Incompressible Flow Example: Sipp and Lebedev. JFM. (2007)
 This file shows an example `ff-bifbox` workflow for reproducing the results of the paper:
-```tex
+```bibtex
 @article{sipp_lebedev_2007,
   title={Global stability of base and mean flows: a general approach and its applications to cylinder and open cavity flows},
   volume={593},
@@ -13,6 +13,35 @@ This file shows an example `ff-bifbox` workflow for reproducing the results of t
 }
 ```
 The commands below illustrate how to perform a weakly nonlinear analysis of the 2D incompressible flow around a cylinder and an open cavity using `ff-bifbox`.
+
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{1}{Re}\frac{\partial^2u_i}{\partial x_j^2} &= 0 \\
+\frac{\partial u_i}{\partial x_i} &= 0
+\end{align*}
+$$
+
+together with the boundary conditions:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $u_x=1$, $u_y=0$ |
+| Wall, $\Gamma_w$ | $u_x=u_y=0$ |
+| Slip, $\Gamma_s$ | $\frac{\partial u_x}{\partial y}=u_y=0$ |
+| Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial y}=u_y=0$, if symmetric |
+| Axis, $\Gamma_a$| $u_x=\frac{\partial u_y}{\partial y}=0$, if asymmetric |
+| Outlet, $\Gamma_o$ | $\frac{1}{Re}\frac{\partial u_i}{\partial x}-p\hat{e}_x= 0$ |
+
+The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the planar domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_a+\Gamma_s+\Gamma_o$. Solutions $\vec{q}=\left(u_i,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{p}\right)^T$,
+
+$$
+\left(\check{u}_i,\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\frac{1}{Re}\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\check{p},\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0.
+
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_sipp_lebedev_2007.idp](./eqns_sipp_lebedev_2007.idp).
 
 Note that, in this example of Sipp and Lebedev, viscosity is parameterized by $1/Re$ instead of $Re$ in order to make the equation system linear with respect to the control parameter. Though such scalings do improve the performance of predictor-corrector methods and weakly-nonlinear analysis, `ff-bifbox` does not require the system to be linear in the parameters.
 

@@ -1,7 +1,7 @@
 # annularjet.md
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
-This file can be used with FreeFEM to create a mesh for the laminar annular jet.
+This file can be used with FreeFEM to create a mesh for the laminar annular jet as in [Douglas, Emerson, & Lieuwen. JFM, (2022)](https://doi.org/10.1017/jfm.2022.453).
 
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor

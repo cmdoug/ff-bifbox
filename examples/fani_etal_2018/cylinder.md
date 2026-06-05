@@ -1,7 +1,7 @@
 # cylinder.md
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
-This file can be used with FreeFEM to create a mesh for the cylinder.
+This file can be used with FreeFEM to create a mesh for the cylinder as in [Fani, Citro, Giannetti, & Auteri. PoF. (2018)](https://doi.org/10.1063/1.4997536).
 
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor

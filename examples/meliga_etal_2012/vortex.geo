@@ -27,16 +27,16 @@ Point (3)  = {0, rmax, 0, 1/n1};
 
 
 // Lines
-Line (1) = {3,0};
-Line (2) = {0,1};
-Line (3) = {1,2};
-Line (4) = {2,3};
+Line (1) = {0,1};
+Line (2) = {1,2};
+Line (3) = {2,3};
+Line (4) = {3,0};
 
 // Labels
-Physical Line ("AXIS") = {2};
-Physical Line ("OUTFLOW") = {3};
-Physical Line ("INFLOW") = {1};
-Physical Line ("SLIP") = {4};
+Physical Line ("AXIS") = {1};
+Physical Line ("OUTFLOW") = {2};
+Physical Line ("LATERAL") = {3};
+Physical Line ("INFLOW") = {4};
 
 // Surfaces
 Line Loop(1) = {1:4};

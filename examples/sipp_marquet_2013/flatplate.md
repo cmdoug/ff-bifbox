@@ -1,7 +1,7 @@
 # flatplate.md
 Author: Daniel Moreno ([@dmorenobz](https://github.com/dmorenobz)) [damoreno@ing.uc3m.es](mailto:damoreno@ing.uc3m.es)
 
-This file can be used with FreeFEM to create a mesh for the flat plate boundary layer as in [Sipp and Marquet. TCFD. (2013) DOI:10.1007/s00162-012-0265-y].
+This file can be used with FreeFEM to create a mesh for the flat plate boundary layer as in [Sipp & Marquet. TCFD. (2013)](https://doi.org/10.1007/s00162-012-0265-y).
 
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor

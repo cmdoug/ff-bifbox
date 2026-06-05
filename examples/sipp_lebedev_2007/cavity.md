@@ -1,7 +1,7 @@
 # cavity.md
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
-This file can be used with FreeFEM to create a mesh for the cylinder as in [D. Sipp and A. Lebedev, JFM (2007) DOI:10.1017/S0022112007008907].
+This file can be used with FreeFEM to create a mesh for the cylinder as in [Sipp & Lebedev. JFM. (2007)](https://doi.org/10.1017/S0022112007008907).
 
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor

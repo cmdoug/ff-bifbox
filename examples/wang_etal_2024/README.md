@@ -1,6 +1,6 @@
 # Low-Mach V-flame Example: Wang et al., JFM, (2024)
 This file shows an example `ff-bifbox` workflow for reproducing the results in the study:
-```tex
+```bibtex
 @article{wang_etal_2024,
   title = {{Onset of global instability in a premixed annular V-flame}},
   author = {Wang, Chuhan and Douglas, Christopher M. and Guan, Yu and Xu, Chunxiao and Lesshafft, Lutz},
@@ -13,6 +13,54 @@ This file shows an example `ff-bifbox` workflow for reproducing the results in t
 }
 ```
 The commands below illustrate how to perform a bifurcation analysis of a lean premixed V-flame in an axisymmetric annular jet using `ff-bifbox`.
+
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial\rho}{\partial t} + u_i\frac{\partial \rho}{\partial x_i} + \rho\frac{\partial u_i}{\partial x_i} &= 0 \\
+\rho\frac{\partial u_i}{\partial t} + \rho u_j\frac{\partial u_i}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{\partial\tau_{ij}}{\partial x_j} &= 0 \\
+\rho\frac{\partial Y_{\mathrm{CH}_4}}{\partial t} + \rho u_i\frac{\partial Y_{\mathrm{CH}_4}}{\partial x_i} - \frac{\partial}{\partial x_i}\left(\frac{\mu}{Sc}\frac{\partial Y_{\mathrm{CH}_4}}{\partial x_i}\right) + W_{\mathrm{CH}_4}\mathcal{Q}&= 0 \\
+c_p\rho\frac{\partial T}{\partial t} + c_p\rho u_i\frac{\partial T}{\partial x_i} - \frac{\partial}{\partial x_i}\left(\frac{c_p\mu}{Pr}\frac{\partial T}{\partial x_i}\right) + \Delta h_f^0\mathcal{Q} &= 0
+\end{align*}
+$$
+
+where:
+- $\tau_{ij}=\mu\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\frac{2}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}\right)$
+- $p_0 = R_s\rho T$
+- $\mu=\frac{1}{sg}\frac{A_sT^{1/2}}{1+T_s/T}$
+- $sg\left(r,x\right)=\begin{cases}
+1 & \text{if } r \leq r_{sg} \text{ and } x \leq x_{sg}\\
+1 + \left(\alpha-1\right)\zeta\left(x,x_{sg}\right) & \text{if } r \leq r_{sg} \text{ and } x > x_{sg}\\
+sg\left(r_{sg}, x\right) + \left[\alpha-sg\left(r_{sg},x\right)\right]\zeta\left(r,r_{sg}\right) & \text{if } r > r_{sg}
+\end{cases}$
+- $\zeta\left(a,b\right)=\frac{1}{2}+\frac{1}{2}\tanh\left\{\tan\left(-\frac{\pi}{2}+\pi\frac{|a-b|}{l}\right)\right\}$
+- $\mathcal{Q}=A_r\left(\rho\frac{Y_{\mathrm{CH}_4}}{W_{\mathrm{CH}_4}}\right)^{n_{\mathrm{CH}_4}}\left(\rho\frac{Y_{\mathrm{O}_2}}{W_{\mathrm{O}_2}}\right)^{n_{\mathrm{O}_2}}\exp\left(-\frac{T_a}{T}\right)$.
+
+The boundary conditions are:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $u_x=93750(2r - 0.003)(0.011 - 2r)U_0\text{ m/s}$, $u_r=0$, $Y_{\mathrm{CH}_4}=0.04256$, $T=300\text{ K}$ |
+| Annular channel wall, $\Gamma_w$ | $u_x=u_r=\frac{\partial Y_{\mathrm{CH}_4}}{\partial r}=\frac{\partial T}{\partial r}=0$ |
+| Dump plane wall, $\Gamma_{dp}$ | $u_x=u_r= \frac{\partial Y_{\mathrm{CH}_4}}{\partial x}=0$, $T=300\text{ K}$ |
+| Centrebody wall, $\Gamma_{cb}$ | $u_x=u_r= \frac{\partial Y_{\mathrm{CH}_4}}{\partial x}=0$, $T=T_{cb}\text{ K}$ |
+| Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial r}=u_r=\frac{\partial Y_{\mathrm{CH}_4}}{\partial r}=\frac{\partial T}{\partial r}=0$ |
+| Lateral, $\Gamma_l$ | $\frac{\partial u_x}{\partial r}=u_r=Y_{\mathrm{CH}_4}=0$, $T=300\text{ K}$ |
+| Outlet, $\Gamma_o$ | $\tau_{ix}-p\hat{e}_x = \frac{\partial Y_{\mathrm{CH}_4}}{\partial x} = \frac{\partial T}{\partial x} = 0$ |
+
+The present implementation is based on a weak formulation of these equations. Density is eliminated as an unknown using the equation of state, test functions are introduced, and the equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_{dp}+\Gamma_{cb}+\Gamma_a+\Gamma_l+\Gamma_o$. Solutions $\vec{q}=\left(u_i,Y_{\mathrm{CH}_4},T,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{Y},\check{T},\check{p}\right)^T$,
+
+$$
+\begin{align*}
+&\left(\check{u}_i,\rho\left[\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right]\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\mu\left[\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\frac{2}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}\right]\right)_{\Omega} \\
+&+\left(\check{Y},\rho\left[\frac{\partial Y_{\mathrm{CH}_4}}{\partial t} + u_i\frac{\partial Y_{\mathrm{CH}_4}}{\partial x_i}\right] + W_{\mathrm{CH}_4}\mathcal{Q}\right)_{\Omega} + \left(\frac{\partial \check{Y}}{\partial x_i},\frac{\mu}{Sc}\frac{\partial Y_{\mathrm{CH}_4}}{\partial x_i}\right)_{\Omega} \\
+&+\left(\check{T},\rho\left[\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i}\right] + \frac{\Delta h_f^0}{c_p}\mathcal{Q}\right)_{\Omega} + \left(\frac{\partial \check{T}}{\partial x_i},\frac{\mu}{Pr}\frac{\partial T}{\partial x_i}\right)_{\Omega} \\
+&+\left(\check{p},\frac{1}{T}\frac{\partial T}{\partial t}+\frac{u_i}{T}\frac{\partial T}{\partial x_i}-\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0
+\end{align*}
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_wang_etal_2024.idp](./eqns_wang_etal_2024.idp).
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.
@@ -47,17 +95,17 @@ Note that, unlike most of the `ff-bifbox` examples, the results in `wang_etal_20
 ### Laminar base flow
 1. Compute a non-reacting base state with reference parameters on the initial mesh.
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir examples/wang_etal_2024/data -mi Vflame.msh -fo nonreacting_0 -U0 0.1 -Tr 700 -As 1.67212e-6 -Ts 170.672 -Pr 0.7 -Sc 0.7 -p0 101325 -Rs 264.56013215560904 -Cp 1.3 -YCH4 0.04256 -WCH4 0.016 -YO2 0.2128 -WO2 0.032 -nCH4 1.0 -nO2 0.5 -Ar 0 -Ta 10065.425264217412 -Dh0f -804.084 -alpha 0.05 -xsg 0.15 -rsg 0.03 -snes_rtol 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir examples/wang_etal_2024/data -mi Vflame.msh -fo nonreacting_0 -U0 0.1 -Tcb 700 -As 1.67212e-6 -Ts 170.672 -Pr 0.7 -Sc 0.7 -p0 101325 -Rs 264.56013215560904 -Cp 1.3 -YCH4 0.04256 -WCH4 0.016 -YO2 0.2128 -WO2 0.032 -nCH4 1.0 -nO2 0.5 -Ar 0 -Ta 10065.425264217412 -Dh0f -804.084 -alpha 0.05 -xsg 0.15 -rsg 0.03 -snes_rtol 0
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi nonreacting_0.base -fo nonreacting_1 -U0 0.5 -mo nonreacting_1
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi nonreacting_1.base -fo nonreacting -U0 2.2 -pv 1 -mo nonreacting
 ```
 
 2. Turn on chemistry and ignite the $U_0=2.2$ m/s flow at an elevated centrebody temperature and lower combustion enthalpy. Then perform continuation back to reference parameters. Coarse meshes are used for computational efficiency and stabilizing artificial dissipation. 
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi nonreacting.base -fo ignite_0 -Tr 1000 -Ar 1.1e7 -Dh0f -100 -mo ignite_0 -snes_rtol 0 -err 0.05
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi nonreacting.base -fo ignite_0 -Tcb 1000 -Ar 1.1e7 -Dh0f -100 -mo ignite_0 -snes_rtol 0 -err 0.05
 ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi ignite_0.base -fo ignite -param Dh0f -h0 -200 -mo ignite -dmax 100 -err 0.1 -scount 5 -paramtarget -804.084 -maxcount -1 -contorder 2
 cd $workdir && export lastfile=$(printf '%s\n' ignite_*.base | sort -t_ -k2,2n | tail -1) && cd -
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo ignited -Tr 700 -Dh0f -804.084 -mo ignited -snes_rtol 0 -err 0.05 -snes_linesearch_type l2
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo ignited -Tcb 700 -Dh0f -804.084 -mo ignited -snes_rtol 0 -err 0.05 -snes_linesearch_type l2
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi ignited.base -fo U02p2 -pv 1 -snes_rtol 0 -snes_linesearch_type l2 -mo U02p2
 ```
 

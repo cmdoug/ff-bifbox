@@ -62,7 +62,7 @@
   + on(BCchannel, u = U, u#y = U#y )
   + on(BClateral, u#y = U#y, u#Y = U#Y, u#T = U#T - 300. )
   + on(BCwall, u = U, u#y = U#y, u#T = U#T - 300. )
-  + on(BCcenterbody, u = U, u#y = U#y, u#T = U#T - params["Tr"] )
+  + on(BCcenterbody, u = U, u#y = U#y, u#T = U#T - params["Tcb"] )
   + on(BCaxis, u#y = U#y )
   // EOM
   macro HomBoundaryConditions(u)

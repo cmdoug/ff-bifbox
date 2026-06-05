@@ -1,8 +1,8 @@
 # Pool-fire puffing as a hydrodynamic global mode: Moreno-Boza et al. (Combustion and Flame, 2018 )
 This example shows how to use `ff-bifbox` to compute the steady axisymmetric base flow and the leading global modes of the low-Mach-number round pool-fire problem considered by Moreno-Boza et al. (2018) in: 
 
-```tex
-@article{moreno-boza_etall_2018,
+```bibtex
+@article{moreno-boza_etal_2018,
   title={On the critical conditions for pool-fire puffing},
   author={Moreno-Boza, Daniel and Coenen, Wilfried and Carpio, Jaime and S{\'a}nchez, Antonio L and Williams, Forman A},
   journal={Combustion and Flame},
@@ -10,10 +10,53 @@ This example shows how to use `ff-bifbox` to compute the steady axisymmetric bas
   pages={426--438},
   year={2018},
   publisher={Elsevier}
+  doi={10.1016/j.combustflame.2018.02.011},
 }
 ```
 
 The model uses a Lagrange-multiplier formulation for the weak enforcement of the vaporizing-fuel boundary condition at the pool surface (and also the isothermal boundary conditions on the surrounding wall when enforced). The transported scalar variables are the weighted coupling function `Zt` ($\tilde{Z}$) and the excess-enthalpy variable `H` ($\xi$). The density and transport coefficients are reconstructed from the thermochemical closures defined in the equation file. This equation system has numerical challenges because the governing equations have a non-smooth dependence on $\tilde{Z}$. As such, it is possible for the solver to stagnate or diverge when successive iterations push the cusp back-and-forth across quadrature points. To overcome such issues, it is recommended to perturb the parameters and/or the mesh and try again.
+
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial \rho}{\partial t} + u_i\frac{\partial \rho}{\partial x_i} + \rho\frac{\partial u_i}{\partial x_i} &= 0 \\
+\frac{Ra}{Pr}\rho\left(\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right) + \frac{\partial p}{\partial x_i} - \left(1-\rho\right)\hat{e}_x - \frac{\partial}{\partial x_j}\left[\mu\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right)\right] &= 0 \\
+Ra\rho\left(\frac{\partial \xi}{\partial t} + u_j\frac{\partial \xi}{\partial x_j}\right) - \frac{\partial}{\partial x_i}\left(\rho D_T\frac{\partial \xi}{\partial x_i}\right) &= 0 \\
+Ra\rho\left(\frac{\partial Z}{\partial t} + u_j\frac{\partial Z}{\partial x_j}\right) - \frac{1}{Le}\frac{\partial}{\partial x_i}\left(\rho D_T\frac{\partial \tilde{Z}}{\partial x_i}\right) &= 0
+\end{align*}
+$$
+
+where:
+- $\mu=\rho D_T=T^\sigma$
+- $T=1+\left(T_B-1-\frac{q}{S}\right)\xi+\frac{q}{S}\min\left(1,\frac{\tilde{Z}}{\tilde{Z}_S}\right)$
+- $\rho = \frac{1}{T\left[1+\max\left(0, \frac{\tilde{Z}-\tilde{Z}_S}{1-\tilde{Z}_S}\right)\left(\frac{W_A}{W_F}-1\right)\right]}$
+- $Z=Z_S\min\left(1,\frac{\tilde{Z}}{\tilde{Z}_S}\right) + \max\left(0, \frac{\tilde{Z} - \tilde{Z}_S}{1 - \tilde{Z}_S}\right)\left(1 - Z_S\right)$.
+
+The boundary conditions are:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Pool, $\Gamma_p$ | $-T_B^\sigma\frac{\partial\xi}{\partial x} = \alpha Ra \rho u_x$, $u_r=0$, $\xi=1$, $-T_B^\sigma\frac{\partial\tilde{Z}}{\partial x} =Le_F Ra \rho u_x\left(1-\tilde{Z}\right)$ |
+| Wall, $\Gamma_w$ | $u_x=u_r=\frac{\partial\tilde{Z}}{\partial x}=\frac{\partial\xi}{\partial x}=0$ if adiabatic |
+| Wall, $\Gamma_w$ | $u_x=u_r=\frac{\partial\tilde{Z}}{\partial x}=0$, $\xi=\frac{q/S}{q/S+1-T_B}\min\left(1,\frac{\tilde{Z}}{\tilde{Z}_S}\right)$ if isothermal |
+| Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial r}=u_r=\frac{\partial \xi}{\partial r}=\frac{\partial \tilde{Z}}{\partial r}=0$ |
+| Lateral, $\Gamma_l$ | $\mu\left(\frac{\partial u_i}{\partial r}+\frac{\partial u_r}{\partial x_i}\right)-p\hat{e}_r = \xi = \tilde{Z} = 0$ |
+| Outlet, $\Gamma_o$ | $\mu\left(\frac{\partial u_i}{\partial x}+\frac{\partial u_x}{\partial x_i}\right)-p\hat{e}_x = \frac{\partial \xi}{\partial x} = \frac{\partial \tilde{Z}}{\partial x}=0$ |
+
+The present implementation is based on a weak formulation of these equations. Density is eliminated as an unknown algebraically using the equation of state, test functions are introduced, and the equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_p+\Gamma_w+\Gamma_a+\Gamma_l+\Gamma_o$. Solutions $\vec{q}=\left(u_i,p,\tilde{Z},\xi,\lambda\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{p},\check{\tilde{Z}},\check{\xi},\check{\lambda}\right)^T$,
+
+$$
+\begin{align*}
+&\left(\check{u}_i,\frac{Ra}{Pr}\rho\left[\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right]\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},T^\sigma\left[\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right]\right)_{\Omega} \\
+&+\left(\check{u}_x,\rho-1\right)_{\Omega} - \left(\check{u}_x,\lambda\right)_{\Gamma_i} + \left(\check{p}n_i,\rho u_i\right)_{\partial\Omega}-\left(\frac{\partial\check{p}}{\partial x_i},\rho u_i\right)_{\Omega} \\
+&+\left(\check{\tilde{Z}},Ra\rho\frac{\partial Z}{\partial \tilde{Z}}\left[\frac{\partial \tilde{Z}}{\partial t} + u_i\frac{\partial \tilde{Z}}{\partial x_i}\right]\right)_{\Omega} + \left(\frac{\partial \check{\tilde{Z}}}{\partial x_i},\frac{T^\sigma}{Le}\frac{\partial \tilde{Z}}{\partial x_i}\right)_{\Omega} \\
+&- \left(\check{\tilde{Z}},\frac{T_B^\sigma Le_F}{\alpha Le}\frac{\partial\xi}{\partial x}\left(\tilde{Z}-1\right)\right)_{\Gamma_i} + \left(\check{\xi},Ra\rho\left[\frac{\partial \xi}{\partial t} + u_i\frac{\partial \xi}{\partial x_i}\right]\right)_{\Omega} + \left(\frac{\partial \check{\xi}}{\partial x_i},T^\sigma\frac{\partial \xi}{\partial x_i}\right)_{\Omega} \\
+&-\left(\check{\lambda},\frac{T_B^\sigma}{\alpha}\frac{\partial\xi}{\partial x} + Ra\rho u_x\right)_{\Gamma_i} + \underbrace{\left(\check{\lambda},T-1\right)_{\Gamma_w} + \left(\check{\xi},\lambda\right)_{\Gamma_w}}_{\text{removed for adiabatic wall case}} = 0.
+\end{align*}
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_moreno-boza_etal_2018.idp](./eqns_moreno-boza_etal_2018.idp).
 
 The workflow below targets the methanol parameter set and reproduces the base flow and global spectrum near the onset of the axisymmetric puffing instability using `ff-bifbox`.
 

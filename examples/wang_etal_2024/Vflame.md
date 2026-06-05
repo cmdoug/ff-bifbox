@@ -1,7 +1,7 @@
 # Vflame.md
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
-This file can be used with FreeFEM to create a mesh for the annular V-flame configuration.
+This file can be used with FreeFEM to create a mesh for the annular V-flame configuration as in [Wang, Douglas, Guan, Xu, & Lesshafft. JFM. 2024](https://doi.org/10.1017/jfm.2024.869).
 
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor

@@ -1,7 +1,7 @@
 # chakravarthy.md
 Author: Gretchen Schulke ([@gretchen-s](https://github.com/gretchen-s)) [gretchen.schulke@duke.edu](mailto:gretchen.schulke@duke.edu)
 
-This file can be used with FreeFEM to create a mesh for the laminar jet as in [R. Chakravarthy, L. Lesshafft, & P. Huerre. JFM, (2018)].
+This file can be used with FreeFEM to create a mesh for the laminar buoyant jet/plume as in [Chakravarthy, Lesshafft, & Huerre. JFM. (2018)](https://doi.org/10.1017/jfm.2017.764).
 
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor

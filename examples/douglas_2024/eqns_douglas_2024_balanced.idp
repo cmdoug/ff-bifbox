@@ -37,9 +37,9 @@
 // RESIDUAL OPERATOR
   varf vR(defu(dum), defu(v))
     = int2d(Th)(
-      ugradu(v, ub, 0, ub) - div(0, v)*ubp + veclap(v, 0, ub)/params["Re"] - vp*div(0, ub)
+      ugradu(v, ub, 0, ub) - div(0, v)*ubp + veclap(v, 0, ub)*params["1/Re"] - vp*div(0, ub)
     )
-    + int1d(Th, BCwall, BCopen)(
+    + int1d(Th, BClat, BCopen)(
      -y*ndotu(v)*ubphi + lap(vphi, 0, ubphi) - gradvdotf(0, vphi, ub, ub)
     )
     + BoundaryConditions(dum, ub);
@@ -48,17 +48,17 @@
   varf vJ(defu(dum), defu(v))
     = int2d(Th)(
       iomega*vdotu(v, dum)
-      + ugradu(v, dum, 0, ub) + ugradu(v, ub, ik(0), dum) - div(-ik(0), v)*dump + veclap(v, ik(0), dum)/params["Re"] - vp*div(ik(0), dum)
+      + ugradu(v, dum, 0, ub) + ugradu(v, ub, ik(0), dum) - div(-ik(0), v)*dump + veclap(v, ik(0), dum)*params["1/Re"] - vp*div(ik(0), dum)
       + 1e-12*vphi*dumphi*(x<29.999)*(y<9.999)
     )
-    + int1d(Th, BCwall, BCopen)(
+    + int1d(Th, BClat, BCopen)(
       -y*ndotu(v)*dumphi + lap(vphi, ik(0), dumphi) - gradvdotf(-ik(0), vphi, ub, dum) - gradvdotf(-ik(0), vphi, dum, ub)
     )
     + int2d(Th)(
       iomega*vdotu(v, um)
-      + ugradu(v, um, 0, ub) + ugradu(v, ub, ik(0), um) - div(-ik(0), v)*ump + veclap(v, ik(0), um)/params["Re"] - vp*div(ik(0), um)
+      + ugradu(v, um, 0, ub) + ugradu(v, ub, ik(0), um) - div(-ik(0), v)*ump + veclap(v, ik(0), um)*params["1/Re"] - vp*div(ik(0), um)
     )
-    + int1d(Th, BCwall, BCopen)(
+    + int1d(Th, BClat, BCopen)(
       -y*ndotu(v)*umphi + lap(vphi, ik(0), umphi) - gradvdotf(-ik(0), vphi, ub, um) - gradvdotf(-ik(0), vphi, um, ub)
     )
     + HomBoundaryConditions(dum);

@@ -35,13 +35,13 @@
   int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
   int[int] ParaviewOrderfc = [ParaviewOrderf, ParaviewOrderf];
   // Initial conditions (if no file)
-  macro InitialConditions()[1, 0, 0, 0]//EOM
+  macro InitialConditions()[1, 0, (params["S"]*((y<=1)*y*(2-y^2) + (y>1)/(y+(y==0)))), 0]//EOM
 // Boundary labels
   int BCnull = 0;
   int BCaxis = 1;
   int BCopen = 2;
-  int BCinflow = 3;
-  int BCslip = 4;
+  int BClat = 3;
+  int BCinflow = 4;
 // Define solution monitors to extract:
   macro getmonitors(){
     fespace Xh1(Thg, P2);

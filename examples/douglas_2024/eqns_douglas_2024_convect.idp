@@ -22,9 +22,9 @@
 
   macro lap(g, ik, f) ( y*(dx(g)*dx(f) + dy(g)*dy(f)) + (-ik)*(ik)*g*f/y ) // EOM
 
-real Cr = getARGV("-Cr", 0.1);
-
-  macro C() (N.x*params["C"] + N.y*Cr)//EOM
+  real Cr = getARGV("-Cr", 0.1);
+  real Cx = getARGV("-Cx", 0.6);
+  macro C() (N.x*Cx + N.y*Cr)//EOM
 
 // Boundary conditions
   macro BoundaryConditions(u, U)
@@ -38,7 +38,7 @@ real Cr = getARGV("-Cr", 0.1);
 // RESIDUAL OPERATOR
   varf vR(defu(dum), defu(v))
     = int2d(Th)(
-      ugradu(v, ub, 0, ub) + vdotgrads(v, 0, ubp) + veclap(v, 0, ub)/params["Re"] - vp*div(0, ub) + y*c*vp
+      ugradu(v, ub, 0, ub) + vdotgrads(v, 0, ubp) + veclap(v, 0, ub)*params["1/Re"] - vp*div(0, ub) + y*c*vp
     )
     + BoundaryConditions(dum, ub);
 
@@ -46,17 +46,17 @@ real Cr = getARGV("-Cr", 0.1);
   varf vJ(defu(dum), defu(v))
     = int2d(Th)(
       iomega*vdotu(v, dum)
-      + ugradu(v, dum, 0, ub) + ugradu(v, ub, ik(0), dum) + vdotgrads(v, ik(0), dump) + veclap(v, ik(0), dum)/params["Re"] - vp*div(ik(0), dum)
+      + ugradu(v, dum, 0, ub) + ugradu(v, ub, ik(0), dum) + vdotgrads(v, ik(0), dump) + veclap(v, ik(0), dum)*params["1/Re"] - vp*div(ik(0), dum)
     )
-    + int1d(Th, BCwall, BCopen)(
-      iomega*vdotu(v, dum)/(C*params["Re"])
+    + int1d(Th, BClat, BCopen)(
+      iomega*vdotu(v, dum)*params["1/Re"]/C
     )
     + int2d(Th)(
       iomega*vdotu(v, um)
-      + ugradu(v, um, 0, ub) + ugradu(v, ub, ik(0), um) + vdotgrads(v, ik(0), ump) + veclap(v, ik(0), um)/params["Re"] - vp*div(ik(0), um)
+      + ugradu(v, um, 0, ub) + ugradu(v, ub, ik(0), um) + vdotgrads(v, ik(0), ump) + veclap(v, ik(0), um)*params["1/Re"] - vp*div(ik(0), um)
     )
-    + int1d(Th, BCwall, BCopen)(
-      iomega*vdotu(v, um)/(C*params["Re"])
+    + int1d(Th, BClat, BCopen)(
+      iomega*vdotu(v, um)*params["1/Re"]/C
     )
     + HomBoundaryConditions(dum);
 
@@ -65,9 +65,9 @@ real Cr = getARGV("-Cr", 0.1);
 // MASS OPERATOR
   varf vM(defu(dum), defu(v))
     = int2d(Th)( vdotu(v, dum) )
-    + int1d(Th, BCopen)( vdotu(v, dum)/(C*params["Re"]) )
+    + int1d(Th, BCopen)( vdotu(v, dum)*params["1/Re"]/C )
     + int2d(Th)( vdotu(v, um) )
-    + int1d(Th, BCopen)( vdotu(v, um)/(C*params["Re"]) )
+    + int1d(Th, BCopen)( vdotu(v, um)*params["1/Re"]/C )
     + HomBoundaryConditions(dum);
 
 // MASS DERIVATIVE OPERATOR

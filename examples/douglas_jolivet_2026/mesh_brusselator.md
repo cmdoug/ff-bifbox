@@ -1,7 +1,7 @@
 # mesh_brusselator.md
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
-This file is used to create initial meshes for the example of the 3-D Brusselator from [C. Douglas, P. Jolivet. (2026)].
+This file is used to create initial meshes for the example of the 3-D Brusselator from [Douglas, Jolivet. CPC. (2026)](https://doi.org/10.1016/j.cpc.2026.110221).
 
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor

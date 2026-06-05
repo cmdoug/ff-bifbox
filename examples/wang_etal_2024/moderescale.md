@@ -1,6 +1,8 @@
 # moderescale.md
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
+This file can be used with FreeFEM to create scaled velocity perturbations from linear eigenmodes that can be used as initial perturbations for DNS of the annular V-flame as in [Wang, Douglas, Guan, Xu, & Lesshafft. JFM. 2024](https://doi.org/10.1017/jfm.2024.869).
+
 MUST BE RUN WITH 1 MPI PROCESS
 
 ```freefem

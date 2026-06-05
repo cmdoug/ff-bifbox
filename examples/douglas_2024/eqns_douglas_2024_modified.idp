@@ -34,7 +34,7 @@
 // RESIDUAL OPERATOR
   varf vR(defu(dum), defu(v))
     = int2d(Th)(
-      ugradu(v, ub, 0, ub) - div(0, v)*ubp + veclap(v, 0, ub)/params["Re"] - vp*div(0, ub)
+      ugradu(v, ub, 0, ub) - div(0, v)*ubp + veclap(v, 0, ub)*params["1/Re"] - vp*div(0, ub)
     )
     + int1d(Th, BCopen)(
       y*ndotu(v)*ubpo + vpo*(y*tdotgrads(ubpo) - ubz^2*N.x)
@@ -45,7 +45,7 @@
   varf vJ(defu(dum), defu(v))
     = int2d(Th)(
       iomega*vdotu(v, dum)
-      + ugradu(v, dum, 0, ub) + ugradu(v, ub, ik(0), dum) - div(-ik(0), v)*dump + veclap(v, ik(0), dum)/params["Re"] - vp*div(ik(0), dum)
+      + ugradu(v, dum, 0, ub) + ugradu(v, ub, ik(0), dum) - div(-ik(0), v)*dump + veclap(v, ik(0), dum)*params["1/Re"] - vp*div(ik(0), dum)
       + 1e-10*vpo*dumpo
     )
     + int1d(Th, BCopen)(
@@ -53,7 +53,7 @@
     )
     + int2d(Th)(
       iomega*vdotu(v, um)
-      + ugradu(v, um, 0, ub) + ugradu(v, ub, ik(0), um) - div(-ik(0), v)*ump + veclap(v, ik(0), um)/params["Re"] - vp*div(ik(0), um)
+      + ugradu(v, um, 0, ub) + ugradu(v, ub, ik(0), um) - div(-ik(0), v)*ump + veclap(v, ik(0), um)*params["1/Re"] - vp*div(ik(0), um)
     )
     + int1d(Th, BCopen)(
       (y*ndotu(v)*umpo + vpo*(y*tdotgrads(umpo) - 2.0*ubz*umz*N.x))

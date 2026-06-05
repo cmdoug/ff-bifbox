@@ -9,8 +9,8 @@
   include "macro_ddm.idp"
   verbosity = getARGV("-v",0);
 // Define parameter and monitor names
-  string[int] paramnames = ["Re", "S", "C"]; // set parameter names
-  string[int] monitornames = ["minux(x,0)"]; // set monitor names
+  string[int] paramnames = ["1/Re", "S"]; // set parameter names
+  string[int] monitornames = ["w0min"]; // set monitor names
 // Declare symmetries
   real[int] sym(1);
 // Define state vector and FE space
@@ -39,18 +39,12 @@
 // Boundary labels
   int BCnull = 0;
   int BCaxis = 1;
+  int BCopen = 2;
+  int BClat = 3;
   int BCinflow = 4;
-  int BCopen = 5;
-  int BCwall = 6;
 // Define solution monitors to extract:
   macro getmonitors(){
     fespace Xh1(Thg, P2);
-    Xh1 UX = ubg;
-    varf Onaxis(UX, VX) = on(BCaxis, UX = 1);
-    real[int] onaxis = Onaxis(0, Xh1, tgv = 1);
-    int[int] indices(onaxis.sum);
-    real[int] uonaxis(indices.n);
-    for(int i=0, j=0; i<Xh1.ndof; ++i) if(onaxis[i]) {indices[j] = i; ++j;}
-    for(int i=0; i<indices.n; ++i) uonaxis[i] = UX[][indices[i]];
-    monitors["minux(x,0)"] = uonaxis.min;
+    Xh1 UX = ubg + (x > 70.0 | y > 1.0)*1e10;
+    monitors["w0min"] = UX[].min;
   }// EOM

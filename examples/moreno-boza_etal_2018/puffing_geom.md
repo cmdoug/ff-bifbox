@@ -1,6 +1,8 @@
 # puffing_geom.md
 Author: Daniel Moreno ([@dmorenobz](https://github.com/dmorenobz)) [damoreno@ing.uc3m.es](mailto:damoreno@ing.uc3m.es)
 
+This file can be used to create a mesh for the pool fire puffing problem as in [Moreno-Boza, Coenen, Carpio, Sánchez, & Williams. CnF. (2018)](https://doi.org/10.1016/j.combustflame.2018.02.011).
+
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor
 include "settings.idp"
