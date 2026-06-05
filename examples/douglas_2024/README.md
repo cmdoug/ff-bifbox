@@ -22,8 +22,8 @@ $$
 $$
 
 Depending on the chosen BC set, these are complemented by additional governing equations for the boundary variables:
-- Modified outflow BC: $\frac{\partial p_o}{\partial x_i}\hat{t}_i - \frac{u_{\theta}^2}{r} = 0$
-- Balanced outflow BC: $\frac{\partial^2 \phi_o}{\partial x_i^2} - \frac{\partial}{\partial x_i}\left(-\frac{u_{\theta}^2}{r}\hat{e}_r+\frac{u_ru_\theta}{r}\hat{e}_{\theta}\right)= 0$
+- Modified outflow BC: $`\frac{\partial p_o}{\partial x_i}\hat{t}_i - \frac{u_{\theta}^2}{r} = 0`$
+- Balanced outflow BC: $`\frac{\partial^2 \phi_o}{\partial x_i^2} - \frac{\partial}{\partial x_i}\left(-\frac{u_{\theta}^2}{r}\hat{e}_r+\frac{u_ru_\theta}{r}\hat{e}_{\theta}\right)= 0`$
 
 together with the boundary conditions:
 
@@ -55,10 +55,10 @@ Here:
 - $\vec{q}=\left(u_i,p,c\right)^T \text{ if convective BC}$
 
 The other terms are:
-- If free outflow: $\left(\text{Other terms}\right)=\left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega}$
-- If modified outflow: $\left(\text{Other terms}\right)=\left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega}+\left(\check{u}_i,p_o\hat{n}_i\right)_{\Gamma_o} + \left(\check{p}_o,\frac{\partial p_o}{\partial x_i}\hat{t}_i-\frac{u_{\theta}^2}{r}\right)_{\Gamma_o}$
-- If balanced outflow: $\left(\text{Other terms}\right)=\left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\check{u}_i,\phi_o\hat{n}_i\right)_{\Gamma_o} + \left(\frac{\partial \check{\phi}_o}{\partial x_i},\frac{\partial \phi_o}{\partial x_i} + \frac{u_{\theta}^2}{r}\hat{e}_r - \frac{u_ru_\theta}{r}\hat{e}_{\theta}\right)_{\Gamma_o}$
-- If convective: $\left(\text{Other terms}\right)=\left(\check{u}_i,\frac{\partial p}{\partial x_i}\right)_{\Omega} + \left(\check{p},c\right)_{\Omega} + \left(\check{c},\bar{p}\right)_{\Omega} + \left(\check{u}_i,\frac{1}{C_i\hat{n}_i Re}\frac{\partial \hat{u}_i}{\partial t}\right)_{\Gamma_o}$
+- If free outflow: $`\left(\text{Other terms}\right)=\left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega}`$
+- If modified outflow: $`\left(\text{Other terms}\right)=\left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega}+\left(\check{u}_i,p_o\hat{n}_i\right)_{\Gamma_o} + \left(\check{p}_o,\frac{\partial p_o}{\partial x_i}\hat{t}_i-\frac{u_{\theta}^2}{r}\right)_{\Gamma_o}`$
+- If balanced outflow: $`\left(\text{Other terms}\right)=\left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\check{u}_i,\phi_o\hat{n}_i\right)_{\Gamma_o} + \left(\frac{\partial \check{\phi}_o}{\partial x_i},\frac{\partial \phi_o}{\partial x_i} + \frac{u_{\theta}^2}{r}\hat{e}_r - \frac{u_ru_\theta}{r}\hat{e}_{\theta}\right)_{\Gamma_o}`$
+- If convective: $`\left(\text{Other terms}\right)=\left(\check{u}_i,\frac{\partial p}{\partial x_i}\right)_{\Omega} + \left(\check{p},c\right)_{\Omega} + \left(\check{c},\bar{p}\right)_{\Omega} + \left(\check{u}_i,\frac{1}{C_i\hat{n}_i Re}\frac{\partial \hat{u}_i}{\partial t}\right)_{\Gamma_o}`$
 
 These weak formulations have been implemented in the equations files for this example: [eqns_douglas_2024_freeout.idp](./eqns_douglas_2024_freeout.idp), [eqns_douglas_2024_modified.idp](./eqns_douglas_2024_modified.idp), [eqns_douglas_2024_balanced.idp](./eqns_douglas_2024_balanced.idp), [eqns_douglas_2024_convect.idp](./eqns_douglas_2024_convect.idp).
 

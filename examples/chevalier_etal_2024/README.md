@@ -25,18 +25,18 @@ $$
 $$
 
 where:
-- $\nu_t=\tilde{\nu}f_{v1}$
-- $f_{v1}=\frac{\tilde{\nu}^3}{\tilde{\nu}^3+\left(\frac{c_{v1}}{Re}\right)^3}$
-- $\tilde{S}=\sqrt{\frac{1}{2}\left(\frac{\partial u_i}{\partial x_j}-\frac{\partial u_j}{\partial x_i}\right)\left(\frac{\partial u_i}{\partial x_j}-\frac{\partial u_j}{\partial x_i}\right)}+\frac{\tilde{\nu}}{\kappa^2 d^2}f_{v2}$
-- $f_{v2}=1-\frac{\tilde{\nu}}{\frac{1}{Re}+\tilde{\nu}f_{v1}}$
-- $f_w=g\left[\frac{1+c_{w3}^6}{g^6+c_{w3}^6}\right]^{1/6}$
-- $g=\left[1+c_{w2}\left(\min\left(\frac{\tilde{\nu}}{\tilde{S}\kappa^2d^2},10\right)^5-1\right)\right]\min\left(\frac{\tilde{\nu}}{\tilde{S}\kappa^2d^2},10\right)$
+- $`\nu_t=\tilde{\nu}f_{v1}`$
+- $`f_{v1}=\frac{\tilde{\nu}^3}{\tilde{\nu}^3+\left(\frac{c_{v1}}{Re}\right)^3}`$
+- $`\tilde{S}=\sqrt{\frac{1}{2}\left(\frac{\partial u_i}{\partial x_j}-\frac{\partial u_j}{\partial x_i}\right)\left(\frac{\partial u_i}{\partial x_j}-\frac{\partial u_j}{\partial x_i}\right)}+\frac{\tilde{\nu}}{\kappa^2 d^2}f_{v2}`$
+- $`f_{v2}=1-\frac{\tilde{\nu}}{\frac{1}{Re}+\tilde{\nu}f_{v1}}`$
+- $`f_w=g\left[\frac{1+c_{w3}^6}{g^6+c_{w3}^6}\right]^{1/6}`$
+- $`g=\left[1+c_{w2}\left(\min\left(\frac{\tilde{\nu}}{\tilde{S}\kappa^2d^2},10\right)^5-1\right)\right]\min\left(\frac{\tilde{\nu}}{\tilde{S}\kappa^2d^2},10\right)`$
 
 together with the boundary conditions:
 
 | Boundary | Constraints |
 | :--- | :--- |
-| Inlet, $\Gamma_i$ | $u_x=\tanh\left[6\left(1-r^2\right)\right]$, $u_r=0$, $u_{\theta}=Sr\tanh\left[6\left(1-r^2\right)\right]$, $\tilde{\nu}=10^{-6}$ |
+| Inlet, $\Gamma_i$ | $`u_x=\tanh\left[6\left(1-r^2\right)\right]`$, $u_r=0$, $u_{\theta}=Sr\tanh\left[6\left(1-r^2\right)\right]$, $\tilde{\nu}=10^{-6}$ |
 | Wall, $\Gamma_w$ | $u_x=u_r=u_{\theta}=\tilde{\nu}=0$ |
 | Co-flow, $\Gamma_c$ | $u_x=2\alpha\left(\frac{r-1-\epsilon}{19-\epsilon}\right)\left(1-\frac{r-1-\epsilon}{2\left(19-\epsilon\right)}\right)$, $u_r=u_{\theta}=0$, $\tilde{\nu}=10^{-6}$ |
 | Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=\frac{\partial \tilde{\nu}}{\partial r}=0$, if $m=0$ |

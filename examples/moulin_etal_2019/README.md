@@ -28,10 +28,10 @@ together with the boundary conditions:
 
 | Boundary | Constraints |
 | :--- | :--- |
-| Inlet, $\Gamma_i$ | $u_x=1$, $u_y=u_z=0$ |
-| Wall, $\Gamma_w$ | $u_x=u_y=u_z=0$ |
-| Slip, $\Gamma_s$ | $u_i\hat{n}_i=\frac{\partial u_i}{\partial x_l}\epsilon_{ijk}\hat{n}_j\hat{n}_l=0$ |
-| Outlet, $\Gamma_o$ | $\frac{1}{Re}\frac{\partial u_i}{\partial x}-p\hat{e}_x= 0$ |
+| Inlet, $\Gamma_i$ | $`u_x=1$, $u_y=u_z=0`$ |
+| Wall, $\Gamma_w$ | $`u_x=u_y=u_z=0`$ |
+| Slip, $\Gamma_s$ | $`u_i\hat{n}_i=\frac{\partial u_i}{\partial x_l}\epsilon_{ijk}\hat{n}_j\hat{n}_l=0`$ |
+| Outlet, $\Gamma_o$ | $`\frac{1}{Re}\frac{\partial u_i}{\partial x}-p\hat{e}_x= 0`$ |
 
 The present implementation is based on a grad–div stabilized weak formulation of these equations. Test functions are introduced, and the equations are integrated over the Cartesian domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_s+\Gamma_o$. Solutions $\vec{q}=\left(u_i,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{p}\right)^T$,
 

@@ -23,16 +23,16 @@ $$
 \end{align*}
 $$
 
-where $\rho\left[1+\left(S-1\right)T\right] = 1$
+where $`\rho\left[1+\left(S-1\right)T\right] = 1`$
 
 together with the boundary conditions:
 
 | Boundary | Constraints |
 | :--- | :--- |
-| Inlet, $\Gamma_i$ | $u_x=\frac{1}{2}+\frac{1}{2}\tanh\left[\frac{5}{2}\left(\frac{1}{r}-r\right)\right]$, $u_r=0$, $\rho=1-\left(1-\frac{1}{S}\right)\left\lbrace\frac{1}{2}+\frac{1}{2}\tanh\left[\frac{5}{2}\left(\frac{1}{r}-r\right)\right]\right\rbrace$ |
-| Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial r}=u_r=\frac{\partial \rho}{\partial r}=0$, if $m=0$ |
-| Outlet, $\Gamma_o$ | $\frac{1}{Re}\frac{\partial u_i}{\partial x}-p\hat{e}_x = \frac{\partial \rho}{\partial x}=0$ |
-| Lateral, $\Gamma_l$ | $\frac{1}{Re}\frac{\partial u_i}{\partial r}-p\hat{e}_r = 0$, $\rho=1$ |
+| Inlet, $\Gamma_i$ | $`u_x=\frac{1}{2}+\frac{1}{2}\tanh\left[\frac{5}{2}\left(\frac{1}{r}-r\right)\right]`$, $u_r=0$, $`\rho=1-\left(1-\frac{1}{S}\right)\left\lbrace\frac{1}{2}+\frac{1}{2}\tanh\left[\frac{5}{2}\left(\frac{1}{r}-r\right)\right]\right\rbrace`$ |
+| Axis, $\Gamma_a$| $`\frac{\partial u_x}{\partial r}=u_r=\frac{\partial \rho}{\partial r}=0`$, if $m=0$ |
+| Outlet, $\Gamma_o$ | $`\frac{1}{Re}\frac{\partial u_i}{\partial x}-p\hat{e}_x = \frac{\partial \rho}{\partial x}=0`$ |
+| Lateral, $\Gamma_l$ | $`\frac{1}{Re}\frac{\partial u_i}{\partial r}-p\hat{e}_r = 0`$, $`\rho=1`$ |
 
 The present implementation is based on a weak formulation of these equations. The density variable is eliminated using the equation of state, test functions are introduced, and the equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_a+\Gamma_o+\Gamma_l$. Solutions $\vec{q}=\left(u_i,T,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{T},\check{p}\right)^T$,
 
