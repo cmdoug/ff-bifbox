@@ -13,6 +13,18 @@ int paraviewflag = getARGV("-pv", 0); // indicate whether solution is saved for 
 // paraviewflag <= 0: don't save data in ParaView format (only in FF format)
 // paraviewflag == 1: save in ParaView format on current mesh
 // paraviewflag == 2, 3, ...: save in ParaView format on 2x, 3x, ... refined mesh using meshsplit
+
+// If settings file does not define a forcing
+IFMACRO(!deff)
+IFMACRO(!initf)
+  macro deff(f) defu(f) // EOM
+  macro initf(i) initu(i) // EOM
+  func Pkf = Pk;
+  IFMACRO(!adaptf)
+    macro adaptf(f) adaptu(f) // EOM
+  ENDIFMACRO
+ENDIFMACRO
+ENDIFMACRO
 // If settings file does not define a ParaView output format
 IFMACRO(!paraviewu)
   macro paraviewu(u) adaptu(u) // EOM
@@ -42,7 +54,7 @@ ParaViewOrderf = 1;
 int[int] ParaViewOrderc  = [ParaViewOrder,  ParaViewOrder];
 int[int] ParaViewOrderfc = [ParaViewOrderf, ParaViewOrderf];
 // Convert ParaViewNames into the strings: ParaViewDataName, ParaViewDataNamec
-string ParaViewDataName="", ParaViewDataNamec="";
+string ParaViewDataName, ParaViewDataNamec;
 for (int i=0; i<ParaViewNames.n; i++) {
     if (i) { ParaViewDataName = ParaViewDataName + " "; ParaViewDataNamec = ParaViewDataNamec + " "; }
     ParaViewDataName  = ParaViewDataName + ParaViewNames[i];
@@ -51,7 +63,7 @@ for (int i=0; i<ParaViewNames.n; i++) {
 for (int i=0; i<ParaViewNames.n; i++)
     ParaViewDataNamec = ParaViewDataNamec + " " + ParaViewNames[i] + "_i";
 // Convert ParaViewNamesf into the strings: ParaViewDataNamef, ParaViewDataNamefc
-string ParaViewDataNamef="", ParaViewDataNamefc="";
+string ParaViewDataNamef, ParaViewDataNamefc;
 for (int i=0; i<ParaViewNamesf.n; i++) {
     if (i) { ParaViewDataNamef = ParaViewDataNamef + " "; ParaViewDataNamefc = ParaViewDataNamefc + " "; }
     ParaViewDataNamef  = ParaViewDataNamef + ParaViewNamesf[i];
