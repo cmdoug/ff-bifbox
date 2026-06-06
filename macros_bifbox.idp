@@ -24,7 +24,6 @@ IFMACRO(!initf)
     macro adaptf(f) adaptu(f) // EOM
   ENDIFMACRO
   IFMACRO(!paraviewf)
-    macro paraviewf(f) adaptf(f) // EOM
     string[int] ParaViewNamesf = ParaViewNames;
   ENDIFMACRO
 ENDIFMACRO
@@ -32,6 +31,9 @@ ENDIFMACRO
 // If settings file does not define a ParaView output format
 IFMACRO(!paraviewu)
   macro paraviewu(u) adaptu(u) // EOM
+ENDIFMACRO
+IFMACRO(!paraviewf)
+  macro paraviewf(f) adaptf(f) // EOM
 ENDIFMACRO
 // If settings files does not define InitialConditions
 IFMACRO(!InitialConditions)
