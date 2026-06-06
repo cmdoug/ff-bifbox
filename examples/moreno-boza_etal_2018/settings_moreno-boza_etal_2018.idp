@@ -28,23 +28,15 @@
   macro deff(f)[f, f#y]//EOM
   macro initf(i)[i, i]//EOM
   func Pkf = [P2, P2];
-// Define quantities for mesh adaptation and plotting in Paraview
+// Define quantities for mesh adaptation and plotting in ParaView
   macro Zfrom(U) ( Zs*min(real(U#Zt)/Zts, 1.0) + max(real(U#Zt) - Zts, 0.0)/(1.0 - Zts)*(1.0 - Zs) ) // EOM
   macro Tfrom(U) ( 1.0 + (params["TB"] - 1.0 - params["qoS"])*U#H + params["qoS"]*min(1.0, real(U#Zt)/Zts) ) // EOM
   macro adaptu(u)[u, u#y], u#Zt, u#H, Tfrom(u), Zfrom(u), u#p //EOM
   macro adaptf(f)[f, f#y] //EOM
-// Name and order for real Paraview outputs  
-  macro paraviewu(u)[u, u#y, u*0], u#Zt, u#H, Tfrom(u), Zfrom(u), u#p //EOM
-  string ParaviewDataName = "velocity Ztilde enthalpy temperature Z pressure";
-  string ParaviewDataNamef = "momentum";
-  int[int] ParaviewOrder = [1, 1, 1, 1, 1, 1];
-  int[int] ParaviewOrderf = [1];
-// Name and order for complex Paraview outputs
-  string ParaviewDataNamec = "velocity_r Ztilde_r enthalpy_r temperature_r Z_r pressure_r velocity_i Ztilde_i enthalpy_i temperature_i Z_i pressure_i";
-  string ParaviewDataNamefc = "momentum_r momentum_i";
-  int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
-  int[int] ParaviewOrderfc = [ParaviewOrderf, ParaviewOrderf];
-  // Initial conditions (if no file)
+// Names for ParaView outputs
+  string[int] ParaViewNames = ["velocity", "pressure"];
+  string[int] ParaViewNamesf = ["momentum"];
+// Initial conditions (if no file)
   macro InitialConditions()[0, 0, 0, 1, 0, 0]//EOM
 // Boundary labels
   int BCnull = 0;

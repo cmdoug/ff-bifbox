@@ -107,7 +107,7 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder50.mode -fo c
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cavity4000.mode -fo cavity -param 1/Re -nf 0
 ```
 
-3. Adapt the mesh to the critical solution, save `.vtu` files for Paraview
+3. Adapt the mesh to the critical solution, save `.vtu` files for ParaView
 ```sh
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinderadapt -mo cylinderhopf -adaptto bda -param 1/Re -thetamax 5 -pv 1 -wnl 1 
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cavity.hopf -fo cavityadapt -mo cavityhopf -adaptto bda -param 1/Re -pv 1 -wnl 1
@@ -131,7 +131,7 @@ NOTE: Sipp & Lebedev do not perform harmonic balance analysis. See Fabre et al.,
 
 
 ### Time-domain nonlinear simulation
-1. Compute time series over first 10 time units for cavity case after step increase in Reynolds number, adapt mesh to solution, export files to Paraview. 
+1. Compute time series over first 10 time units for cavity case after step increase in Reynolds number, adapt mesh to solution, export files to ParaView. 
 ```sh
 ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir -fi cavity4000.base -fo cavity -1/Re 0.0002 -tsdt 0.01 -mo cavitytimeseries -scount 5 -maxcount 1000 -pv 1
 ```

@@ -118,7 +118,7 @@ NOTE: Here, the `-sym` argument specifies the asymmetric (1) or symmetric (0) re
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder50.mode -fo cylinder -param 1/Re -nf 0
 ```
 
-3. Adapt the mesh to the critical solution, save `.vtu` files for Paraview
+3. Adapt the mesh to the critical solution, save `.vtu` files for ParaView
 ```sh
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinder -mo cylinderhopf -adaptto bda -param 1/Re -thetamax 5 -pv 1
 ```

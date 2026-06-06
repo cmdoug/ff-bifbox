@@ -30,25 +30,10 @@
   int BCxsym = 7;
   int BCysym = 8;
   int BCpsym = 9;
-// Define forcing vector and FE space (for resolvent analysis)
-  macro deff(f)[f, f#y, f#z]//EOM
-  macro initf(i)[i, i, i]//EOM
-  func Pkf = [P2, P2, P2];
-// Define quantities for mesh adaptation and plotting in Paraview
+// Define quantities for mesh adaptation and plotting in ParaView
   macro adaptu(u)[u, u#y, u#z]//EOM
-  macro adaptf(f)[f, f#y, f#z]//EOM
-// Name and order for real ParaView outputs
-  string ParaviewDataName = "disp";
-  string ParaviewDataNamef = ParaviewDataName;
-  int[int] ParaviewOrder = [1];
-  int[int] ParaviewOrderf = ParaviewOrder;
-// Name and order for complex Paraview outputs
-  string ParaviewDataNamec = ParaviewDataName + "_r " + ParaviewDataName + "_i";
-  string ParaviewDataNamefc = ParaviewDataNamec;
-  int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
-  int[int] ParaviewOrderfc = ParaviewOrderc;
-  // Initial conditions (if no file)
-  macro InitialConditions()initu(0)//EOM
+// Names for ParaView output
+  string[int] ParaViewNames = ["disp"];
 // coordinate mapping macros ---------------------------------------------------
   macro coordinatetransform(U) x + real(U), y + real(U#y), z + real(U#z) // EOM
 // Define solution monitors to extract:

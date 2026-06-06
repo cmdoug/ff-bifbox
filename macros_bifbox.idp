@@ -9,18 +9,36 @@
 cout.precision(12);
 string workdir = getARGV("-dir","./data/"); // set working directory
 if (workdir(workdir.length-1:workdir.length-1) != "/") workdir = workdir + "/";
-int paraviewflag = getARGV("-pv", 0); // indicate whether solution is saved for Paraview
-// paraviewflag <= 0: don't save data in Paraview format (only in FF format)
-// paraviewflag == 1: save in Paraview format on current mesh
-// paraviewflag == 2, 3, ...: save in Paraview format on 2x, 3x, ... refined mesh using meshsplit
-// If settings file does not define a paraview output format
+int paraviewflag = getARGV("-pv", 0); // indicate whether solution is saved for ParaView
+// paraviewflag <= 0: don't save data in ParaView format (only in FF format)
+// paraviewflag == 1: save in ParaView format on current mesh
+// paraviewflag == 2, 3, ...: save in ParaView format on 2x, 3x, ... refined mesh using meshsplit
+
+// If settings file does not define forcing macros
+IFMACRO(!deff)
+IFMACRO(!initf)
+  macro deff(f) defu(f) // EOM
+  macro initf(i) initu(i) // EOM
+  func Pkf = Pk;
+  IFMACRO(!adaptf)
+    macro adaptf(f) adaptu(f) // EOM
+  ENDIFMACRO
+  IFMACRO(!paraviewf)
+    string[int] ParaViewNamesf = ParaViewNames;
+  ENDIFMACRO
+ENDIFMACRO
+ENDIFMACRO
+// If settings file does not define a ParaView output format
 IFMACRO(!paraviewu)
   macro paraviewu(u) adaptu(u) // EOM
 ENDIFMACRO
 IFMACRO(!paraviewf)
   macro paraviewf(f) adaptf(f) // EOM
 ENDIFMACRO
-
+// If settings files does not define InitialConditions
+IFMACRO(!InitialConditions)
+  macro InitialConditions()initu(0)//EOM
+ENDIFMACRO
 // If settings file does not define a coordinate transform.
 IFMACRO(!coordinatetransform)
   IFMACRO(dimension,2)
@@ -30,6 +48,33 @@ IFMACRO(!coordinatetransform)
     macro coordinatetransform(U) x, y, z // EOM
   ENDIFMACRO
 ENDIFMACRO
+// Define ParaViewOrder to export real data at vertices
+int[int] ParaViewOrder(ParaViewNames.n);
+ParaViewOrder = 1;
+int[int] ParaViewOrderf(ParaViewNamesf.n);
+ParaViewOrderf = 1;
+// Define ParaViewOrderc to export complex data at vertices
+int[int] ParaViewOrderc  = [ParaViewOrder,  ParaViewOrder];
+int[int] ParaViewOrderfc = [ParaViewOrderf, ParaViewOrderf];
+// Convert ParaViewNames into the strings: ParaViewDataName, ParaViewDataNamec
+string ParaViewDataName, ParaViewDataNamec;
+for (int i=0; i<ParaViewNames.n; i++) {
+    if (i) { ParaViewDataName = ParaViewDataName + " "; ParaViewDataNamec = ParaViewDataNamec + " "; }
+    ParaViewDataName  = ParaViewDataName + ParaViewNames[i];
+    ParaViewDataNamec = ParaViewDataNamec + ParaViewNames[i] + "_r";
+}
+for (int i=0; i<ParaViewNames.n; i++)
+    ParaViewDataNamec = ParaViewDataNamec + " " + ParaViewNames[i] + "_i";
+// Convert ParaViewNamesf into the strings: ParaViewDataNamef, ParaViewDataNamefc
+string ParaViewDataNamef, ParaViewDataNamefc;
+for (int i=0; i<ParaViewNamesf.n; i++) {
+    if (i) { ParaViewDataNamef = ParaViewDataNamef + " "; ParaViewDataNamefc = ParaViewDataNamefc + " "; }
+    ParaViewDataNamef  = ParaViewDataNamef + ParaViewNamesf[i];
+    ParaViewDataNamefc = ParaViewDataNamefc + ParaViewNamesf[i] + "_r";
+}
+for (int i=0; i<ParaViewNamesf.n; i++)
+    ParaViewDataNamefc = ParaViewDataNamefc + " " + ParaViewNamesf[i] + "_i";
+
 // Parse mesh or solution filename
 func string parsefilename(string & filename, string & fileroot){
   string fileext;
@@ -274,6 +319,7 @@ macro domegaResidualHB(MqHB, J, ub, uh, sym0) {
         Rctemp = vdM(0, XMh, tgv = -10);
       }
       Rc += Rctemp;
+      IFMACRO(cubic)
       for (int k = 0; k < Nh; k++) {
         if (k != nh-j-1 && k < Nh+nh-j) {
           um2[] = 0.5*uh(:, k);
@@ -294,6 +340,7 @@ macro domegaResidualHB(MqHB, J, ub, uh, sym0) {
           Rc += Rctemp;
         }
       }
+      ENDIFMACRO
     }
     Rc *= 1i*(1+nh);
     ChangeNumbering([J, J], [Rc.re, Rc.im], Rtemp);
@@ -929,6 +976,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
     ik.im = (sym1);
     Mat<complex>[int, int] MHBtemp(1+2*Nh, 1+2*Nh);
     matrix<complex> Cmat, An3i, An2r = vM(XMh, XMh, tgv = -20);
+    IFMACRO(cubic)
     ik3.im = (sym1);
     for (int j = 0; j < Nh; j++){
       um[] = uh(:, j);
@@ -938,6 +986,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
       Cmat = vddM(XMh, XMh, tgv = -20);
       An2r += Cmat;
     }
+    ENDIFMACRO
     constructor(MHBtemp(0, 0), J, An2r);
     for (int j = 0; j < Nh; j++){
       um[] = uh(:, j);
@@ -948,6 +997,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
       ik.im *= -1.0;
       ik2.im = (1+j)*(sym0) + (sym1);
       An2r = vdM(XMh, XMh, tgv = -20);
+      IFMACRO(cubic)
       for (int k = 0; k < Nh; k++){
         if (k < Nh-j-1) {
           um[] = uh(:, 1+j+k);
@@ -982,6 +1032,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
           An2r += Cmat;
         }
       }
+      ENDIFMACRO
       constructor(MHBtemp(0, 1+2*j), J, An2r);
       constructor(MHBtemp(0, 2+2*j), J, An3i);
     }
@@ -996,6 +1047,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
       ik.im *= -1.0;
       ik2.im = (sym1);
       An3i = vdM(XMh, XMh, tgv = -20);
+      IFMACRO(cubic)
       ik3.im = (sym1);
       for (int j = 0; j < Nh; j++) {
         if (j != nh) {
@@ -1016,6 +1068,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
           An3i += Cmat;
         }
       }
+      ENDIFMACRO
       constructor(MHBtemp(1+2*nh, 0), J, An2r);
       constructor(MHBtemp(2+2*nh, 0), J, An3i);
       for (int j = 0; j < Nh; j++) {
@@ -1064,6 +1117,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
           ik2.im = (1+j)*(sym0) + (sym1);
           An2i = vdM(XMh, XMh, tgv = -20);
         }
+        IFMACRO(cubic)
         for (int k = 0; k < Nh; k++) {
           if (k != nh-j-1 && k < Nh+nh-j) {
             sym = (1+nh)*(sym0) + (sym1);
@@ -1140,6 +1194,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
             An2i += Cmat;
           }
         }
+        ENDIFMACRO
         constructor(MHBtemp(1+2*nh, 1+2*j), J, An2r);
         constructor(MHBtemp(1+2*nh, 2+2*j), J, An3r);
         constructor(MHBtemp(2+2*nh, 1+2*j), J, An2i);
@@ -1223,7 +1278,7 @@ macro savebase(basefileout, statsfile, meshfile, saveflag, monitorflag){
         fespace XMhgpv(Thgpv, Pk);
         XMhgpv defu(ugr);
         ugr[] = qpv;
-        savevtk(workdir + basefileout + "_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+        savevtk(workdir + basefileout + "_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
       }
     }
   }
@@ -1304,7 +1359,7 @@ macro savemode(modefileout, statsfile, basefile, meshfile, evecs, evals, sym, sa
           XMhgpv defu(ugr), defu(ugi);
           ugr[] = qpv.re;
           ugi[] = qpv.im;
-          savevtk(workdir + modefileout0 + "_mode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+          savevtk(workdir + modefileout0 + "_mode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
         }
       }
     }
@@ -1392,7 +1447,7 @@ macro saveresp(respfileout, statsfile, basefile, meshfile, sym, omega, saveflag,
         XMhgpv defu(ugr), defu(ugi);
         ugr[] = qpv.re;
         ugi[] = qpv.im;
-        savevtk(workdir + respfileout + "_resp.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+        savevtk(workdir + respfileout + "_resp.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
       }
     }
   }
@@ -1483,12 +1538,12 @@ macro saverslv(rslvfileout, statsfile, basefile, meshfile, fvecs, uvecs, gains, 
           Xhgpv deff(fgr), deff(fgi);
           fgr[] = fpv.re;
           fgi[] = fpv.im;
-          savevtk(workdir + fileout + "_rslv_forcing.vtu", Thgpv, paraviewf(fgr), paraviewf(fgi), dataname = ParaviewDataNamefc, order = ParaviewOrderfc);
+          savevtk(workdir + fileout + "_rslv_forcing.vtu", Thgpv, paraviewf(fgr), paraviewf(fgi), dataname = ParaViewDataNamefc, order = ParaViewOrderfc);
           fespace XMhgpv(Thgpv, Pk);
           XMhgpv defu(ugr), defu(ugi);
           ugi[] = qpv.im;
           ugr[] = qpv.re;
-          savevtk(workdir + fileout + "_rslv_response.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+          savevtk(workdir + fileout + "_rslv_response.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
         }
       }
     }
@@ -1602,11 +1657,11 @@ macro savefold(foldfileout, statsfile, meshfile, alpha, beta, saveflag, monitorf
         fespace XMhgpv(Thgpv, Pk);
         XMhgpv defu(ugr);
         ugr[] = qpv;
-        savevtk(workdir + foldfileout + "_fold_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+        savevtk(workdir + foldfileout + "_fold_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
         ugr[] = qmpv;
-        savevtk(workdir + foldfileout + "_fold_dirmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+        savevtk(workdir + foldfileout + "_fold_dirmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
         ugr[] = qmapv;
-        savevtk(workdir + foldfileout + "_fold_adjmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+        savevtk(workdir + foldfileout + "_fold_adjmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
       }
     }
   }
@@ -1726,13 +1781,13 @@ macro savehopf(hopffileout, statsfile, meshfile, sym, omega, alpha, beta, savefl
         fespace XMhgpv(Thgpv, Pk);
         XMhgpv defu(ugr), defu(ugi);
         ugr[] = qpv;
-        savevtk(workdir + hopffileout + "_hopf_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+        savevtk(workdir + hopffileout + "_hopf_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
         ugr[] = qmpv.re;
         ugi[] = qmpv.im;
-        savevtk(workdir + hopffileout + "_hopf_dirmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+        savevtk(workdir + hopffileout + "_hopf_dirmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
         ugr[] = qmapv.re;
         ugi[] = qmapv.im;
-        savevtk(workdir + hopffileout + "_hopf_adjmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+        savevtk(workdir + hopffileout + "_hopf_adjmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
       }
     }
   }
@@ -1810,7 +1865,7 @@ macro savetdls(tdlsfileout, statsfile, meshfile, basefile, ICfile, sym, time, sa
         XMhgpv defu(ugr), defu(ugi);
         ugr[] = qpv.re;
         ugi[] = qpv.im;
-        savevtk(workdir + tdlsfileout + "_tdls.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+        savevtk(workdir + tdlsfileout + "_tdls.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
       }
     }
   }
@@ -1891,7 +1946,7 @@ macro savetdns(tdnsfileout, statsfile, meshfile, ICfile, time, saveflag, monitor
         fespace XMhgpv(Thgpv, Pk);
         XMhgpv defu(ugr);
         ugr[] = qpv;
-        savevtk(workdir + tdnsfileout + "_tdns.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+        savevtk(workdir + tdnsfileout + "_tdns.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
       }
     }
   }
@@ -2028,19 +2083,19 @@ macro savehoho(hohofileout, statsfile, meshfile, sym1, sym2, omega1, omega2, alp
         fespace XMhgpv(Thgpv, Pk);
         XMhgpv defu(ugr), defu(ugi);
         ugr[] = qpv;
-        savevtk(workdir + hohofileout + "_hoho_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+        savevtk(workdir + hohofileout + "_hoho_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
         ugr[] = q1mpv.re;
         ugi[] = q1mpv.im;
-        savevtk(workdir + hohofileout + "_hoho_dirmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+        savevtk(workdir + hohofileout + "_hoho_dirmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
         ugr[] = q1mapv.re;
         ugi[] = q1mapv.im;
-        savevtk(workdir + hohofileout + "_hoho_adjmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+        savevtk(workdir + hohofileout + "_hoho_adjmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
         ugr[] = q2mpv.re;
         ugi[] = q2mpv.im;
-        savevtk(workdir + hohofileout + "_hoho_dirmode2.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+        savevtk(workdir + hohofileout + "_hoho_dirmode2.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
         ugr[] = q2mapv.re;
         ugi[] = q2mapv.im;
-        savevtk(workdir + hohofileout + "_hoho_adjmode2.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+        savevtk(workdir + hohofileout + "_hoho_adjmode2.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
       }
     }
   }
@@ -2177,17 +2232,17 @@ macro savefoho(fohofileout, statsfile, meshfile, sym, omega, alpha1, alpha2, bet
         fespace XMhgpv(Thgpv, Pk);
         XMhgpv defu(ugr), defu(ugi);
         ugr[] = qpv;
-        savevtk(workdir + fohofileout + "_foho_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+        savevtk(workdir + fohofileout + "_foho_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
         ugr[] = q1mpv.re;
         ugi[] = q1mpv.im;
-        savevtk(workdir + fohofileout + "_foho_dirmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+        savevtk(workdir + fohofileout + "_foho_dirmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
         ugr[] = q1mapv.re;
         ugi[] = q1mapv.im;
-        savevtk(workdir + fohofileout + "_foho_adjmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+        savevtk(workdir + fohofileout + "_foho_adjmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
         ugr[] = q2mpv;
-        savevtk(workdir + fohofileout + "_foho_dirmode2.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+        savevtk(workdir + fohofileout + "_foho_dirmode2.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
         ugr[] = q2mapv;
-        savevtk(workdir + fohofileout + "_foho_adjmode2.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+        savevtk(workdir + fohofileout + "_foho_adjmode2.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
       }
     }
   }
@@ -2293,12 +2348,12 @@ macro saveporb(porbfileout, statsfile, meshfile, sym, omega, Nh, saveflag, monit
         XMhgpv defu(ugr), defu(ugi);
         XMhgpv<complex> defu(ugc);
         ugr[] = qpv;
-        savevtk(workdir + porbfileout + "_porb_mean.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+        savevtk(workdir + porbfileout + "_porb_mean.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
         for(int nh = 0; nh < Nh; nh++){
           ugc[] = qmpv(:, nh);
           ugr[] = ugc[].re;
           ugi[] = ugc[].im;
-          savevtk(workdir + porbfileout + "_porb_harm" + nh + ".vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+          savevtk(workdir + porbfileout + "_porb_harm" + nh + ".vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
         }
       }
     }
@@ -2396,7 +2451,7 @@ macro savefloq(floqfileout, statsfile, basefile, meshfile, evecs, evals, omega, 
             ugc[] = qmpv(:, jj);
             ugr[] = ugc[].re;
             ugi[] = ugc[].im;
-            savevtk(workdir + floqfileout0 + "_floq_comp" + jj + ".vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+            savevtk(workdir + floqfileout0 + "_floq_comp" + jj + ".vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
           }
         }
       }
