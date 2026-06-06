@@ -317,6 +317,7 @@ macro domegaResidualHB(MqHB, J, ub, uh, sym0) {
         Rctemp = vdM(0, XMh, tgv = -10);
       }
       Rc += Rctemp;
+      IFMACRO(cubic)
       for (int k = 0; k < Nh; k++) {
         if (k != nh-j-1 && k < Nh+nh-j) {
           um2[] = 0.5*uh(:, k);
@@ -337,6 +338,7 @@ macro domegaResidualHB(MqHB, J, ub, uh, sym0) {
           Rc += Rctemp;
         }
       }
+      ENDIFMACRO
     }
     Rc *= 1i*(1+nh);
     ChangeNumbering([J, J], [Rc.re, Rc.im], Rtemp);
@@ -972,6 +974,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
     ik.im = (sym1);
     Mat<complex>[int, int] MHBtemp(1+2*Nh, 1+2*Nh);
     matrix<complex> Cmat, An3i, An2r = vM(XMh, XMh, tgv = -20);
+    IFMACRO(cubic)
     ik3.im = (sym1);
     for (int j = 0; j < Nh; j++){
       um[] = uh(:, j);
@@ -981,6 +984,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
       Cmat = vddM(XMh, XMh, tgv = -20);
       An2r += Cmat;
     }
+    ENDIFMACRO
     constructor(MHBtemp(0, 0), J, An2r);
     for (int j = 0; j < Nh; j++){
       um[] = uh(:, j);
@@ -991,6 +995,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
       ik.im *= -1.0;
       ik2.im = (1+j)*(sym0) + (sym1);
       An2r = vdM(XMh, XMh, tgv = -20);
+      IFMACRO(cubic)
       for (int k = 0; k < Nh; k++){
         if (k < Nh-j-1) {
           um[] = uh(:, 1+j+k);
@@ -1025,6 +1030,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
           An2r += Cmat;
         }
       }
+      ENDIFMACRO
       constructor(MHBtemp(0, 1+2*j), J, An2r);
       constructor(MHBtemp(0, 2+2*j), J, An3i);
     }
@@ -1039,6 +1045,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
       ik.im *= -1.0;
       ik2.im = (sym1);
       An3i = vdM(XMh, XMh, tgv = -20);
+      IFMACRO(cubic)
       ik3.im = (sym1);
       for (int j = 0; j < Nh; j++) {
         if (j != nh) {
@@ -1059,6 +1066,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
           An3i += Cmat;
         }
       }
+      ENDIFMACRO
       constructor(MHBtemp(1+2*nh, 0), J, An2r);
       constructor(MHBtemp(2+2*nh, 0), J, An3i);
       for (int j = 0; j < Nh; j++) {
@@ -1107,6 +1115,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
           ik2.im = (1+j)*(sym0) + (sym1);
           An2i = vdM(XMh, XMh, tgv = -20);
         }
+        IFMACRO(cubic)
         for (int k = 0; k < Nh; k++) {
           if (k != nh-j-1 && k < Nh+nh-j) {
             sym = (1+nh)*(sym0) + (sym1);
@@ -1183,6 +1192,7 @@ macro MassHBcplx(MHB, J, ub, uh, sym0, sym1) {
             An2i += Cmat;
           }
         }
+        ENDIFMACRO
         constructor(MHBtemp(1+2*nh, 1+2*j), J, An2r);
         constructor(MHBtemp(1+2*nh, 2+2*j), J, An3r);
         constructor(MHBtemp(2+2*nh, 1+2*j), J, An2i);
