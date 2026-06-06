@@ -17,7 +17,7 @@ include "macros_bifbox.idp"
 string meshin = getARGV("-mi", ""); // input meshfile
 string filein = getARGV("-fi", "");
 string fileout = getARGV("-fo", filein);
-paraviewflag = getARGV("-pv", 1); // indicate whether solution is saved for Paraview
+paraviewflag = getARGV("-pv", 1); // indicate whether solution is saved for ParaView
 
 assert(filein.rfind(".") > 0); // assert that filein includes extension
 string fileroot, fileext = parsefilename(filein, fileroot);
@@ -46,7 +46,7 @@ if (mpirank==0){
     fespace XMhgpv(Thgpv, Pk);
     XMhgpv defu(ugr);
     ugr[] = qpv;
-    savevtk(workdir + fileout + "_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    savevtk(workdir + fileout + "_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
   }
   else if (fileext == "mode"){
     XMhg<complex> defu(umg);
@@ -67,7 +67,7 @@ if (mpirank==0){
     XMhgpv defu(ugr), defu(ugi);
     ugr[] = qpv.re;
     ugi[] = qpv.im;
-    savevtk(workdir + fileout + "_mode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_mode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
   }
   else if (fileext == "resp"){
     XMhg<complex> defu(umg);
@@ -88,7 +88,7 @@ if (mpirank==0){
     XMhgpv defu(ugr), defu(ugi);
     ugr[] = qpv.re;
     ugi[] = qpv.im;
-    savevtk(workdir + fileout + "_resp.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_resp.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
   }
   else if (fileext == "rslv"){
     Xhg<complex> deff(fmg);
@@ -115,12 +115,12 @@ if (mpirank==0){
     Xhgpv deff(fgr), deff(fgi);
     fgr[] = fpv.re;
     fgi[] = fpv.im;
-    savevtk(workdir + fileout + "_rslv_forcing.vtu", Thgpv, paraviewf(fgr), paraviewf(fgi), dataname = ParaviewDataNamefc, order = ParaviewOrderfc);
+    savevtk(workdir + fileout + "_rslv_forcing.vtu", Thgpv, paraviewf(fgr), paraviewf(fgi), dataname = ParaViewDataNamefc, order = ParaViewOrderfc);
     fespace XMhgpv(Thgpv, Pk);
     XMhgpv defu(ugr), defu(ugi);
     ugi[] = qpv.im;
     ugr[] = qpv.re;
-    savevtk(workdir + fileout + "_rslv_response.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_rslv_response.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
   }
   else if (fileext == "fold"){
     XMhg defu(ubg), defu(umg), defu(umag);
@@ -147,11 +147,11 @@ if (mpirank==0){
     fespace XMhgpv(Thgpv, Pk);
     XMhgpv defu(ugr);
     ugr[] = qpv;
-    savevtk(workdir + fileout + "_fold_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    savevtk(workdir + fileout + "_fold_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
     ugr[] = qmpv;
-    savevtk(workdir + fileout + "_fold_dirmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    savevtk(workdir + fileout + "_fold_dirmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
     ugr[] = qmapv;
-    savevtk(workdir + fileout + "_fold_adjmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    savevtk(workdir + fileout + "_fold_adjmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
   }
   else if (fileext == "hopf"){
     XMhg defu(ubg);
@@ -181,13 +181,13 @@ if (mpirank==0){
     fespace XMhgpv(Thgpv, Pk);
     XMhgpv defu(ugr), defu(ugi);
     ugr[] = qpv;
-    savevtk(workdir + fileout + "_hopf_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    savevtk(workdir + fileout + "_hopf_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
     ugr[] = qmpv.re;
     ugi[] = qmpv.im;
-    savevtk(workdir + fileout + "_hopf_dirmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_hopf_dirmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
     ugr[] = qmapv.re;
     ugi[] = qmapv.im;
-    savevtk(workdir + fileout + "_hopf_adjmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_hopf_adjmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
   }
   else if (fileext == "tdns"){
     XMhg defu(ubg);
@@ -207,7 +207,7 @@ if (mpirank==0){
     fespace XMhgpv(Thgpv, Pk);
     XMhgpv defu(ugr);
     ugr[] = qpv;
-    savevtk(workdir + fileout + "_tdns.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    savevtk(workdir + fileout + "_tdns.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
   }
   else if (fileext == "tdls"){
     XMhg<complex> defu(umg);
@@ -229,7 +229,7 @@ if (mpirank==0){
     XMhgpv defu(ugr), defu(ugi);
     ugr[] = qpv.re;
     ugi[] = qpv.im;
-    savevtk(workdir + fileout + "_tdls.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_tdls.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
   }
   else if (fileext == "hoho"){
     XMhg defu(ubg);
@@ -266,19 +266,19 @@ if (mpirank==0){
     fespace XMhgpv(Thgpv, Pk);
     XMhgpv defu(ugr), defu(ugi);
     ugr[] = qpv;
-    savevtk(workdir + fileout + "_hoho_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    savevtk(workdir + fileout + "_hoho_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
     ugr[] = q1mpv.re;
     ugi[] = q1mpv.im;
-    savevtk(workdir + fileout + "_hoho_dirmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_hoho_dirmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
     ugr[] = q1mapv.re;
     ugi[] = q1mapv.im;
-    savevtk(workdir + fileout + "_hoho_adjmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_hoho_adjmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
     ugr[] = q2mpv.re;
     ugi[] = q2mpv.im;
-    savevtk(workdir + fileout + "_hoho_dirmode2.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_hoho_dirmode2.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
     ugr[] = q2mapv.re;
     ugi[] = q2mapv.im;
-    savevtk(workdir + fileout + "_hoho_adjmode2.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_hoho_adjmode2.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
   }
   else if (fileext == "foho"){
     XMhg defu(ubg), defu(u2mg), defu(u2mag);
@@ -318,17 +318,17 @@ if (mpirank==0){
     fespace XMhgpv(Thgpv, Pk);
     XMhgpv defu(ugr), defu(ugi);
     ugr[] = qpv;
-    savevtk(workdir + fileout + "_foho_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    savevtk(workdir + fileout + "_foho_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
     ugr[] = q1mpv.re;
     ugi[] = q1mpv.im;
-    savevtk(workdir + fileout + "_foho_dirmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_foho_dirmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
     ugr[] = q1mapv.re;
     ugi[] = q1mapv.im;
-    savevtk(workdir + fileout + "_foho_adjmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+    savevtk(workdir + fileout + "_foho_adjmode1.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
     ugr[] = q2mpv;
-    savevtk(workdir + fileout + "_foho_dirmode2.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    savevtk(workdir + fileout + "_foho_dirmode2.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
     ugr[] = q2mapv;
-    savevtk(workdir + fileout + "_foho_adjmode2.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    savevtk(workdir + fileout + "_foho_adjmode2.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
   }
   else if (fileext == "porb"){
     XMhg defu(ubg);
@@ -359,12 +359,12 @@ if (mpirank==0){
     XMhgpv defu(ugr), defu(ugi);
     XMhgpv<complex> defu(ugc);
     ugr[] = qpv;
-    savevtk(workdir + fileout + "_porb_mean.vtu", Thgpv, paraviewu(ugr), dataname = ParaviewDataName, order = ParaviewOrder);
+    savevtk(workdir + fileout + "_porb_mean.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
     for(int harm = 0; harm < Nh; harm++){
       ugc[] = qmpv(:, harm);
       ugr[] = ugc[].re;
       ugi[] = ugc[].im;
-      savevtk(workdir + fileout + "_porb_harm" + harm + ".vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+      savevtk(workdir + fileout + "_porb_harm" + harm + ".vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
     }
   }
   else if (fileext == "floq"){
@@ -402,7 +402,7 @@ if (mpirank==0){
       ugc[] = qmpv(:, jj);
       ugr[] = ugc[].re;
       ugi[] = ugc[].im;
-      savevtk(workdir + fileout + "_floq_comp" + jj + ".vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaviewDataNamec, order = ParaviewOrderc);
+      savevtk(workdir + fileout + "_floq_comp" + jj + ".vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
     }
   }
 }
