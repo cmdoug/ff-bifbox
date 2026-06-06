@@ -20,7 +20,10 @@ ENDIFMACRO
 IFMACRO(!paraviewf)
   macro paraviewf(f) adaptf(f) // EOM
 ENDIFMACRO
-
+// If settings files does not define InitialConditions
+IFMACRO(!InitialConditions)
+  macro InitialConditions()initu(0)//EOM
+ENDIFMACRO
 // If settings file does not define a coordinate transform.
 IFMACRO(!coordinatetransform)
   IFMACRO(dimension,2)
@@ -30,6 +33,33 @@ IFMACRO(!coordinatetransform)
     macro coordinatetransform(U) x, y, z // EOM
   ENDIFMACRO
 ENDIFMACRO
+// Define ParaviewOrder to export real data at vertices
+int[int] ParaviewOrder(ParaViewNames.n);
+ParaviewOrder = 1;
+int[int] ParaviewOrderf(ParaViewNamesf.n);
+ParaviewOrderf = 1;
+// Define ParaviewOrderc to export complex data at vertices
+int[int] ParaviewOrderc  = [ParaviewOrder,  ParaviewOrder];
+int[int] ParaviewOrderfc = [ParaviewOrderf, ParaviewOrderf];
+// Convert ParaViewNames into the strings: ParaviewDataName, ParaviewDataNamec
+string ParaviewDataName="", ParaviewDataNamec="";
+for (int i=0; i<ParaViewNames.n; i++) {
+    if (i) { ParaviewDataName = ParaviewDataName + " "; ParaviewDataNamec = ParaviewDataNamec + " "; }
+    ParaviewDataName  = ParaviewDataName + ParaViewNames[i];
+    ParaviewDataNamec = ParaviewDataNamec + ParaViewNames[i] + "_r";
+}
+for (int i=0; i<ParaViewNames.n; i++)
+    ParaviewDataNamec = ParaviewDataNamec + " " + ParaViewNames[i] + "_i";
+// Convert ParaViewNamesf into the strings: ParaviewDataNamef, ParaviewDataNamefc
+string ParaviewDataNamef="", ParaviewDataNamefc="";
+for (int i=0; i<ParaViewNamesf.n; i++) {
+    if (i) { ParaviewDataNamef = ParaviewDataNamef + " "; ParaviewDataNamefc = ParaviewDataNamefc + " "; }
+    ParaviewDataNamef  = ParaviewDataNamef + ParaViewNamesf[i];
+    ParaviewDataNamefc = ParaviewDataNamefc + ParaViewNamesf[i] + "_r";
+}
+for (int i=0; i<ParaViewNamesf.n; i++)
+    ParaviewDataNamefc = ParaviewDataNamefc + " " + ParaViewNamesf[i] + "_i";
+
 // Parse mesh or solution filename
 func string parsefilename(string & filename, string & fileroot){
   string fileext;

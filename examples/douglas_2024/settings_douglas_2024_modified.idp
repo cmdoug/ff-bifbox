@@ -21,19 +21,13 @@
   macro deff(f)[f, f#y, f#z]//EOM
   macro initf(i)[i, i, i]//EOM
   func Pkf = [P2, P2, P2];
-// Define quantities for mesh adaptation and plotting in Paraview
+// Define quantities for mesh adaptation and plotting in ParaView
   macro adaptu(u)[u, u#y, u#z], u#p//EOM
   macro adaptf(f)[f, f#y, f#z]//EOM
-// Name and order for real Paraview outputs
-  string ParaviewDataName = "velocity pressure";
-  string ParaviewDataNamef = "momentum";
-  int[int] ParaviewOrder = [1, 1];
-  int[int] ParaviewOrderf = [1];
-// Name and order for complex Paraview outputs
-  string ParaviewDataNamec = "velocity_r pressure_r velocity_i pressure_i";
-  string ParaviewDataNamefc = "momentum_r momentum_i";
-  int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
-  int[int] ParaviewOrderfc = [ParaviewOrderf, ParaviewOrderf];
+// Names for ParaView outputs
+  string[int] ParaViewNames = ["velocity", "pressure"];
+  string[int] ParaViewNamesf = ["momentum"];
+// Initial conditions (if no file)
   // Initial conditions (if no file)
   macro InitialConditions()[1, 0, (params["S"]*((y<=1)*y*(2-y^2) + (y>1)/(y+(y==0)))), 0, 0]//EOM
 // Boundary labels

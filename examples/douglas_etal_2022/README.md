@@ -104,7 +104,7 @@ ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo annularjet100_
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo annularjet100_F -param S -mo annularjet100_F -adaptto b -thetamax 1 -nf 0
 ```
 
-6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for Paraview
+6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for ParaView
 ```sh
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi annularjet100_B.fold -fo annularjet100_B -mo annularet100_B -adaptto bda -param S -pv 1 -thetamax 1
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi annularjet100_F.fold -fo annularjet100_F -mo annularjet100_F -adaptto bda -param S -pv 1 -thetamax 1

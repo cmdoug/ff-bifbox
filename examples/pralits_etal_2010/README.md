@@ -97,7 +97,7 @@ ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi ${foldguesslist[0]} -
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi ${foldguesslist[1]} -fo cylinder100_F -param alpha -nf 0
 ```
 
-6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for Paraview
+6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for ParaView
 ```sh
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder100_B -mo cylinder100_B -adaptto bda -param alpha -pv 1 -thetamax 1 -hmin 5e-3 -dmax 1 -err 0.005
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_F.fold -fo cylinder100_F -mo cylinder100_F -adaptto bda -param alpha -pv 1 -thetamax 1 -hmin 5e-3 -dmax 1 -err 0.005
@@ -126,7 +126,7 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode1.mode -f
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode2.mode -fo cylindermode2 -param alpha -nf 0
 ```
 
-11. Adapt the mesh to the critical solutions, save `.vtu` files for Paraview
+11. Adapt the mesh to the critical solutions, save `.vtu` files for ParaView
 ```sh
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode1.hopf -fo cylindermode1 -mo cylindermode1hopf -adaptto bda -param 1/Re -thetamax 1 -hmin 5e-3 -dmax 1 -err 0.005 -pv 1
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode2.hopf -fo cylindermode2 -mo cylindermode2hopf -adaptto bda -param alpha -thetamax 1 -hmin 5e-3 -dmax 1 -err 0.005 -pv 1

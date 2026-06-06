@@ -103,7 +103,7 @@ ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo swirljet100_B 
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo swirljet100_F -param S -mo swirljet100_F -adaptto b -thetamax 1 -nf 0
 ```
 
-6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for Paraview
+6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for ParaView
 ```sh
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi swirljet100_B.fold -fo swirljet100_B -mo swirljet100_B -adaptto bda -param S -pv 1 -thetamax 1
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi swirljet100_F.fold -fo swirljet100_F -mo swirljet100_F -adaptto bda -param S -pv 1 -thetamax 1
@@ -132,7 +132,7 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi swirljet1p8m1.mode -f
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi swirljet1p8m2.mode -fo swirljetm2 -param 1/Re -nf 0
 ```
 
-11. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for Paraview
+11. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for ParaView
 ```sh
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi swirljetm1.hopf -fo swirljetm1 -param 1/Re -mo swirljetm1 -adaptto bda -pv 1 -thetamax 1
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi swirljetm2.hopf -fo swirljetm2 -param 1/Re -mo swirljetm2 -adaptto bda -pv 1 -thetamax 1

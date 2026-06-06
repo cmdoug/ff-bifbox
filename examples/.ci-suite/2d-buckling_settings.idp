@@ -25,11 +25,6 @@
     monitors["dispX"] = real(ubg(0., 0.));
     monitors["dispY"] = real(ubgy(0., 0.));
   }// EOM
-//
-/* 
-    The items below are details that don't need to be covered in the tutorial!
-*/
-//
 // Boundary labels on the mesh
   int BCnull = 0;
   int BCpin = 1;
@@ -40,20 +35,11 @@
   macro deff(f)[f, f#y]//EOM
   macro initf(i)[i, i]//EOM
   func Pkf = [P2, P2];
-// Define quantities for mesh adaptation and/or plotting in Paraview
+// Define quantities for mesh adaptation and/or plotting in ParaView
   macro adaptu(u)[u, u#y]//EOM
   macro adaptf(f)[f, f#y]//EOM
-// Name and order for real Paraview outputs
-  string ParaviewDataName = "disp";
-  string ParaviewDataNamef = ParaviewDataName;
-  int[int] ParaviewOrder = [1];
-  int[int] ParaviewOrderf = ParaviewOrder;
-// Name and order for complex Paraview outputs
-  string ParaviewDataNamec = ParaviewDataName + "_r " + ParaviewDataName + "_i";
-  string ParaviewDataNamefc = ParaviewDataNamec;
-  int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
-  int[int] ParaviewOrderfc = ParaviewOrderc;
-  // Initial conditions (if no file)
-  macro InitialConditions()initu(0)//EOM
+// Names for ParaView outputs
+  string[int] ParaViewNames = ["disp"];
+  string[int] ParaViewNamesf = ParaViewNames;
 // coordinate mapping macros ---------------------------------------------------
   macro coordinatetransform(U) x + real(U), y + real(U#y) // EOM

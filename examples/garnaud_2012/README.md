@@ -82,7 +82,7 @@ ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi jet.base -fo jet -pa
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi jet_15.base -fo jet1000 -1/Re 0.001
 ```
 
-4. Adapt mesh to $Re=1000$ solution and recompute base state, save `.vtu` file for Paraview
+4. Adapt mesh to $Re=1000$ solution and recompute base state, save `.vtu` file for ParaView
 ```sh
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi jet1000.base -fo jet1000adapt -mo jet1000adapt -pv 1
 ```
@@ -92,7 +92,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi jet1000.base -fo jet1
 ```sh
 ff-mpirun -np $nproc rslvcompute.md -v 0 -dir $workdir -fi jet1000adapt.base -so jet1000adapt -omega 0.314159 -omegaf 3.14159 -nomega 10
 ```
-2. Compute forcing/response modes at $St=[0.1, 0.48, 0.64, 0.95]$, save `.vtu` files for Paraview
+2. Compute forcing/response modes at $St=[0.1, 0.48, 0.64, 0.95]$, save `.vtu` files for ParaView
 ```sh
 ff-mpirun -np $nproc rslvcompute.md -v 0 -dir $workdir -fi jet1000adapt.base -fo jet1000_St0p1 -omega 0.314159 -pv 1
 ff-mpirun -np $nproc rslvcompute.md -v 0 -dir $workdir -fi jet1000adapt.base -fo jet1000_St0p48 -omega 1.50796 -pv 1
