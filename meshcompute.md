@@ -61,7 +61,7 @@ for (ii = 0; ii < filecount; ii++) {
   else if ( fileexts[ii] == "hopf" || fileexts[ii] == "porb" ) nuvec += 5;
   else if ( fileexts[ii] == "foho" ) nuvec += 7;
   else if ( fileexts[ii] == "hoho" ) nuvec += 9;
-  else if ( fileexts[ii] == "rslv" ) {nuvec += 3; nfvec += 2;}
+  else if ( fileexts[ii] == "rslv" ) {nuvec += 2; nfvec += 2;}
 }
 string meshroot, meshext = parsefilename(meshin, meshroot);
 parsefilename(meshout, meshout); // trim extension from output mesh, if given
