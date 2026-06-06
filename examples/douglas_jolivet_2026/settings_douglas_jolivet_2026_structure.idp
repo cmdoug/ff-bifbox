@@ -32,9 +32,8 @@
   int BCpsym = 9;
 // Define quantities for mesh adaptation and plotting in ParaView
   macro adaptu(u)[u, u#y, u#z]//EOM
-// Names for ParaView outputs
+// Names for ParaView output
   string[int] ParaViewNames = ["disp"];
-  string[int] ParaViewNamesf = ParaViewNames;
 // coordinate mapping macros ---------------------------------------------------
   macro coordinatetransform(U) x + real(U), y + real(U#y), z + real(U#z) // EOM
 // Define solution monitors to extract:

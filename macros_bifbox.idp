@@ -14,7 +14,7 @@ int paraviewflag = getARGV("-pv", 0); // indicate whether solution is saved for 
 // paraviewflag == 1: save in ParaView format on current mesh
 // paraviewflag == 2, 3, ...: save in ParaView format on 2x, 3x, ... refined mesh using meshsplit
 
-// If settings file does not define a forcing
+// If settings file does not define forcing macros
 IFMACRO(!deff)
 IFMACRO(!initf)
   macro deff(f) defu(f) // EOM
@@ -23,14 +23,15 @@ IFMACRO(!initf)
   IFMACRO(!adaptf)
     macro adaptf(f) adaptu(f) // EOM
   ENDIFMACRO
+  IFMACRO(!paraviewf)
+    macro paraviewf(f) adaptf(f) // EOM
+    string[int] ParaViewNamesf = ParaViewNames;
+  ENDIFMACRO
 ENDIFMACRO
 ENDIFMACRO
 // If settings file does not define a ParaView output format
 IFMACRO(!paraviewu)
   macro paraviewu(u) adaptu(u) // EOM
-ENDIFMACRO
-IFMACRO(!paraviewf)
-  macro paraviewf(f) adaptf(f) // EOM
 ENDIFMACRO
 // If settings files does not define InitialConditions
 IFMACRO(!InitialConditions)

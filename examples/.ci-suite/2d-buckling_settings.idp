@@ -33,8 +33,7 @@
   int BCxsym = 7;
 // Define quantities for mesh adaptation and/or plotting in ParaView
   macro adaptu(u)[u, u#y]//EOM
-// Names for ParaView outputs
+// Names for ParaView output
   string[int] ParaViewNames = ["disp"];
-  string[int] ParaViewNamesf = ParaViewNames;
 // coordinate mapping macros ---------------------------------------------------
   macro coordinatetransform(U) x + real(U), y + real(U#y) // EOM
