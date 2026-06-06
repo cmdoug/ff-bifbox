@@ -1,6 +1,6 @@
 # Incompressible Swirling Annual Jet Example: Douglas etal, JFM, (2022)
 This file shows an example `ff-bifbox` workflow for reproducing the results in the study:
-```tex
+```bibtex
 @article{douglas_etal_2022,
   title={Dynamics and bifurcations of laminar annular swirling and non-swirling jets},
   volume={943},
@@ -14,7 +14,38 @@ This file shows an example `ff-bifbox` workflow for reproducing the results in t
 ```
 The commands below illustrate how to perform a bifurcation analysis of an incompressible swirling annular jet using `ff-bifbox`.
 
-NOTE: This code uses computational coordinates that differ from the physical coordinates by a scaling factor related to the parameter $d$ (see the `Y()` macro in `eqns_douglas_etal_2022.idp`). Paraview files are printed on the computational coordinates so this coordinate transormation must be taken into consideration at the visualization stage.
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{1}{Re}\frac{\partial^2u_i}{\partial x_j^2} &= 0 \\
+\frac{\partial u_i}{\partial x_i} &= 0 \\
+\frac{\partial p_o}{\partial x_i}\hat{t}_i - \frac{u_{\theta}^2}{r}&= 0
+\end{align*}
+$$
+
+together with the boundary conditions:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $`u_x=\frac{2-8r^2-\log\left(2r\right)\left(1-d^2\right)/\log\left(d\right)}{1+d^2+\left(1-d^2\right)/\log\left(d\right)}`$, $\frac{\partial u_r}{\partial r}=0$, $u_{\theta}=2Sr$ |
+| Pipe, $\Gamma_p$ | $u_x=u_r=0$, $u_{\theta}=S$ |
+| Wall, $\Gamma_w$ | $u_x=u_r=u_{\theta}=p_o=0$ |
+| Axis, $\Gamma_a$| $`\begin{cases}\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=0, & \text{if } m=0 \\\\ u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=0, & \text{if } \|m\|=1 \\\\ u_x=u_r=u_{\theta}=0, & \text{if } \|m\|>1\end{cases}`$ |
+| Open, $\Gamma_o$ | $`\frac{1}{Re}\frac{\partial u_i}{\partial x_j}\hat{n}_j-\left(p-p_o\right)\hat{n}_i-\frac{1}{2}u_i\min\left(0,u_j\hat{n}_j\right) = 0`$ |
+
+The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_p+\Gamma_w+\Gamma_a+\Gamma_o$. Solutions $\vec{q}=\left(u_i,p,p_o\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{p},\check{p}_o\right)^T$,
+
+$$
+\begin{align*} 
+&\left(\check{u}_i,\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\frac{1}{Re}\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\check{p},\frac{\partial u_i}{\partial x_i}\right)_{\Omega} \\
+&+ \left(\check{u}_i,p_o\hat{n}_i-\frac{1}{2}u_i\min\left(0,u_j\hat{n}_j\right)\right)_{\Gamma_o} + \left(\check{p}_o,\frac{\partial p_o}{\partial x_i}\hat{t}_i-\frac{u_{\theta}^2}{r}\right)_{\Gamma_o} = 0.
+\end{align*}
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_douglas_etal_2022.idp](./eqns_douglas_etal_2022.idp).
+
+NOTE: This code uses computational coordinates that differ from the physical coordinates by a scaling factor related to the parameter $d$ (see the `Y()` macro in [settings_douglas_etal_2022.idp](./settings_douglas_etal_2022.idp)). Note that ParaView files are exported using the physical coordinates.
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.

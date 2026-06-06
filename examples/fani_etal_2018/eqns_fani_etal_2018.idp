@@ -13,9 +13,15 @@
   macro vdotu(v, u) ( v*u + v#y*u#y ) // velocity inner product
   macro div(u) ( dx(u) + dy(u#y) ) // velocity divergence
   macro ugradu(v, U, u) ( v*(U*dx(u) + U#y*dy(u)) + v#y*(U*dx(u#y) + U#y*dy(u#y)) ) // velocity advection term
-  macro visc(v, u) ( dx(v)*(dx(u) - dy(u#y)) + (dy(v) + dx(v#y))*(dx(u#y) + dy(u)) + dy(v#y)*(dy(u#y) - dx(u)) ) // viscous term
+  macro visc(v, u) ( 2.0*(dx(v)*(dx(u) - div(u)/3.0) + dy(v#y)*(dy(u#y) - div(u)/3.0)) + (dy(v) + dx(v#y))*(dx(u#y) + dy(u)) ) // viscous term
   macro diff(g, f) ( dx(g)*dx(f) + dy(g)*dy(f) ) // scalar diffusion term
-  macro ugradf(U, f)   ( U*dx(f) + U#y*dy(f) ) // scalar advection term
+  macro ugradf(U, f) ( U*dx(f) + U#y*dy(f) ) // scalar advection term
+
+  macro ubrho() ( (params["gamma"]*params["Ma^2"]*ubp + 1.0)/ubT ) // derived density
+  macro drho(du) ( params["gamma"]*params["Ma^2"]*du#p/ubT - (params["gamma"]*params["Ma^2"]*ubp + 1.0)/ubT^2*du#T ) // EOM
+  macro d2rho(du, d2u) ( 2.0*(params["gamma"]*params["Ma^2"]*ubp + 1.0)/ubT^3*du#T*d2u#T - params["gamma"]*params["Ma^2"]*(du#p*d2u#T + d2u#p*du#T)/ubT^2 ) // EOM
+  macro d3rho(du, d2u, d3u) ( 2.0*params["gamma"]*params["Ma^2"]*((du#p*d2u#T + d2u#p*du#T)*d3u#T + d3u#p*du#T*d2u#T)/ubT^3 - 6.0*(params["gamma"]*params["Ma^2"]*ubp + 1.0)/ubT^4*du#T*d2u#T*d3u#T ) // EOM
+
 // Boundary conditions
   macro BoundaryConditions(u, U)
     on(BCwall, u = U, u#y = U#y )
@@ -33,53 +39,52 @@
 // RESIDUAL OPERATOR
   varf vR(defu(dum), defu(v))
     = int2d(Th)(
-      vR*(ugradf(ub, ubR) + ubR*div(ub) + beta1(x,y)*(ubR - 1.0))
-      + ubR*ugradu(v, ub, ub) - div(v)*ubp + beta1(x,y)*(vdotu(v, ub) - v) + visc(v, ub)*params["1/Re"]
-      + vT*(ubR*ugradf(ub, ubT) + (params["gamma"] - 1.0)*(ubR*ubT*div(ub) - params["gamma"]*params["Ma^2"]*params["1/Re"]*visc(ub, ub)) + beta1(x,y)*(ubT - 1.0)) + params["gamma"]*params["1/Pr"]*params["1/Re"]*diff(vT, ubT)
-      + vp*(params["gamma"]*params["Ma^2"]*ubp + 1.0 - ubR*ubT)
+      vp*(params["gamma"]*params["Ma^2"]*ugradf(ub, ubp) - ubrho*ugradf(ub, ubT) + (params["gamma"]*params["Ma^2"]*ubp + 1.0)*div(ub) + beta1(x,y)*(params["gamma"]*params["Ma^2"]*ubp + 1.0 - ubT))
+      + ubrho*ugradu(v, ub, ub) - div(v)*ubp + beta1(x,y)*(vdotu(v, ub) - v) + visc(v, ub)*params["1/Re"]
+      + vT*(ubrho*ugradf(ub, ubT) + (params["gamma"] - 1.0)*((params["gamma"]*params["Ma^2"]*ubp + 1.0)*div(ub) - params["gamma"]*params["Ma^2"]*params["1/Re"]*visc(ub, ub)) + beta1(x,y)*(ubT - 1.0)) + params["gamma"]*params["1/Pr"]*params["1/Re"]*diff(vT, ubT)
     )
     + BoundaryConditions(dum, ub);
 
 // JACOBIAN OPERATOR
   varf vJ(defu(dum), defu(v))
     = int2d(Th)(
-      iomega*(vR*umR + ubR*(vT*umT + vdotu(v, um)))
-      + vR*(ugradf(ub, umR) + ugradf(um, ubR) + umR*div(ub) + ubR*div(um) + beta1(x,y)*umR)
-      + ubR*(ugradu(v, um, ub) + ugradu(v, ub, um)) + umR*ugradu(v, ub, ub) - div(v)*ump + beta1(x,y)*vdotu(v, um) + visc(v , um )*params["1/Re"]
-      + vT*(ubR*(ugradf(um, ubT) + ugradf(ub, umT)) + umR*ugradf(ub, ubT) + (params["gamma"] - 1.0)*(umR*ubT*div(ub) + ubR*umT*div(ub) + ubR*ubT*div(um)) - params["gamma"]*(params["gamma"] - 1.0)*params["Ma^2"]*(visc(um, ub) + visc(ub, um))*params["1/Re"] + beta1(x,y)*umT) + params["gamma"]*params["1/Pr"]*params["1/Re"]*diff(vT, umT)
-      + vp*(params["gamma"]*params["Ma^2"]*ump - umR*ubT - ubR*umT)
+      iomega*(vp*params["gamma"]*params["Ma^2"]*dump + ubrho*((vT - vp)*dumT + vdotu(v, dum)))
+      + vp*(params["gamma"]*params["Ma^2"]*(ugradf(dum, ubp) + ugradf(ub, dump)) - drho(dum)*ugradf(ub, ubT) - ubrho*(ugradf(dum, ubT) + ugradf(ub, dumT)) + params["gamma"]*params["Ma^2"]*dump*div(ub) + (params["gamma"]*params["Ma^2"]*ubp + 1.0)*div(dum) + beta1(x,y)*(params["gamma"]*params["Ma^2"]*dump - dumT))
+      + drho(dum)*ugradu(v, ub, ub) + ubrho*(ugradu(v, dum, ub) + ugradu(v, ub, dum)) - div(v)*dump + beta1(x,y)*vdotu(v, dum) + visc(v, dum)*params["1/Re"]
+      + vT*(drho(dum)*ugradf(ub, ubT) + ubrho*(ugradf(dum, ubT) + ugradf(ub, dumT)) + (params["gamma"] - 1.0)*(params["gamma"]*params["Ma^2"]*dump*div(ub) + (params["gamma"]*params["Ma^2"]*ubp + 1.0)*div(dum) - params["gamma"]*params["Ma^2"]*params["1/Re"]*(visc(dum, ub) + visc(ub, dum))) + beta1(x,y)*dumT) + params["gamma"]*params["1/Pr"]*params["1/Re"]*diff(vT, dumT)
     )
     + int2d(Th)(
-      iomega*(vR*dumR + ubR*(vT*dumT + vdotu(v, dum)))
-      + vR*(ugradf(ub, dumR) + ugradf(dum, ubR) + dumR*div(ub) + ubR*div(dum) + beta1(x,y)*dumR)
-      + ubR*(ugradu(v, dum, ub) + ugradu(v, ub, dum)) + dumR*ugradu(v, ub, ub) - div(v)*dump + beta1(x,y)*vdotu(v, dum) + visc(v , dum )*params["1/Re"]
-      + vT*(ubR*(ugradf(dum, ubT) + ugradf(ub, dumT)) + dumR*ugradf(ub, ubT) + (params["gamma"] - 1.0)*(dumR*ubT*div(ub) + ubR*dumT*div(ub) + ubR*ubT*div(dum)) - params["gamma"]*(params["gamma"] - 1.0)*params["Ma^2"]*(visc(dum, ub) + visc(ub, dum))*params["1/Re"] + beta1(x,y)*dumT) + params["gamma"]*params["1/Pr"]*params["1/Re"]*diff(vT, dumT)
-      + vp*(params["gamma"]*params["Ma^2"]*dump - dumR*ubT - ubR*dumT)
+      iomega*(vp*params["gamma"]*params["Ma^2"]*ump + ubrho*((vT - vp)*umT + vdotu(v, um)))
+      + vp*(params["gamma"]*params["Ma^2"]*(ugradf(um, ubp) + ugradf(ub, ump)) - drho(um)*ugradf(ub, ubT) - ubrho*(ugradf(um, ubT) + ugradf(ub, umT)) + params["gamma"]*params["Ma^2"]*ump*div(ub) + (params["gamma"]*params["Ma^2"]*ubp + 1.0)*div(um) + beta1(x,y)*(params["gamma"]*params["Ma^2"]*ump - umT))
+      + drho(um)*ugradu(v, ub, ub) + ubrho*(ugradu(v, um, ub) + ugradu(v, ub, um)) - div(v)*ump + beta1(x,y)*vdotu(v, um) + visc(v, um)*params["1/Re"]
+      + vT*(drho(um)*ugradf(ub, ubT) + ubrho*(ugradf(um, ubT) + ugradf(ub, umT)) + (params["gamma"] - 1.0)*(params["gamma"]*params["Ma^2"]*ump*div(ub) + (params["gamma"]*params["Ma^2"]*ubp + 1.0)*div(um) - params["gamma"]*params["Ma^2"]*params["1/Re"]*(visc(um, ub) + visc(ub, um))) + beta1(x,y)*umT) + params["gamma"]*params["1/Pr"]*params["1/Re"]*diff(vT, umT)
     )
     + HomBoundaryConditions(dum);
 
 // MASS OPERATOR
   varf vM(defu(dum), defu(v))
-    = int2d(Th)( vR*dumR + ubR*(vdotu(v, dum) + vT*dumT) )
-    + int2d(Th)( vR*umR + ubR*(vdotu(v, um) + vT*umT) )
+    = int2d(Th)( vp*params["gamma"]*params["Ma^2"]*dump + ubrho*((vT - vp)*dumT + vdotu(v, dum)) )
+    + int2d(Th)( vp*params["gamma"]*params["Ma^2"]*ump + ubrho*((vT - vp)*umT + vdotu(v, um)) )
     + HomBoundaryConditions(dum);
 
 // MASS DERIVATIVE OPERATOR
   varf vdM(defu(dum), defu(v))
-    = int2d(Th)( um2R*(vT*umT + vdotu(v, um)) + umR*(vT*um2T + vdotu(v, um2)) )
-    + int2d(Th)( dumR*(vT*umT + vdotu(v, um)) + umR*(vT*dumT + vdotu(v, dum)) )
+    = int2d(Th)( drho(dum)*((vT - vp)*umT + vdotu(v, um)) )
+    + int2d(Th)( drho(um2)*((vT - vp)*umT + vdotu(v, um)) )
     + HomBoundaryConditions(dum);
 
 // MASS 2ND DERIVATIVE OPERATOR
   varf vddM(defu(dum), defu(v))
-    = HomBoundaryConditions(dum);
+    = int2d(Th)( d2rho(um2, dum)*((vT - vp)*umT + vdotu(v, um)) )
+    + int2d(Th)( d2rho(um2, um3)*((vT - vp)*umT + vdotu(v, um)) )
+    + HomBoundaryConditions(dum);
 
 // FORCING/RESPONSE OPERATORS
   varf vMq(defu(dum), defu(v))
     = int2d(Th)(
-      0.5*(ubT/(params["gamma"]*params["Ma^2"]*ubR)*vR*dumR + ubR*vdotu(v, dum) + ubR/(params["gamma"]*(params["gamma"] - 1.0)*params["Ma^2"]*ubT)*vT*dumT)
+      0.5*(ubrho*vdotu(v, dum) + ubrho/(params["gamma"]*(params["gamma"] - 1.0)*params["Ma^2"]*ubT)*vT*dumT)
     )
-    + int2d(Th)( vR*umR + ubR*(vdotu(v, um) + vT*umT) )
+    + int2d(Th)( vp*params["gamma"]*params["Ma^2"]*ump + ubrho*((vT - vp)*umT + vdotu(v, um)) )
     + HomBoundaryConditions(dum);
 
   varf vMf(deff(fm), deff(v))
@@ -91,29 +96,29 @@
 // HESSIAN OPERATOR
   varf vH(defu(dum), defu(v))
     = int2d(Th)(
-      iomega*um2R*(vT*umT + vdotu(v, um)) + iomega2*umR*(vT*um2T + vdotu(v, um2))
-      + vR*(ugradf(um2, umR) + ugradf(um, um2R) + umR*div(um2) + um2R*div(um))
-      + um2R*(ugradu(v, um, ub) + ugradu(v, ub, um)) + ubR*(ugradu(v, um, um2) + ugradu(v, um2, um)) + umR*(ugradu(v, um2, ub) + ugradu(v, ub, um2))
-      + vT*(um2R*(ugradf(um, ubT) + ugradf(ub, umT)) + ubR*(ugradf(um, um2T) + ugradf(um2, umT)) + umR*(ugradf(um2, ubT) + ugradf(ub, um2T)) + (params["gamma"] - 1.0)*(umR*(um2T*div(ub) + ubT*div(um2)) + umT*(um2R*div(ub) + ubR*div(um2)) + (um2R*ubT + ubR*um2T)*div(um)) - params["gamma"]*(params["gamma"] - 1.0)*params["Ma^2"]*(visc(um, um2) + visc(um2, um))*params["1/Re"])
-      - vp*(umR*um2T + um2R*umT)
+      iomega*(drho(dum)*((vT - vp)*umT + vdotu(v, um))) + iomega2*(drho(um)*((vT - vp)*dumT + vdotu(v, dum)))
+      + vp*(params["gamma"]*params["Ma^2"]*(ugradf(um, dump) + ugradf(dum, ump)) - d2rho(um, dum)*ugradf(ub, ubT) - drho(um)*(ugradf(dum, ubT) + ugradf(ub, dumT)) - drho(dum)*(ugradf(um, ubT) + ugradf(ub, umT)) - ubrho*(ugradf(um, dumT) + ugradf(dum, umT)) + params["gamma"]*params["Ma^2"]*(ump*div(dum) + dump*div(um)))
+      + d2rho(um, dum)*ugradu(v, ub, ub) + drho(um)*(ugradu(v, dum, ub) + ugradu(v, ub, dum)) + drho(dum)*(ugradu(v, um, ub) + ugradu(v, ub, um)) + ubrho*(ugradu(v, um, dum) + ugradu(v, dum, um))
+      + vT*(d2rho(um, dum)*ugradf(ub, ubT) + drho(um)*(ugradf(dum, ubT) + ugradf(ub, dumT)) + drho(dum)*(ugradf(um, ubT) + ugradf(ub, umT)) + ubrho*(ugradf(um, dumT) + ugradf(dum, umT)) + (params["gamma"] - 1.0)*(params["gamma"]*params["Ma^2"]*(ump*div(dum) + dump*div(um)) - params["gamma"]*params["Ma^2"]*params["1/Re"]*(visc(um, dum) + visc(dum, um))))
     )
     + int2d(Th)(
-      iomega*dumR*(vT*umT + vdotu(v, um)) + iomega2*umR*(vT*dumT + vdotu(v, dum))
-      + vR*(ugradf(dum, umR) + ugradf(um, dumR) + umR*div(dum) + dumR*div(um))
-      + dumR*(ugradu(v, um, ub) + ugradu(v, ub, um)) + ubR*(ugradu(v, um, dum) + ugradu(v, dum, um)) + umR*(ugradu(v, dum, ub) + ugradu(v, ub, dum))
-      + vT*(dumR*(ugradf(um, ubT) + ugradf(ub, umT)) + ubR*(ugradf(um, dumT) + ugradf(dum, umT)) + umR*(ugradf(dum, ubT) + ugradf(ub, dumT)) + (params["gamma"] - 1.0)*(umR*(dumT*div(ub) + ubT*div(dum)) + umT*(dumR*div(ub) + ubR*div(dum)) + (dumR*ubT + ubR*dumT)*div(um)) - params["gamma"]*(params["gamma"] - 1.0)*params["Ma^2"]*(visc(um, dum) + visc(dum, um))*params["1/Re"])
-      - vp*(umR*dumT + dumR*umT)
+      iomega*(drho(um2)*((vT - vp)*umT + vdotu(v, um))) + iomega2*(drho(um)*((vT - vp)*um2T + vdotu(v, um2)))
+      + vp*(params["gamma"]*params["Ma^2"]*(ugradf(um, um2p) + ugradf(um2, ump)) - d2rho(um, um2)*ugradf(ub, ubT) - drho(um)*(ugradf(um2, ubT) + ugradf(ub, um2T)) - drho(um2)*(ugradf(um, ubT) + ugradf(ub, umT)) - ubrho*(ugradf(um, um2T) + ugradf(um2, umT)) + params["gamma"]*params["Ma^2"]*(ump*div(um2) + um2p*div(um)))
+      + d2rho(um, um2)*ugradu(v, ub, ub) + drho(um)*(ugradu(v, um2, ub) + ugradu(v, ub, um2)) + drho(um2)*(ugradu(v, um, ub) + ugradu(v, ub, um)) + ubrho*(ugradu(v, um, um2) + ugradu(v, um2, um))
+      + vT*(d2rho(um, um2)*ugradf(ub, ubT) + drho(um)*(ugradf(um2, ubT) + ugradf(ub, um2T)) + drho(um2)*(ugradf(um, ubT) + ugradf(ub, umT)) + ubrho*(ugradf(um, um2T) + ugradf(um2, umT)) + (params["gamma"] - 1.0)*(params["gamma"]*params["Ma^2"]*(ump*div(um2) + um2p*div(um)) - params["gamma"]*params["Ma^2"]*params["1/Re"]*(visc(um, um2) + visc(um2, um))))
     )
     + HomBoundaryConditions(dum);
 
 // TRESSIAN OPERATOR
   varf vT(defu(dum), defu(v))
     = int2d(Th)(
-      umR*(ugradu(v, um2, um3) + ugradu(v, um3, um2)) + um2R*(ugradu(v, um, um3) + ugradu(v, um3, um)) + um3R*(ugradu(v, um, um2) + ugradu(v, um2, um))
-      + vT*(umR*(ugradf(um2, um3T) + ugradf(um3, um2T)) + um2R*(ugradf(um, um3T) + ugradf(um3, umT)) + um3R*(ugradf(um, um2T) + ugradf(um2, umT)) + (params["gamma"] - 1.0)*((um2R*um3T + um3R*um2T)*div(um) + (umR*um3T + um3R*umT)*div(um2) + (umR*um2T + um2R*umT)*div(um3)))
+      iomega*(d2rho(um2, dum)*((vT - vp)*umT + vdotu(v, um))) + iomega2*(d2rho(um, dum)*((vT - vp)*um2T + vdotu(v, um2))) + iomega3*(d2rho(um, um2)*((vT - vp)*dumT + vdotu(v, dum)))
+      + d3rho(um, um2, dum)*ugradu(v, ub, ub) + d2rho(um, um2)*(ugradu(v, dum, ub) + ugradu(v, ub, dum)) + d2rho(um, dum)*(ugradu(v, um2, ub) + ugradu(v, ub, um2)) + drho(um)*(ugradu(v, um2, dum) + ugradu(v, dum, um2)) + d2rho(um2, dum)*(ugradu(v, um, ub) + ugradu(v, ub, um)) + drho(um2)*(ugradu(v, um, dum) + ugradu(v, dum, um)) + drho(dum)*(ugradu(v, um, um2) + ugradu(v, um2, um))
+      + (vT - vp)*(d3rho(um, um2, dum)*ugradf(ub, ubT) + d2rho(um, um2)*(ugradf(dum, ubT) + ugradf(ub, dumT)) + d2rho(um, dum)*(ugradf(um2, ubT) + ugradf(ub, um2T)) + drho(um)*(ugradf(um2, dumT) + ugradf(dum, um2T)) + d2rho(um2, dum)*(ugradf(um, ubT) + ugradf(ub, umT)) + drho(um2)*(ugradf(um, dumT) + ugradf(dum, umT)) + drho(dum)*(ugradf(um, um2T) + ugradf(um2, umT)))
     )
     + int2d(Th)(
-      umR*(ugradu(v, um2, dum) + ugradu(v, dum, um2)) + um2R*(ugradu(v, um, dum) + ugradu(v, dum, um)) + dumR*(ugradu(v, um, um2) + ugradu(v, um2, um))
-      + vT*(umR*(ugradf(um2, dumT) + ugradf(dum, um2T)) + um2R*(ugradf(um, dumT) + ugradf(dum, umT)) + dumR*(ugradf(um, um2T) + ugradf(um2, umT)) + (params["gamma"] - 1.0)*((um2R*dumT + dumR*um2T)*div(um) + (umR*dumT + dumR*umT)*div(um2) + (umR*um2T + um2R*umT)*div(dum)))
+      iomega*(d2rho(um2, um3)*((vT - vp)*umT + vdotu(v, um))) + iomega2*(d2rho(um, um3)*((vT - vp)*um2T + vdotu(v, um2))) + iomega3*(d2rho(um, um2)*((vT - vp)*um3T + vdotu(v, um3)))
+      + d3rho(um, um2, um3)*ugradu(v, ub, ub) + d2rho(um, um2)*(ugradu(v, um3, ub) + ugradu(v, ub, um3)) + d2rho(um, um3)*(ugradu(v, um2, ub) + ugradu(v, ub, um2)) + drho(um)*(ugradu(v, um2, um3) + ugradu(v, um3, um2)) + d2rho(um2, um3)*(ugradu(v, um, ub) + ugradu(v, ub, um)) + drho(um2)*(ugradu(v, um, um3) + ugradu(v, um3, um)) + drho(um3)*(ugradu(v, um, um2) + ugradu(v, um2, um))
+      + (vT - vp)*(d3rho(um, um2, um3)*ugradf(ub, ubT) + d2rho(um, um2)*(ugradf(um3, ubT) + ugradf(ub, um3T)) + d2rho(um, um3)*(ugradf(um2, ubT) + ugradf(ub, um2T)) + drho(um)*(ugradf(um2, um3T) + ugradf(um3, um2T)) + d2rho(um2, um3)*(ugradf(um, ubT) + ugradf(ub, umT)) + drho(um2)*(ugradf(um, um3T) + ugradf(um3, umT)) + drho(um3)*(ugradf(um, um2T) + ugradf(um2, umT)))
     )
     + HomBoundaryConditions(dum);

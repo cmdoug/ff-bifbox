@@ -1,6 +1,6 @@
 # 3D Incompressible Wake Flow Example: Marquet and Larsson, (2015)
 This file shows an example `ff-bifbox` workflow for reproducing the results of the study:
-```tex
+```bibtex
 @article{marquet_larsson_2015,
 title = {Global wake instabilities of low aspect-ratio flat-plates},
 journal = {European Journal of Mechanics - B/Fluids},
@@ -15,7 +15,38 @@ author = {O. Marquet and M. Larsson},
 ```
 The commands below illustrate how to run the perform a stability analysis of 3D wake behind a rectangular plate using `ff-bifbox`. Note that unlike the example in `examples/moulin_etal_2019`, this study leverages direct methods, so bifurcation points (fold, hopf, etc.) can be located.
 
-IMPORTANT NOTE: The ability to solve 3 dimensional problems in ff-bifbox is still under development! In particular, 3D mesh adaptation with `mmg3d` may contain bugs. 
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{1}{Re}\frac{\partial^2u_i}{\partial x_j^2} &= 0 \\
+\frac{\partial u_i}{\partial x_i} &= 0
+\end{align*}
+$$
+
+together with the boundary conditions:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $u_x=1$, $u_y=u_z=0$ |
+| Wall, $\Gamma_w$ | $u_x=u_y=u_z=0$ |
+| xz-plane, $\Gamma_y$ | $`\begin{cases}\frac{\partial u_x}{\partial y}=u_y=\frac{\partial u_z}{\partial y}=0, & \text{if symmetric} \\\\ u_x=\frac{\partial u_y}{\partial y}=u_z=0, & \text{if asymmetric} \end{cases}`$ |
+| xy-plane, $\Gamma_z$ | $`\begin{cases}\frac{\partial u_x}{\partial z}=\frac{\partial u_y}{\partial z}=u_z=0, & \text{if symmetric} \\\\ u_x=u_y=\frac{\partial u_z}{\partial z}=0, & \text{if asymmetric}\end{cases}`$|
+| Slip, $\Gamma_s$ | $`u_i\hat{n}_i=\frac{\partial u_i}{\partial x_l}\epsilon_{ijk}\hat{n}_j\hat{n}_l=0`$ |
+| Outlet, $\Gamma_o$ | $`\frac{1}{Re}\frac{\partial u_i}{\partial x}-p\hat{e}_x= 0`$ |
+
+The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the Cartesian domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_y+\Gamma_z+\Gamma_s+\Gamma_o$. Solutions $\vec{q}=\left(u_i,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{p}\right)^T$,
+
+$$
+\left(\check{u}_i,\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\frac{1}{Re}\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\check{p},\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0.
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_marquet_larsson_2015.idp](./eqns_marquet_larsson_2015.idp).
+
+NOTES: 
+- This code uses computational coordinates that differ from the physical coordinates by a scaling factor related to the parameter $L$ (see the `Z()` macro in [settings_marquet_larsson_2015.idp](./settings_marquet_larsson_2015.idp)). Note that ParaView files are exported using the physical coordinates.
+
+- The ability to solve 3 dimensional problems in `ff-bifbox` is still under development. In particular, 3D mesh adaptation with `mmg3d` may contain bugs. 
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.

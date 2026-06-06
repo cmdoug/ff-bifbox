@@ -1,6 +1,6 @@
 # 2D Compressible Flow Example: Fani et al. PoF. (2018)
 This file shows an example `ff-bifbox` workflow for reproducing the results of the paper:
-```tex
+```bibtex
 @article{fani_etal_2018,
     author = {Fani, A. and Citro, V. and Giannetti, F. and Auteri, F.},
     title = "{Computation of the bluff-body sound generation by a self-consistent mean flow formulation}",
@@ -12,6 +12,47 @@ This file shows an example `ff-bifbox` workflow for reproducing the results of t
 }
 ```
 The commands below illustrate how to analyze a 2D compressible flow around a cylinder using `ff-bifbox`.
+
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial\rho}{\partial t} + \rho \frac{\partial u_i}{\partial x_i} + u_i\frac{\partial\rho}{\partial x_i} - \tilde{\beta}\left(\rho-1\right)&= 0\\
+\rho\frac{\partial u_i}{\partial t} + \rho u_j\frac{\partial u_i}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{1}{Re}\frac{\partial\tau_{ij}}{\partial x_j} - \tilde{\beta}\left(u_i-\hat{e}_x\right) &= 0 \\
+\rho\frac{\partial T}{\partial t} + \rho u_i\frac{\partial T}{\partial x_i} +\left(\gamma-1\right)\rho T\frac{\partial u_i}{\partial x_i} - \frac{\gamma\left(\gamma-1\right)M^2}{Re}\tau_{ij}\frac{\partial u_i}{\partial x_j} \\- \frac{\gamma}{Pr Re}\frac{\partial^2T}{\partial x_i^2} - \tilde{\beta}\left(T-1\right) &= 0
+\end{align*}
+$$
+
+where:
+- $`\tau_{ij}=\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\frac{2}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}`$
+- $`\rho = \frac{1 + \gamma M^2p}{T}`$
+- $`\tilde{\beta}\left(x,y\right)=\begin{cases}0,& \text{if } x_3 \leq x \leq x_4 \text{ and } \|y\| \leq y_2 \\\\ \left|1-\frac{1}{M}\right|f\left(x_3,x\right),& \text{if } x < x_3 \text{ and } \|y\| \leq y_2 \\\\ \left|1+\frac{1}{M}\right|f\left(x,x_4\right), & \text{if } x > x_4 \text{ and } \|y\| \leq y_2 \\\\ \tilde{\beta}\left(x,y_2\right)+\left|\frac{1}{M}\right|f\left(y,y_4\right),& \text{if } \|y\| > y_2 \end{cases}`$
+- $`f\left(a,b\right)=\frac{2\alpha}{l_s^2}\left(a-b\right)`$.
+
+The boundary conditions are:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $u_x=T=1$, $u_y=0$ |
+| Wall, $\Gamma_w$| $u_x=u_y=\frac{\partial T}{\partial x_i}\hat{n}_i=0$ |
+| Axis, $\Gamma_a$| $`\begin{cases}\frac{\partial u_x}{\partial y}=u_y=\frac{\partial T}{\partial y}=0, & \text{if symmetric} \\\\ u_x=\frac{\partial u_y}{\partial y}=T=0, & \text{if antisymmetric} \end{cases}`$ |
+| Lateral, $\Gamma_l$ | $\frac{\partial u_x}{\partial y}=u_y=\frac{\partial T}{\partial y}=0$ |
+| Outlet, $\Gamma_o$ | $\frac{1}{Re}\tau_{ix}-p\hat{e}_x = \frac{\partial T}{\partial x}=0$ |
+
+NOTE: the original paper also imposes a $\rho=1$ condition along $\Gamma_i$. However, this is not needed, and, in fact, it overconstrains the system due to the algebraic ideal gas equation of state. (There are really only two dynamically independent thermodynamic variables.) The approach taken here corrects this.
+
+The present implementation is based on a weak formulation of these equations. Density is eliminated using the equation of state, test functions are introduced, and the equations are integrated over the planar domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_a+\Gamma_l+\Gamma_o$. Solutions $\vec{q}=\left(u_i,T,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{T},\check{p}\right)^T$,
+
+$$
+\begin{align*} 
+&\left(\check{u}_i,\frac{1 + \gamma M^2p}{T}\left[\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right] + \tilde{\beta}\left(u_i-\hat{e}_x\right)\right)_{\Omega} - \left(\frac{\partial \check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\tau_{ij}\right)_{\Omega} \\
+&+ \left(\check{p},\gamma M^2\left[\frac{\partial p}{\partial t} + u_i\frac{\partial p}{\partial x_i}\right] - \frac{1 + \gamma M^2p}{T}\left[\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i} - T\frac{\partial u_i}{\partial x_i}\right] + \tilde{\beta}\left(1 + \gamma M^2p-T\right)\right)_{\Omega}\\
+&+\left(\check{T},\frac{1 + \gamma M^2p}{T}\left[\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i} + \left(\gamma-1\right)T\frac{\partial u_i}{\partial x_i}\right] - \frac{\gamma\left(\gamma-1\right)M^2}{Re}\tau_{ij}\frac{\partial u_i}{\partial x_j}+\tilde{\beta}\left(T-1\right)\right)_{\Omega} \\
+&+\left(\frac{\partial\check{T}}{\partial x_i},\frac{\gamma}{Pr Re}\frac{\partial T}{\partial x_i}\right)_{\Omega} = 0.
+\end{align*}
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_fani_etal_2018.idp](./eqns_fani_etal_2018.idp).
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.
@@ -67,8 +108,8 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder150.base -fo 
 ### First order
 1. Compute leading direct eigenmode at $Re\sim50$ and $Re=150$
 ```sh
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi cylinder50.base -fo cylinder50 -eps_target 0.1+0.7i -sym 1 -eps_pos_gen_non_hermitian
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi cylinder150.base -fo cylinder150 -eps_target 0.2+0.8i -sym 1 -pv 1 -eps_pos_gen_non_hermitian
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi cylinder50.base -fo cylinder50 -eps_target 0.1+0.7i -sym 1
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi cylinder150.base -fo cylinder150 -eps_target 0.2+0.8i -sym 1 -pv 1
 ```
 NOTE: Here, the `-sym` argument specifies the asymmetric (1) or symmetric (0) reflective symmetry across the boundary `BCaxis`.
 
@@ -92,4 +133,4 @@ NOTE: the signs and normalizations of the normal form coefficients used in `hopf
 ```sh
 ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinder -mo cylinderporb -adaptto 01 -thetamax 5 -param 1/Re -h0 -1 -scount 5 -maxcount -1 -paramtarget 0.00666667
 ```
-NOTE: the formulation in `ff-bifbox` is fully self-consistent, and does not neglect the unsteady nonlinear interactions as in the original paper. 
+NOTE: the formulation in `ff-bifbox` is more fully self-consistent, and does not neglect the unsteady nonlinear interactions as in the original paper. 

@@ -1,6 +1,6 @@
 # 2D Incompressible Flow Example: Garnaud, PhD Thesis, (2012)
 This file shows an example `ff-bifbox` workflow for reproducing the results in Chapter 6.4 of the thesis:
-```tex
+```bibtex
 @phdthesis{garnaud_2012,
   TITLE = {{Modes, transient dynamics and forced response of circular jets}},
   AUTHOR = {Garnaud, Xavier},
@@ -10,6 +10,32 @@ This file shows an example `ff-bifbox` workflow for reproducing the results in C
 }
 ```
 The commands below illustrate how to perform a resolvent analysis of an incompressible laminar axisymmetric jet using `ff-bifbox`.
+
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{1}{Re}\frac{\partial^2u_i}{\partial x_j^2} &= 0 \\
+\frac{\partial u_i}{\partial x_i} &= 0
+\end{align*}
+$$
+
+together with the boundary conditions:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $u_x=\tanh\left(5-5r\right)$, $u_r=0$ |
+| Wall, $\Gamma_w$ | $u_x=u_r=0$ |
+| Axis, $\Gamma_a$| $\frac{\partial u_x}{\partial r}=u_r=0$ |
+| Open, $\Gamma_o$ | $\frac{1}{Re}\frac{\partial u_i}{\partial x_j}\hat{n}_j-p\hat{n}_i = 0$ |
+
+The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_a+\Gamma_o$. Solutions $\vec{q}=\left(u_i,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{p}\right)^T$,
+
+$$
+\left(\check{u}_i,\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\frac{1}{Re}\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\check{p},\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0.
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_garnaud_2012.idp](./eqns_garnaud_2012.idp).
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.

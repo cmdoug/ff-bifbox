@@ -1,6 +1,6 @@
 # Low-Mach conical flame Example: Douglas et al., CnF, (2023)
 This file shows an example `ff-bifbox` workflow for reproducing the results in the study:
-```tex
+```bibtex
 @article{douglas_etal_2023,
   title = {{Flash-back, blow-off, and symmetry breaking of premixed conical flames}},
   volume={258},
@@ -13,6 +13,41 @@ This file shows an example `ff-bifbox` workflow for reproducing the results in t
 }
 ```
 The commands below illustrate how to perform a bifurcation analysis of a premixed conical flame using `ff-bifbox`.
+
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{1}{T}\left(\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right) + \frac{\partial p}{\partial x_i} - \frac{1}{Re}\frac{\partial}{\partial x_j}\left[T^{2/3}\left(\frac{\partial u_i}{x_j} + \frac{\partial u_j}{x_i}\right)\right] &= 0 \\
+\frac{1}{T}\left(\frac{\partial Y}{\partial t} + u_i\frac{\partial Y}{\partial x_i}\right) - \frac{1}{Re Pr Le}\frac{\partial}{\partial x_i}\left(T^{2/3}\frac{\partial Y}{\partial x_i}\right) + \dot{\omega}&= 0 \\
+\frac{1}{T}\left(\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i}\right) - \frac{1}{Re Pr}\frac{\partial}{\partial x_i}\left(T^{2/3}\frac{\partial T}{\partial x_i}\right) - \Delta T\dot{\omega} &= 0 \\
+\frac{\partial u_i}{\partial x_i} - \frac{1}{Re Pr}\frac{\partial}{\partial x_i}\left(T^{2/3}\frac{\partial T}{\partial x_i}\right) - \Delta T\dot{\omega} &= 0
+\end{align*}
+$$
+
+where $`\dot{\omega}=Da \frac{Y}{T}\exp\left[Ze\left(1+\frac{1}{\Delta T}\right)\left(1-\frac{1+\Delta T}{T}\right)\right]`$.
+
+The boundary conditions are:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $u_x=2-8r^2$, $u_r=u_{\theta}=0$, $Y=T=1$ |
+| Wall, $\Gamma_w$ | $`u_x=u_r=u_{\theta}=\frac{\partial Y}{\partial x_i}\hat{n}_i=0`$, $T=1$ |
+| Axis, $\Gamma_a$| $`\begin{cases}\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=\frac{\partial Y}{\partial r}=\frac{\partial T}{\partial r}=0, & \text{if } m=0 \\\\ u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=Y=T=0, & \text{if } \|m\|=1 \\\\ u_x=u_r=u_{\theta}=Y=T=0, & \text{if } \|m\|>1\end{cases}`$ |
+| Open, $\Gamma_o$ | $`\frac{T^{2/3}}{Re}\frac{\partial u_i}{\partial x_j}\hat{n}_j-p\hat{n}_i = \frac{\partial Y}{\partial x_i}\hat{n}_i=\frac{\partial T}{\partial x_i}\hat{n}_i=0`$ |
+
+The present implementation is based on a weak formulation of these equations. The equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_a+\Gamma_o$. Solutions $\vec{q}=\left(u_i,Y,T,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{Y},\check{T},\check{p}\right)^T$,
+
+$$
+\begin{align*}
+&\left(\check{u}_i,\frac{1}{T}\left[\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right]\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\frac{T^{2/3}}{Re}\left[\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}\right]\right)_{\Omega} - \left(\check{u}_i\hat{n}_j,\frac{T^{2/3}}{Re}\frac{\partial u_j}{\partial x_i}\right)_{\Gamma_o} \\
+&+ \left(\check{Y},\frac{1}{T}\left[\frac{\partial Y}{\partial t} + u_i\frac{\partial Y}{\partial x_i}\right] + \dot{\omega}\right)_{\Omega} + \left(\frac{\partial \check{Y}}{\partial x_i},\frac{T^{2/3}}{Re Pr Le}\frac{\partial Y}{\partial x_i}\right)_{\Omega} \\
+&+ \left(\check{T},\frac{1}{T}\left[\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i}\right] - \Delta T \dot{\omega}\right)_{\Omega} + \left(\frac{\partial \check{T}}{\partial x_i},\frac{T^{2/3}}{Re Pr}\frac{\partial T}{\partial x_i}\right)_{\Omega} \\
+&+ \left(\check{p},\frac{\partial u_i}{\partial x_i} - \Delta T \dot{\omega}\right)_{\Omega} + \left(\frac{\partial \check{p}}{\partial x_i},\frac{T^{2/3}}{Re Pr}\frac{\partial T}{\partial x_i}\right)_{\Omega} - \left(\check{p}\hat{n}_i,\frac{T^{2/3}}{Re Pr}\frac{\partial T}{\partial x_i}\right)_{\partial\Omega} = 0 
+\end{align*}
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_douglas_etal_2023.idp](./eqns_douglas_etal_2023.idp).
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.

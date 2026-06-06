@@ -1,14 +1,24 @@
 # Steady-state theory of thermal explosions in a homogeneous mixture
 
-This repository reproduces the classical Frank–Kamenetskii bifurcation diagram using `ff-bifbox`.
+This example reproduces the classical Frank–Kamenetskii bifurcation diagram of Damköhler number $\mathrm{Da}$ versus temperature $u$ in a cylindrical domain using `ff-bifbox`.
 
-We compute steady solutions of
+In strong form, the governing equations are given as:
 
 $$
-\Delta u + \mathrm{Da} \exp(u) = 0,
+\Delta u + \mathrm{Da} \exp(u) = 0
 $$
 
-in a cylindrical domain with Dirichlet boundary conditions, and perform continuation in the Damköhler number $\mathrm{Da}$.
+together with homogeneous Dirichlet boundary conditions $u=0$.
+
+The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the planar domain $\Omega$ with boundary $\partial\Omega$. Solutions $u$ are then sought, in the appropriate space, such that for all test functions $\check{u}$,
+
+$$
+-\left(\frac{\partial \check{u}}{\partial x_i},\frac{\partial u}{\partial x_i}\right)_{\Omega} + \left(\check{u},\mathrm{Da}\exp\left(u\right)\right)_{\Omega} = 0
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_FK.idp](./eqns_FK.idp).
+
+
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.
 ```sh
@@ -29,23 +39,23 @@ ln -sf examples/FK_problem/settings_FK.idp settings.idp
 
 #### Build initial mesh using BAMG in FreeFEM
 ```sh
-FreeFem++-mpi -v 0 examples/FK_problem/cylinder_vessel.md -mo $workdir/cylinder_vessel
+FreeFem++-mpi -v 0 examples/FK_problem/vessel.md -mo $workdir/vessel
 ```
 
 ## Perform parallel computations using `ff-bifbox`
 ### Continue base state along the parameter $Da$ from trivial solution
 
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -mi cylinder_vessel.msh -fo cylinder_vessel -param Da -h0 1 -scount 2 -maxcount 25 -tgv -2 -amax 10 -dmax 0.5 -kmax 1 -contorder 1
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -mi vessel.msh -fo FK -param Da -h0 1 -scount 2 -maxcount 25 -tgv -2 -amax 10 -dmax 0.5 -kmax 1 -contorder 1
 ```
 This step computes the steady-state bifurcation diagram.
 
 
 ### Compute fold bifurcation 
 ```sh
-cd "$workdir" && declare -a foldguesslist=(cylinder_vessel_*specialpt.base) && cd -
+cd "$workdir" && declare -a foldguesslist=(FK_*specialpt.base) && cd -
 for guess in "${foldguesslist[@]}"; do
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi "$guess" -fo cylinder_vessel_fold -param Da -pv 1 -tgv -2
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi "$guess" -fo FK_fold -param Da -pv 1 -tgv -2
 done
 ````
 Example output:
@@ -57,8 +67,8 @@ Example output:
 ### Stability analysis 
 Compute eigenvalues along the branch:
 ```sh
-cd "$workdir" && declare -a baselist=(cylinder_vessel_*[0-9].base) && cd -
+cd "$workdir" && declare -a baselist=(FK_*[0-9].base) && cd -
 for base in "${baselist[@]}"; do
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi "$base" -so cylinder_vessel -eps_target 1.0+0.0i -eps_gen_hermitian -nev 3
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi "$base" -so FK -eps_target 1.0+0.0i -eps_gen_hermitian -nev 3
 done
 ```

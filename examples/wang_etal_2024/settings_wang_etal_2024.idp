@@ -13,7 +13,7 @@
   include "macro_ddm.idp"
   verbosity = getARGV("-v", 0);
 // Define parameter and monitor names
-  string[int] paramnames = ["U0","Tr","As","Ts","Pr","Sc","p0","Rs","Cp","YCH4","WCH4","YO2","WO2","nCH4","nO2","Ar","Ta","Dh0f","alpha","xsg","rsg"]; // set parameter names
+  string[int] paramnames = ["U0","Tcb","As","Ts","Pr","Sc","p0","Rs","Cp","YCH4","WCH4","YO2","WO2","nCH4","nO2","Ar","Ta","Dh0f","alpha","xsg","rsg"]; // set parameter names
   string[int] monitornames = ["Re","ux(2.7D,1.2D)","omegadotT"]; // set monitor names
 // Declare symmetries
   real[int] sym(0);

@@ -1,7 +1,7 @@
 # duct.md
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
-This file can be used with FreeFEM to create a mesh for the Kornilov duct.
+This file can be used with FreeFEM to create a mesh for the Kornilov burner duct as in [Brokof, Douglas, Polifke. PROCI. (2024)](https://doi.org/10.1016/j.proci.2024.105362).
 
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor

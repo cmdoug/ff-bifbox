@@ -1,17 +1,23 @@
 # Examples: Douglas & Jolivet (2026)
 This file shows an example `ff-bifbox` workflow for reproducing the results of the study:
-```tex
+```bibtex
 @article{douglas_jolivet_2026,
-  title={ff-bifbox: A scalable, open-source toolbox for bifurcation analysis of nonlinear PDEs},
-  author={Douglas, Christopher M. and Jolivet, Pierre},
-  year={2026},
-  journal={Computer Physics Communications},
-  publisher={Elsevier},
-  notes={Accepted manuscript},
-  doi={10.48550/arXiv.2509.18429}
+author = {Douglas, Christopher M. and Jolivet, Pierre},
+title = {{f}f-bifbox: {A} scalable, open-source toolbox for bifurcation analysis of nonlinear {PDE}s},
+journal = {Computer Physics Communications},
+volume = {326},
+pages = {110221},
+year = {2026},
+Publisher = {Elsevier},
+issn = {0010-4655},
+doi = {10.1016/j.cpc.2026.110221},
+url = {https://doi.org/10.1016/j.cpc.2026.110221},
+arxiv = {https://arxiv.org/abs/2509.18429},
 }
 ```
 The commands below illustrate how to perform a bifurcation analysis of buckling 3-D structure using `ff-bifbox`.
+
+The implementation is based on a weak formulation developed from a total Lagrangian approach, which has been implemented in the equations file for this example: [eqns_douglas_jolivet_2026_structure.idp](./eqns_douglas_jolivet_2026_structure.idp).
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.

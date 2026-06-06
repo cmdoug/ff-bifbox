@@ -83,13 +83,14 @@ See the [examples](https://github.com/cmdoug/ff-bifbox/tree/main/examples) folde
 If you use `ff-bifbox` for research, please cite the following:
 
 ```bibtex
-@article{douglas_ff-bifbox_2026,
+@article{douglas_jolivet_2026,
 author = {Douglas, Christopher M. and Jolivet, Pierre},
 title = {{f}f-bifbox: {A} scalable, open-source toolbox for bifurcation analysis of nonlinear {PDE}s},
 journal = {Computer Physics Communications},
 volume = {326},
 pages = {110221},
 year = {2026},
+Publisher = {Elsevier},
 issn = {0010-4655},
 doi = {10.1016/j.cpc.2026.110221},
 url = {https://doi.org/10.1016/j.cpc.2026.110221},

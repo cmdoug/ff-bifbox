@@ -1,7 +1,7 @@
 # swirljet.md
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
-This file can be used with FreeFEM to create a mesh for the laminar jet as in [C. Douglas, B. Emerson, & T. Lieuwen. JFM, (2021)].
+This file can be used with FreeFEM to create a mesh for the laminar jet as in [Douglas, Emerson, & Lieuwen. JFM, (2021)](https://doi.org/10.1017/jfm.2021.615).
 
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor

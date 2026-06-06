@@ -1,17 +1,48 @@
 # Examples: Douglas & Jolivet (2026)
 This file shows an example `ff-bifbox` workflow for reproducing the results of the study:
-```tex
+```bibtex
 @article{douglas_jolivet_2026,
-  title={ff-bifbox: A scalable, open-source toolbox for bifurcation analysis of nonlinear PDEs},
-  author={Douglas, Christopher M. and Jolivet, Pierre},
-  year={2026},
-  journal={Computer Physics Communications},
-  publisher={Elsevier},
-  notes={Accepted manuscript},
-  doi={10.48550/arXiv.2509.18429}
+author = {Douglas, Christopher M. and Jolivet, Pierre},
+title = {{f}f-bifbox: {A} scalable, open-source toolbox for bifurcation analysis of nonlinear {PDE}s},
+journal = {Computer Physics Communications},
+volume = {326},
+pages = {110221},
+year = {2026},
+Publisher = {Elsevier},
+issn = {0010-4655},
+doi = {10.1016/j.cpc.2026.110221},
+url = {https://doi.org/10.1016/j.cpc.2026.110221},
+arxiv = {https://arxiv.org/abs/2509.18429},
 }
 ```
 The commands below illustrate how to perform a bifurcation analysis of the Brusselator in 3-D using `ff-bifbox`.
+
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial X}{\partial t}-A+\left(B+1\right)X-X^2Y-\frac{D_X}{L^2}\frac{\partial^2 X}{\partial x_i^2} &= 0 \\
+\frac{\partial Y}{\partial t}-BX+X^2Y-\frac{D_Y}{L^2}\frac{\partial^2 Y}{\partial x_i^2} &= 0
+\end{align*}
+$$
+
+The boundary conditions are:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Dirichlet, $\Gamma_d$ | $X=Y=0$ |
+| Neumann, $\Gamma_n$| $\frac{\partial X}{\partial x_i}\hat{n}_i=\frac{\partial Y}{\partial x_i}\hat{n}_i=0$ |
+
+The present implementation is based on a weak formulation of these equations. The equations are integrated over the planar domain $\Omega$ with boundary $\partial\Omega=\Gamma_d+\Gamma_n$. Solutions $\vec{q}=\left(X,Y\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{X},\check{Y}\right)^T$,
+
+$$
+\begin{align*} 
+&\left(\check{X},\frac{\partial X}{\partial t}-A+\left(B+1\right)X-X^2Y\right)_{\Omega}+\left(\frac{\partial\check{X}}{\partial x_i},\frac{D_X}{L^2}\frac{\partial X}{\partial x_i}\right)_{\Omega} \\
+&+\left(\check{Y},\frac{\partial Y}{\partial t}-BX+X^2Y\right)_{\Omega}+\left(\frac{\partial\check{Y}}{\partial x_i},\frac{D_Y}{L^2}\frac{\partial Y}{\partial x_i}\right)_{\Omega} = 0
+\end{align*}
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_douglas_jolivet_2026_brusselator.idp](./eqns_douglas_jolivet_2026_brusselator.idp).
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.

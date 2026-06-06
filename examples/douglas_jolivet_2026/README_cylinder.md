@@ -1,17 +1,55 @@
 # Examples: Douglas & Jolivet (2026)
 This file shows an example `ff-bifbox` workflow for reproducing the results of the study:
-```tex
+```bibtex
 @article{douglas_jolivet_2026,
-  title={ff-bifbox: A scalable, open-source toolbox for bifurcation analysis of nonlinear PDEs},
-  author={Douglas, Christopher M. and Jolivet, Pierre},
-  year={2026},
-  journal={Computer Physics Communications},
-  publisher={Elsevier},
-  notes={Accepted manuscript},
-  doi={10.48550/arXiv.2509.18429}
+author = {Douglas, Christopher M. and Jolivet, Pierre},
+title = {{f}f-bifbox: {A} scalable, open-source toolbox for bifurcation analysis of nonlinear {PDE}s},
+journal = {Computer Physics Communications},
+volume = {326},
+pages = {110221},
+year = {2026},
+Publisher = {Elsevier},
+issn = {0010-4655},
+doi = {10.1016/j.cpc.2026.110221},
+url = {https://doi.org/10.1016/j.cpc.2026.110221},
+arxiv = {https://arxiv.org/abs/2509.18429},
 }
 ```
 The commands below illustrate how to analyze a 2-D compressible flow past a cylinder using `ff-bifbox`.
+
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\left(1+\gamma M^2 p\right)\left[\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right] + T\frac{\partial p}{\partial x_i} - \frac{T}{Re}\frac{\partial\tau_{ij}}{\partial x_j} + \beta_sd_s^2\left(u_i-\hat{e}_x\right) &= 0 \\
+\left(1+\gamma M^2 p\right)\left[\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i} + \left(\gamma-1\right)T\frac{\partial u_i}{\partial x_i}\right] - \frac{\gamma\left(\gamma-1\right)M^2}{Re}T\tau_{ij}\frac{\partial u_i}{\partial x_j} \\- \frac{\gamma T}{Pr Re}\frac{\partial^2T}{\partial x_i^2} + \beta_sd_s^2\gamma\left(T-1\right) &= 0 \\
+\gamma M^2 T\left(\frac{\partial p}{\partial t} + u_i\frac{\partial p}{\partial x_i}\right) - \left(1+\gamma M^2 p\right)\left[\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i} - T\frac{\partial u_i}{\partial x_i}\right]+ \beta_s d_s^2\gamma M^2 p&= 0
+\end{align*}
+$$
+
+where $\tau_{ij}=\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\frac{2}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}$.
+
+The boundary conditions are:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $u_x=T=1$, $u_y=0$ |
+| Wall, $\Gamma_w$| $u_x=u_y=\frac{\partial T}{\partial x_i}\hat{n}_i=0$ |
+| Axis, $\Gamma_a$| $`\begin{cases}\frac{\partial u_x}{\partial y}=u_y=\frac{\partial T}{\partial y}=0, & \text{if symmetric} \\\\ u_x=\frac{\partial u_y}{\partial y}=T=0, & \text{if antisymmetric} \end{cases}`$ |
+| Lateral, $\Gamma_l$ | $\frac{\partial u_x}{\partial y}=u_y=\frac{\partial T}{\partial y}=0$ |
+| Outlet, $\Gamma_o$ | $\frac{1}{Re}\tau_{ix}-p\hat{e}_x = \frac{\partial T}{\partial x}=0$ |
+
+The present implementation is based on a weak formulation of these equations. The equations are integrated over the planar domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_a+\Gamma_l+\Gamma_o$. Solutions $\vec{q}=\left(u_i,T,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{T},\check{p}\right)^T$,
+
+$$
+\begin{align*} 
+&\left(\check{u}_i,\left(1 + \gamma M^2p\right)\left[\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right] + \beta_sd_s^2\left(u_i-\hat{e}_x\right)\right)_{\Omega} - \left(\frac{\partial \left(\check{u}_i T\right)}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \left(\check{u}_i T\right)}{\partial x_j},\tau_{ij}\right)_{\Omega} \\
+&+\left(\check{T},\left(1 + \gamma M^2p\right)\left[\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i} + \left(\gamma-1\right)T \frac{\partial u_i}{\partial x_i}\right] - \frac{\gamma\left(\gamma-1\right)M^2}{Re}T\tau_{ij}\frac{\partial u_i}{\partial x_j}+\beta_sd_s^2\gamma\left(T-1\right)\right)_{\Omega} + \left(\frac{\partial\left(\check{T} T\right)}{\partial x_i},\frac{\gamma}{Pr Re}\frac{\partial T}{\partial x_i}\right)_{\Omega} \\
+&+ \left(\check{p},\gamma M^2T\left[\frac{\partial p}{\partial t} + u_i\frac{\partial p}{\partial x_i}\right] - \left(1 + \gamma M^2p\right)\left[\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i} - T\frac{\partial u_i}{\partial x_i}\right] + \beta_sd_s^2\gamma M^2 p\right)_{\Omega} = 0.
+\end{align*}
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_douglas_jolivet_2026_cylinder.idp](./eqns_douglas_jolivet_2026_cylinder.idp).
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.
@@ -20,7 +58,7 @@ cd ~/your/path/to/ff-bifbox/
 ```
 2. Export working directory and number of processors for easy reference.
 ```sh
-export workdir=examples/douglas_jolivet_2026/cylinder_alt
+export workdir=examples/douglas_jolivet_2026/cylinder
 export nproc=4
 ```
 
@@ -28,8 +66,8 @@ export nproc=4
 
 1. Create symbolic links for governing equations and solver settings.
 ```sh
-ln -sf examples/douglas_jolivet_2026/eqns_douglas_jolivet_2026_cylinder_alt.idp eqns.idp
-ln -sf examples/douglas_jolivet_2026/settings_douglas_jolivet_2026_cylinder_alt.idp settings.idp
+ln -sf examples/douglas_jolivet_2026/eqns_douglas_jolivet_2026_cylinder.idp eqns.idp
+ln -sf examples/douglas_jolivet_2026/settings_douglas_jolivet_2026_cylinder.idp settings.idp
 ```
 
 2. Build initial mesh

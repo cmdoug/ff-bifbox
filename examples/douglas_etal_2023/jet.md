@@ -1,7 +1,7 @@
 # jet.md
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
-This file can be used with FreeFEM to create a mesh for the laminar jet.
+This file can be used with FreeFEM to create a mesh for the laminar jet as in [Douglas, Polifke, Lesshafft. CnF. (2023)](https://doi.org/10.1016/j.combustflame.2023.113060).
 
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor

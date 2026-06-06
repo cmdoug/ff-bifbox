@@ -1,6 +1,6 @@
 # 3D Incompressible Wake Flow Example: Moulin et al., (2019)
 This file shows an example `ff-bifbox` workflow for reproducing the results of the study:
-```tex
+```bibtex
 @article{moulin_etal_2019,
     Author = {Moulin, Johann and Jolivet, Pierre and Marquet, Olivier},
     Title = {{Augmented Lagrangian Preconditioner for Large-Scale Hydrodynamic Stability Analysis}},
@@ -13,9 +13,38 @@ This file shows an example `ff-bifbox` workflow for reproducing the results of t
     Url = {https://github.com/prj-/moulin2019al}
 }
 ```
-The commands below illustrate how to run the perform a stability analysis of 3D wake behind a rectangular plate using `ff-bifbox` with the mAL preconditioner implemented in this study. Note that since this study leverages iterative methods, attempts to solve for bifurcation points (fold, hopf, etc.) WILL NOT WORK since the matrix is horribly ill-conditioned near such singularities. This method should only be used for base flow calculations, stability analysis, resolvent analysis, and/or time-domain simulations. (The latter of which could be done faster with other preconditioning strategies.)
+The commands below illustrate how to run the perform a stability analysis of 3D wake behind a rectangular plate using `ff-bifbox` with the mAL preconditioner implemented in this study. Note that since this study leverages iterative methods, attempts to solve for bifurcation points (fold, hopf, etc.) will not work properly since the matrix is horribly ill-conditioned near such singularities. This method should only be used for base flow calculations, stability analysis, resolvent analysis, and/or time-domain simulations. (The latter of which could be done faster with other preconditioning strategies.)
 
-IMPORTANT NOTE: The ability to solve 3 dimensional problems in ff-bifbox is still under development! In particular, 3D mesh adaptation with `mmg3d` may contain bugs. 
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{1}{Re}\frac{\partial^2u_i}{\partial x_j^2} &= 0 \\
+\frac{\partial u_i}{\partial x_i} &= 0
+\end{align*}
+$$
+
+together with the boundary conditions:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $`u_x=1$, $u_y=u_z=0`$ |
+| Wall, $\Gamma_w$ | $`u_x=u_y=u_z=0`$ |
+| Slip, $\Gamma_s$ | $`u_i\hat{n}_i=\frac{\partial u_i}{\partial x_l}\epsilon_{ijk}\hat{n}_j\hat{n}_l=0`$ |
+| Outlet, $\Gamma_o$ | $`\frac{1}{Re}\frac{\partial u_i}{\partial x}-p\hat{e}_x= 0`$ |
+
+The present implementation is based on a grad–div stabilized weak formulation of these equations. Test functions are introduced, and the equations are integrated over the Cartesian domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_s+\Gamma_o$. Solutions $\vec{q}=\left(u_i,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{p}\right)^T$,
+
+$$
+\begin{align*} 
+&\left(\check{u}_i,\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\frac{1}{Re}\frac{\partial u_i}{\partial x_j}\right)_{\Omega} \\
+&+ \left(\gamma\frac{\partial \check{u}_i}{\partial x_i}-\check{p},\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0.
+\end{align*}
+$$
+
+This weak formulation, together with the mAL preconditioner approach, has been implemented in the equations file for this example: [eqns_moulin_etal_2019.idp](./eqns_moulin_etal_2019.idp).
+
+IMPORTANT NOTE: The ability to solve 3 dimensional problems in `ff-bifbox` is still under development! In particular, 3D mesh adaptation with `mmg3d` may contain bugs. 
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.

@@ -1,6 +1,6 @@
 # 2D Incompressible Swirling Flow Example: Meliga et al, JFM, (2012)
 This file shows an example `ff-bifbox` workflow for reproducing the results in the study:
-```tex
+```bibtex
 @article{meliga_etal_2012,
   title={A weakly nonlinear mechanism for mode selection in swirling jets},
   volume={699},
@@ -11,6 +11,41 @@ This file shows an example `ff-bifbox` workflow for reproducing the results in t
   pages={216–262}}
 ```
 The commands below illustrate how to perform a bifurcation analysis of an incompressible swirling flow using `ff-bifbox`.
+
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{\partial}{\partial x_j}\left(\frac{1}{\tilde{Re}}\frac{\partial u_i}{\partial x_j}\right) &= 0 \\
+\frac{\partial u_i}{\partial x_i} &= 0
+\end{align*}
+$$
+
+where:
+- $`\tilde{Re}(r,z)=\begin{cases} Re, & \text{if } r \leq r_{\max} \text{ and } x \leq x_{\max} \\\\ Re+\left(Re_s-Re\right)\zeta\left(z, z_{\max}\right), & \text{if } r \leq r_{\max} \text{ and } x > x_{\max} \\\\ \tilde{Re}\left(r_{\max}, x\right)+\left(Re_s-\tilde{Re}\left(r_{\max},x\right)\right)\zeta\left(r, r_{\max}\right), & \text{if } r > r_{\max} \end{cases}`$
+- $\zeta\left(a,b\right)=\frac{1}{2}=\frac{1}{2}\tanh\left\lbrace\tau\tan\left(-\frac{\pi}{2}+\pi\frac{\|a-b\|}{l}\right)\right\rbrace$.
+
+The boundary conditions are:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $\Gamma_i$ | $u_x=1$, $u_r=0$, $u_{\theta}=S\Psi(r)$ |
+| Axis, $\Gamma_a$| $`\begin{cases}\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=0, & \text{if } m=0 \\\\ u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=0, & \text{if } \|m\|=1 \\\\ u_x=u_r=u_{\theta}=0, & \text{if } \|m\|>1\end{cases}`$ |
+| Lateral, $\Gamma_l$ | $\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=0$ |
+| Open, $\Gamma_o$ | $\frac{1}{Re_s}\frac{\partial u_i}{\partial x}-p\hat{e}_x = 0$ |
+
+where $`\Psi(r)=\begin{cases}
+r(2-r^2), & \text{if }r \leq 1 \\\\
+\frac{1}{r}, & \text{if } r > 1
+\end{cases}`$.
+
+The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the axisymmetric domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_a+\Gamma_l+\Gamma_o$. Solutions $\vec{q}=\left(u_i,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{p}\right)^T$,
+
+$$
+\left(\check{u}_i,\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\frac{1}{\tilde{Re}}\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\check{p},\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0.
+$$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_meliga_etal_2012.idp](./eqns_meliga_etal_2012.idp).
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.

@@ -1,6 +1,6 @@
 # 2D Reacting Compressible Flow Example: Brokof et al, PROCI. (2024)
 This file shows an example `ff-bifbox` workflow for reproducing the results in the study:
-```tex
+```bibtex
 @article{brokof_etal_2024,
   title = {The role of hydrodynamic shear in the thermoacoustic response of slit flames},
   journal = {Proceedings of the Combustion Institute},
@@ -13,6 +13,58 @@ This file shows an example `ff-bifbox` workflow for reproducing the results in t
 }
 ```
 The commands below illustrate how to analyze a 2D reacting compressible flow through a duct using `ff-bifbox`.
+
+In strong form, the governing equations are given as:
+
+$$
+\begin{align*} 
+\frac{\partial\rho}{\partial t} + \frac{\partial \left(\rho u_i\right)}{\partial x_i} &= 0 \\
+\frac{\partial \left(\rho u_i\right)}{\partial t} + \frac{\partial \left(\rho u_iu_j\right)}{\partial x_j} + \frac{\partial p}{\partial x_i} - \frac{1}{Re}\frac{\partial}{\partial x_j}\epsilon_{ij} &= 0 \\
+\frac{\partial \left(\rho Y\right)}{\partial t} + \frac{\partial \left(\rho u_i Y\right)}{\partial x_i} - \frac{1}{Pe Le}\frac{\partial^2 Y}{\partial x_i^2} + \dot{\omega}_Y &= 0 \\
+\frac{\partial \left(\rho h_s-p\gamma Ma^2\right)}{\partial t} + \frac{\partial \left(\rho u_i h_s\right)}{\partial x_i} - \gamma Ma^2\frac{\partial p}{\partial x_i}u_i & \\
+-\frac{\gamma \Delta T}{\gamma-1}\dot{\omega}_Y - \frac{\gamma}{\gamma-1}\frac{1}{Pe}\frac{\partial^2 T}{\partial x_i^2} - \frac{\gamma Ma^2}{Re} \frac{\partial u_i}{\partial x_j}\epsilon_{ij} &= 0
+\end{align*}
+$$
+
+where:
+- $`\epsilon_{ij}=\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\frac{2}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}`$
+- $`\rho = \frac{1+\gamma Ma^2 p}{T}`$
+- $`\dot{\omega}_Y=Da\rho Y \exp\left(\frac{-\left(1+\Delta T\right)^2Ze}{\Delta T T}\right)`$
+- $`h_s = \frac{\gamma}{\gamma-1}T`$
+
+The boundary conditions are:
+
+| Boundary | Constraints |
+| :--- | :--- |
+| Inlet, $`\Gamma_i`$ | $`\begin{cases}u_x=\frac{2}{5}, u_y=0, Y=T=1, & \text{for base flow} \\\\ \rho u_x=I_{\text{mass},i}, \rho u_x^2=I_{x\text{mom},i}, u_y=Y=T=0, & \text{for perturbations}\end{cases}`$|
+| Wall, $`\Gamma_w`$ | $`u_x=u_y=\frac{\partial Y}{\partial x_i}\hat{n}_i=\frac{\partial T}{\partial x_i}\hat{n}_i=0`$ |
+| Symmetry, $`\Gamma_s`$ | $\frac{\partial u_x}{\partial y}=u_y=\frac{\partial Y}{\partial y}=\frac{\partial T}{\partial y}=0$ |
+| Outlet, $`\Gamma_o`$ | $`\begin{cases}\epsilon_{ix}\hat{e}_x-p\hat{e}_x = \frac{\partial Y}{\partial x} = \frac{\partial T}{\partial x} = 0, & \text{for base flow} \\\\ \rho u_x=I_{\text{mass},o}, \rho u_x^2=I_{x\text{mom},o}, \epsilon_{yx}\hat{e}_x = \frac{\partial Y}{\partial x} = \frac{\partial T}{\partial x}=0, & \text{for perturbations}\end{cases}`$ |
+
+where:
+- $`I_{\text{mass},i}=-\frac{1}{2}\left(\rho-\frac{\bar{\rho}}{\bar{c}}u_x\right)\left[\left(\bar{c}+\bar{u}_x\right)R_{in}+\left(\bar{u}_x - \bar{c}\right)\right]`$
+- $`I_{x\text{mom},i}=-\frac{1}{2}\left(\rho-\frac{\bar{\rho}}{\bar{c}}u_x\right)\left[\left(\bar{c}+\bar{u}_x\right)^2R_{in}+\left(\bar{u}_x - \bar{c}\right)^2\right]`$
+- $`I_{\text{mass},o}=\frac{1}{2}\left(\rho+\frac{\bar{\rho}}{\bar{c}}u_x\right)\left[\left(\bar{c}+\bar{u}_x\right)+\left(\bar{u}_x - \bar{c}\right)R_{out}\right]`$
+- $`I_{x\text{mom},o}=\frac{1}{2}\left(\rho+\frac{\bar{\rho}}{\bar{c}}u_x\right)\left[\left(\bar{c}+\bar{u}_x\right)^2+\left(\bar{u}_x - \bar{c}\right)^2R_{out}\right]`$
+- $`c=\frac{\sqrt{\bar{T}}}{Ma}`$
+
+The present implementation is based on a weak formulation of these equations. Density is eliminated as an unknown using the equation of state, test functions are introduced, and the equations are integrated over the axisymmetric domain $`\Omega`$ with boundary $`\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_s+\Gamma_o`$. Solutions $`\vec{q}=\left(u_i,Y,T,p\right)^T`$ are then sought, in the appropriate spaces, such that for all test functions $`\vec{\check{q}}=\left(\check{u}_i,\check{Y},\check{T},\check{p}\right)^T`$,
+
+$$
+\begin{align*}
+&\left(\check{u}_i,\frac{\partial \left(\rho u_i\right)}{\partial t}\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},-\rho u_i u_j+\frac{1}{Re}\epsilon_{ij}\right)_{\Omega} \\
+&+\left(\check{Y},\frac{\partial \left(\rho Y\right)}{\partial t} + \dot{\omega}_Y\right)_{\Omega} + \left(\check{Y}\hat{n}_i,\rho u_i Y\right)_{\partial\Omega} + \left(\frac{\partial \check{Y}}{\partial x_i},-\rho u_i Y + \frac{1}{PeLe}\frac{\partial Y}{\partial x_i}\right)_{\Omega} \\
+&+\left(\check{T},Ma^2\left[\frac{\partial p}{\partial t} + u_i\frac{\partial p}{\partial x_i}\right] + \left(1+\gamma Ma^2p\right)\frac{\partial u_i }{\partial x_i} - \Delta T\dot{\omega}_Y - \frac{\left(\gamma-1\right) Ma^2}{Re} \frac{\partial u_i}{\partial x_j}\epsilon_{ij}\right)_{\Omega} \\
+&+ \left(\frac{\partial \check{T}}{\partial x_i},\frac{1}{Pe}\frac{\partial T}{\partial x_i}\right)_{\Omega} + \left(\check{p}, \frac{\partial \rho}{\partial t}\right)_{\Omega} - \left(\frac{\partial\check{p}}{\partial x_i}, \rho u_i\right)_{\Omega} + \left(\text{Other terms}\right) = 0
+\end{align*}
+$$
+
+The other terms are:
+- $`\left(\text{Other terms}\right)=\begin{cases} \left(\check{u}_i\hat{n}_j,\rho u_i u_j\right)_{\partial\Omega} + \left(\check{p}\hat{n}_i, \rho u_i\right)_{\partial\Omega}, & \text{ for base flow} \\\\ \left(\check{u}_y\hat{n}_x,\rho u_y u_x\right)_{\partial\Omega} + \left(\check{u}_x\hat{n}_x,I_{x\text{mom},i}\right)_{\Gamma_i} + \left(\check{p}\hat{n}_x, I_{\text{mass},i}\right)_{\Gamma_i} \\\\ + \left(\check{u}_x\hat{n}_x,I_{x\text{mom},o}\right)_{\Gamma_o} + \left(\check{p}\hat{n}_x, I_{\text{mass},o}\right)_{\Gamma_o}, & \text{ for perturbations} \end{cases}`$
+
+This weak formulation has been implemented in the equations file for this example: [eqns_brokof_etal_2024.idp](./eqns_brokof_etal_2024.idp).
+
+NOTE: This code uses computational coordinates that differ from the physical coordinates by a scaling factor related to the parameter $L$ (see the `X()` macro in [settings_brokof_etal_2024.idp](./settings_brokof_etal_2024.idp)). Note that ParaView files are exported using the physical coordinates.
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.

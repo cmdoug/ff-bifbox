@@ -54,7 +54,7 @@
   macro SAfw(u) (SAg(u)*((1.0 + SAcw3^6.0)/(SAg(u)^6.0 + SAcw3^6))^(1.0/6.0)) // EOM
   macro SAfwp(u, ik, du) (SAcw3^6./(1. + SAcw3^6.)*SAgp(u, ik, du)*((1. + SAcw3^6.)/(SAg(u)^6. + SAcw3^6.))^(7./6.)) // EOM
 
-  macro SAg(u) (SAr(u) + SAcw2*(SAr(u)^6.0 - SAr(u))) // EOM
+  macro SAg(u) ( (1.0 + SAcw2*(SAr(u)^5.0 - 1.0))*SAr(u) ) // EOM
   macro SAgp(u, ik, du) ((1.0 + SAcw2*(6.0*SAr(u)^5.0 - 1.0))*SArp(u, ik, du)) // EOM
 
   macro SAr(u) (min(real(y*u#v/(SAS(u)*(SAkap*SAdist)^2.0)), 10.0)) // EOM
