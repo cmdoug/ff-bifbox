@@ -32,7 +32,7 @@ string tstype = getARGV("-ts_type", "beuler");
 int tsmaxsnesfailures = getARGV("-ts_max_snes_failures", -1);
 real tstimestep = getARGV("-ts_time_step", 0.01);
 string tsadapttype = getARGV("-ts_adapt_type", "none");
-string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
+string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 
 // Load mesh, make FE basis
 string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension

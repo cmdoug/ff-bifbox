@@ -14,6 +14,10 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        freefem_branch: [develop, master]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,17 +28,20 @@ jobs:
           sudo apt-get install -y gcc g++ gfortran m4 patch git wget cmake libhdf5-dev \
           libopenblas-dev liblapack-dev flex bison autoconf automake autotools-dev
                 
-      - name: Get FreeFEM develop commit SHA
+      - name: Get FreeFem-sources commit SHA
         id: get_freefem_commit
+        env:
+          FREEFEM_BRANCH: ${{ matrix.freefem_branch }}
         run: |
           set -euo pipefail
-          echo "Querying remote commit for FreeFem/FreeFem-sources develop..."
-          sha=$(git ls-remote https://github.com/FreeFem/FreeFem-sources develop | awk '{print $1}')
+          echo "Querying remote commit for FreeFem/FreeFem-sources $FREEFEM_BRANCH..."
+          sha=$(git ls-remote --heads https://github.com/FreeFem/FreeFem-sources "$FREEFEM_BRANCH" | head -n 1 | awk '{print $1}')
           if [ -z "$sha" ]; then
-            echo "Failed to fetch SHA for FreeFem-sources develop"
+            echo "Failed to fetch SHA for FreeFem-sources branch $FREEFEM_BRANCH"
             exit 1
           fi
-          echo "FreeFEM develop sha: $sha"
+          echo "FreeFem-sources $FREEFEM_BRANCH sha: $sha"
+          echo "freefem_branch=$FREEFEM_BRANCH" >> $GITHUB_OUTPUT
           echo "freefem_sha=$sha" >> $GITHUB_OUTPUT
 
       - name: Restore FreeFEM cache (by commit)
@@ -48,10 +55,12 @@ jobs:
       - name: Build FreeFEM (if needed)
         id: freefem
         env:
+          FREEFEM_BRANCH: ${{ steps.get_freefem_commit.outputs.freefem_branch }}
           FREEFEM_SHA: ${{ steps.get_freefem_commit.outputs.freefem_sha }}
         run: |
           set -euo pipefail
           echo "Expected FreeFEM sha: $FREEFEM_SHA"
+          echo "FreeFEM branch: $FREEFEM_BRANCH"
 
           # If cache restored and .built_sha matches expected SHA and binary present, skip build.
           if [ -d "FreeFem-sources" ] && [ -f "FreeFem-sources/.built_sha" ] && grep -Fxq "$FREEFEM_SHA" FreeFem-sources/.built_sha && [ -x "FreeFem-sources/src/mpi/FreeFem++-mpi" ]; then
@@ -64,13 +73,17 @@ jobs:
           if [ -d "FreeFem-sources" ]; then
             echo "FreeFem-sources exists — updating in place."
             cd FreeFem-sources
-            git pull
+            git fetch --depth 1 origin "$FREEFEM_BRANCH" || true
+            git fetch --depth 1 origin "$FREEFEM_SHA" || true
+            git checkout "$FREEFEM_SHA"
             echo "On commit: $(git rev-parse HEAD)"
           else
-            # Clone fresh and ensure we're on the expected commit
-            echo "Cloning FreeFem-sources..."
-            git clone https://github.com/FreeFem/FreeFem-sources
+            # Clone fresh and checkout the exact expected commit
+            echo "Cloning FreeFem-sources branch $FREEFEM_BRANCH..."
+            git clone --branch "$FREEFEM_BRANCH" --single-branch --depth 1 https://github.com/FreeFem/FreeFem-sources
             cd FreeFem-sources
+            git fetch --depth 1 origin "$FREEFEM_SHA" || true
+            git checkout "$FREEFEM_SHA"
             echo "On commit: $(git rev-parse HEAD)"
           fi
 

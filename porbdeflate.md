@@ -35,7 +35,7 @@ string fileout = getARGV("-fo", ""); // output file without extension
 int select = getARGV("-select", 1);
 bool zerofreq = getARGV("-zero", 0);
 string adaptto = getARGV("-adaptto", "0");
-string sneslinesearchtype = getARGV("-snes_linesearch_type", "basic");
+string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 int Nh = getARGV("-Nh", 0); //if 0, will read Nh from file. In practice, Nh must be at least 1, otherwise use basedeflate.md
 int blocks = getARGV("-blocks", 1); //if blocks = 1, use monolithic LU; if blocks = N w/ 2 <= N <= Nh+1, use block preconditioner with N blocks
 real defp = getARGV("-defp", 1.0); // deflation root order
