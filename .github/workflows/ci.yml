@@ -1,8 +1,5 @@
 name: CI
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 on:
   push:
     branches: [ "main" ]
@@ -20,7 +17,7 @@ jobs:
         freefem_branch: [develop, master]
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install basic system dependencies
         run: |
@@ -45,7 +42,7 @@ jobs:
           echo "freefem_sha=$sha" >> $GITHUB_OUTPUT
 
       - name: Restore FreeFEM cache (by commit)
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: FreeFem-sources
           key: ${{ runner.os }}-freefem-${{ steps.get_freefem_commit.outputs.freefem_sha }}
@@ -134,7 +131,7 @@ jobs:
 
       - name: Upload test artifacts (logs)
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ci-logs
           path: test-results/**/*
