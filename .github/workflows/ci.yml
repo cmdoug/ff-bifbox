@@ -35,7 +35,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "Querying remote commit for FreeFem/FreeFem-sources $FREEFEM_BRANCH..."
-          sha=$(git ls-remote https://github.com/FreeFem/FreeFem-sources "$FREEFEM_BRANCH" | awk '{print $1}')
+          sha=$(git ls-remote --heads https://github.com/FreeFem/FreeFem-sources "$FREEFEM_BRANCH" | head -n 1 | awk '{print $1}')
           if [ -z "$sha" ]; then
             echo "Failed to fetch SHA for FreeFem-sources branch $FREEFEM_BRANCH"
             exit 1
