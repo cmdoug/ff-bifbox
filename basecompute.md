@@ -36,7 +36,7 @@ string meshin = getARGV("-mi", ""); // input meshfile with extension
 string meshout = getARGV("-mo", ""); // output mesh without extension
 string filein = getARGV("-fi", ""); // input file with extension
 string fileout = getARGV("-fo", ""); // output file without extension
-string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
+string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 real TGV = getARGV("-tgv", -1.);
 
 string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension

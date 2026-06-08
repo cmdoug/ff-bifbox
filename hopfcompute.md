@@ -230,7 +230,7 @@ bool zerofreq = getARGV("-zero", 0);
 string param = getARGV("-param", "");
 string adaptto = getARGV("-adaptto", "b");
 real eps = getARGV("-eps", 1e-7);
-string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
+string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 real TGV = getARGV("-tgv", -1);
 real[int] sym1(sym.n);
 real omega;

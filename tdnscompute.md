@@ -38,7 +38,7 @@ string tstype = getARGV("-ts_type", "beuler");
 int tsmaxsnesfailures = getARGV("-ts_max_snes_failures", -1);
 real tstimestep = getARGV("-ts_time_step", 0.01);
 string tsadapttype = getARGV("-ts_adapt_type", "none");
-string sneslinesearchtype = getARGV("-snes_linesearch_type", "basic");
+string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 real TGV = getARGV("-tgv", -1);
 
 // Load mesh, make FE basis

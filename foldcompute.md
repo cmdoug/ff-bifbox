@@ -54,7 +54,7 @@ string param = getARGV("-param", "");
 string adaptto = getARGV("-adaptto", "b");
 real eps = getARGV("-eps", 1e-7);
 real TGV = getARGV("-tgv", -1);
-string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
+string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 real[string] alpha;
 real beta;
 

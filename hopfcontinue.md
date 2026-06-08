@@ -47,7 +47,7 @@ real eps = getARGV("-eps", 1.0e-7);
 real eps2 = getARGV("-eps2", 1.0e-7);
 bool stricttangent = bool(getARGV("-stricttangent", 1));
 int snesmaxit = getARGV("-snes_max_it", 10);
-string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
+string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 real TGV = getARGV("-tgv", -1);
 real[int] sym1(sym.n);
 real omega;

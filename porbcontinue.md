@@ -43,7 +43,7 @@ real monotone = getARGV("-mono", 1.0);
 real eps = getARGV("-eps", 1e-7);
 bool stricttangent = bool(getARGV("-stricttangent", 1));
 int snesmaxit = getARGV("-snes_max_it", 10);
-string sneslinesearchtype = getARGV("-snes_linesearch_type","basic");
+string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 int Nh = getARGV("-Nh", 0); //if 0, will read Nh from file. In practice, Nh must be at least 1, otherwise use basecompute.md
 int blocks = getARGV("-blocks", 1); //if blocks = 1, use monolithic LU; if blocks = N w/ 2 <= N <= Nh+1, use block preconditioner with N blocks
 int refactor = getARGV("-refact", snesmaxit);
