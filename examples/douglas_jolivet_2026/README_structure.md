@@ -26,7 +26,7 @@ cd ~/your/path/to/ff-bifbox/
 ```
 2. Export working directory and number of processors for easy reference.
 ```sh
-export workdir=examples/douglas_jolivet_2026/structure_test
+export workdir=examples/douglas_jolivet_2026/structure
 export nproc=4
 ```
 
