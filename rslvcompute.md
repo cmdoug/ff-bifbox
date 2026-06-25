@@ -4,12 +4,12 @@ Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.dougla
 ## EXAMPLE USAGE:
 ### Compute gains, store without storing forcing/response modes:
 ```sh
-ff-mpirun -np 4 rslvcompute.md -eps_target 0.1+1.0i -eps_nev 10 -fi <FILEIN> -fo <VALFILE>
+ff-mpirun -np 4 rslvcompute.md -omega 1.0 -eps_nev 10 -fi <FILEIN> -fo <VALFILE>
 ```
 
 ### Compute gains, store with forcing/response modes:
 ```sh
-ff-mpirun -np 4 rslvcompute.md -eps_target 0.1+1.0i -eps_nev 4 -fi <FILEIN> -fo <VALFILE>
+ff-mpirun -np 4 rslvcompute.md -omega 1.0 -eps_nev 4 -fi <FILEIN> -fo <VALFILE>
 ```
 
 NOTE: This file should not be changed unless you know what you're doing.
