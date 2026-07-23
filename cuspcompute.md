@@ -192,6 +192,7 @@ $$
 \end{bmatrix}
 \end{equation}
 $$
+
 which similarly yields after left-multiplication by $`\begin{bmatrix}w^T & g\end{bmatrix}`$ and application of Eq. (1):
 
 $$
@@ -221,6 +222,7 @@ $$
 $$
 
 where $`\hat{w}`$ solves the non-singular system:
+
 $$
 \begin{bmatrix}
 \mathcal{J} & \mathcal{M}p_0 \\
