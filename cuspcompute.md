@@ -23,6 +23,12 @@ $$
 g = \left\langle{}v,\mathcal{J}w\right\rangle{} = v^T\mathcal{J}w
 $$
 
+and the cusp residual augmentation:
+
+$$
+h = \langle{}v,\mathcal{H}\left(w,w\right)\rangle = v^T\mathcal{H}\left(w,w\right)
+$$
+
 where $`g`$ is the fold residual and $`v`$ and $`w`$ are the adjoint and direct eigenvectors, respectively.
 
 $`g`$, $`v`$, and $`w`$ can be found using minimially augmented systems:
@@ -112,7 +118,7 @@ At $`g = 0`$, we have $`\mathcal{J}^Tv = 0`$ and $`(\mathcal{M}p_0)^Tv = 1`$, so
 
 It can then be confirmed that $`g = v^T\mathcal{J}w = w^T\mathcal{J}^Tv`$.
 
-Finally, the augmented cusp residual is given by:
+Finally, the augmented cusp residual can be computed directly:
 
 $$
 \begin{equation}

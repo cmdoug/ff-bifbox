@@ -13,7 +13,7 @@ ff-mpirun -np 4 foldcontinue.md -param <PARAM1> -param2 <PARAM2> -fi <FILEIN> -f
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [foldcompute.md](./foldcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [foldcompute.md](./foldcompute.md), [cuspcompute.md](./cuspcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md)
 
 ```freefem
 load "iovtk"
