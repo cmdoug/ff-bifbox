@@ -80,6 +80,11 @@ if(fileext == "base") {
 else if(fileext == "fold") {
   ub[] = loadfold(fileroot, meshin, um[], uma[], alpha, beta);
 }
+else if(fileext == "cusp") {
+  real[string] alphaR;
+  real betaR;
+  ub[] = loadcusp(fileroot, meshin, um[], uma[], alpha, alphaR, betaR);
+}
 else if(fileext == "foho") {
   real omega, beta23, gamma22, gamma23;
   complex[string] alpha1;

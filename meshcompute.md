@@ -114,6 +114,14 @@ if (mpirank==0){ // Perform mesh adaptation (serially) on processor 0
       if(adaptto == "bd" || adaptto == "bda") uvecs(jj++, :) = qm;
       if(adaptto == "ba" || adaptto == "bda") uvecs(jj++, :) = qma;
     }
+    else if(fileexts[ii] == "cusp") {
+      real[string] alpha, alphaR;
+      real beta;
+      real[int] qm(XMhg.ndof), qma(XMhg.ndof);
+      uvecs(jj++, :) = loadcusp(fileroots[ii], meshin, qm, qma, alpha, alphaR, beta);
+      if(adaptto == "bd" || adaptto == "bda") uvecs(jj++, :) = qm;
+      if(adaptto == "ba" || adaptto == "bda") uvecs(jj++, :) = qma;
+    }
     else if(fileexts[ii] == "hopf") {
       real omega;
       complex[string] alpha;

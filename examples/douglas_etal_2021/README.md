@@ -114,57 +114,63 @@ ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi swirljet100_F.fold -f
 ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi swirljet100_B.fold -fo swirljet -mo swirljetfold -adaptto bda -thetamax 1 -param 1/Re -param2 S -h0 4 -scount 4 -maxcount 32
 ```
 
+8. Compute the codimension-2 cusp bifurcation along the fold curve with mesh adaptation
+```sh
+cd "$workdir" && set -- swirljet_*specialpt.fold && export C="$1" && cd -
+ff-mpirun -np $nproc cuspcompute.md -v 0 -dir $workdir -fi $C -fo swirljet -mo swirljetcusp -adaptto bda -thetamax 1 -param 1/Re -param2 S -nf 1
+```
+
 ### Bifurcations to unsteady, 3D dynamics
-8. Compute base state at $Re=133$, $S=1.8$ with guess from $Re=100$ continuation along $S$
+9. Compute base state at $Re=133$, $S=1.8$ with guess from $Re=100$ continuation along $S$
 ```sh
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi swirljet100_10.base -fo swirljet1p8 -1/Re 0.0075 -S 1.8
 ```
 
-9. Compute leading $|m|=1$ and $|m|=2$ eigenvalues
+10. Compute leading $|m|=1$ and $|m|=2$ eigenvalues
 ```sh
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi swirljet1p8.base -fo swirljet1p8m1 -eps_target 0.1-0.8i -sym -1 -eps_pos_gen_non_hermitian
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi swirljet1p8.base -fo swirljet1p8m2 -eps_target 0.1+0.4i -sym -2 -eps_pos_gen_non_hermitian
 ```
 
-10. Compute Hopf bifurcation points
+11. Compute Hopf bifurcation points
 ```sh
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi swirljet1p8m1.mode -fo swirljetm1 -param 1/Re -nf 0
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi swirljet1p8m2.mode -fo swirljetm2 -param 1/Re -nf 0
 ```
 
-11. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for ParaView
+12. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for ParaView
 ```sh
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi swirljetm1.hopf -fo swirljetm1 -param 1/Re -mo swirljetm1 -adaptto bda -pv 1 -thetamax 1
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi swirljetm2.hopf -fo swirljetm2 -param 1/Re -mo swirljetm2 -adaptto bda -pv 1 -thetamax 1
 ```
 
-12. Continue the neutral Hopf curves in the $(1/Re,S)$-plane with adaptive remeshing
+13. Continue the neutral Hopf curves in the $(1/Re,S)$-plane with adaptive remeshing
 ```sh
 ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi swirljetm1.hopf -fo swirljetm1 -mo swirljetm1hopf -adaptto bda -thetamax 1 -param 1/Re -param2 S -h0 4 -scount 4 -maxcount 32
 ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi swirljetm2.hopf -fo swirljetm2 -mo swirljetm2hopf -adaptto bda -thetamax 1 -param 1/Re -param2 S -h0 4 -scount 4 -maxcount 12
 ```
 
-13. Compute the Hopf-Hopf point where the $|m|=1$ and $|m|=2$ curves cross
+14. Compute the Hopf-Hopf point where the $|m|=1$ and $|m|=2$ curves cross
 ```sh
 ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi swirljetm2.hopf -fi2 swirljetm1.hopf -fo swirljetm2m1 -param 1/Re -param2 S -nf 0
 ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi swirljetm2m1.hoho -fo swirljetm2m1 -param 1/Re -param2 S -mo swirljetm2m1 -adaptto bda -pv 1 -thetamax 1
 ```
 
-14. Compute the fold-Hopf point where the $|m|=1$ curve intersects the fold curve
+15. Compute the fold-Hopf point where the $|m|=1$ curve intersects the fold curve
 ```sh
 cd "$workdir" && set -- swirljetm1_*specialpt.hopf && export fohoguess="$2" && cd -
 ff-mpirun -np $nproc fohocompute.md -v 0 -dir $workdir -fi $fohoguess -fo swirljetm1 -param S -param2 1/Re -snes_divergence_tolerance 1e10
 ```
 
 ### Periodic 3D dynamics
-15. Continue periodic solutions along $S$ from their initial Hopf points using the harmonic balance method with $N_h=2$.
+16. Continue periodic solutions along $S$ from their initial Hopf points using the harmonic balance method with $N_h=2$.
 ```sh
 ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm1.hopf -fo swirljetm1 -Nh 2 -mo swirljetm1porb -param S -thetamax 1 -h0 0.5 -scount 4 -maxcount -1 -paramtarget 1.9
 ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm2.hopf -fo swirljetm2 -Nh 2 -mo swirljetm2porb -param S -thetamax 1 -h0 -0.5 -scount 4 -maxcount -1 -paramtarget 1.8
 ```
 NOTE: in the actual paper, $N_h=4$ to $6$ was used to accurately resolve the periodic orbits. $N_h=2$ is used here to reduce computational cost.
 
-16. Compute periodic solutions at $S=1.9$ ($|m|=1$) and $S=1.8$ ($|m|=2$) with $N_h=3$ using a block preconditioner.
+17. Compute periodic solutions at $S=1.9$ ($|m|=1$) and $S=1.8$ ($|m|=2$) with $N_h=3$ using a block preconditioner.
 ```sh
 cd $workdir && export m1file=$(printf '%s\n' swirljetm1_*.porb | sort -t_ -k2,2n | tail -1) && cd -
 ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi $m1file -fo swirljetm1 -Nh 3 -S 1.9 -blocks 3
@@ -173,7 +179,7 @@ ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi $m2file -fo swirljetm
 ```
 
 ### Bifurcations to aperiodic 3D dynamics
-17. Compute Floquet stability of periodic solutions against each other 
+18. Compute Floquet stability of periodic solutions against each other 
 ```sh
 ff-mpirun -np $nproc floqcompute.md -v 0 -dir $workdir -fi swirljetm1.porb -fo swirljetm1 -Nh 3 -eps_target 0.1+0.3i -sym -2 -S 1.9 -blocks 3 -eps_pos_gen_non_hermitian
 ff-mpirun -np $nproc floqcompute.md -v 0 -dir $workdir -fi swirljetm2.porb -fo swirljetm2 -Nh 3 -eps_target 0.02-0.75i -sym -1 -S 1.8 -blocks 3 -eps_pos_gen_non_hermitian

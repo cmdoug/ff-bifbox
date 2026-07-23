@@ -2248,6 +2248,123 @@ macro savefoho(fohofileout, statsfile, meshfile, sym, omega, alpha1, alpha2, bet
   }
 }//EOM
 
+macro savecusp(cuspfileout, statsfile, meshfile, alpha1, alpha2, beta, saveflag, monitorflag){
+  IFMACRO(getmonitors)
+    XMhg defu(tempu), defu(ubg), defu(umg), defu(umag);
+    tempu[](restu) = ub[];
+    mpiAllReduce(tempu[], ubg[], mpiCommWorld, mpiSUM);
+    tempu[](restu) = um[];
+    mpiAllReduce(tempu[], umg[], mpiCommWorld, mpiSUM);
+    tempu[](restu) = uma[];
+    mpiAllReduce(tempu[], umag[], mpiCommWorld, mpiSUM);
+    if(monitorflag) getmonitors;
+  ENDIFMACRO
+  if(mpirank == 0 && monitorflag){
+    cout << "\t";
+    if(paramnames[0] != ""){
+      for (int k = 0; k < paramnames.n; ++k){
+        cout << "alpha[" + paramnames[k] + "] = [" + alpha1[paramnames[k]] + ", " + alpha2[paramnames[k]] + "], ";
+      }
+    }
+    cout << "beta = " + beta;
+    if(paramnames[0] != "") cout << ", " << listparams(paramnames, params);
+    if(monitornames[0] != "") cout << ", " << listparams(monitornames, monitors);
+    cout << "." << endl;
+  }
+  if (mpirank == 0 && statsfile != "") {
+    cout << "  Saving solution stats to '" + statsfile + ".cusp.stat' in '" + workdir + "'." << endl;
+    string dummy = cuspfileout;
+    {
+      ofstream file(workdir + statsfile + ".cusp.stat", append);
+      file.precision(17);
+      file << cuspfileout + ((dummy.rfind(".") > 0) ? "" : ".cusp") << "\t" << meshfile;
+      if(paramnames[0] != ""){
+        for (int k = 0; k < paramnames.n; ++k){
+          file << "\t" << alpha1[paramnames[k]] << "\t" << alpha2[paramnames[k]];
+        }
+      }
+      file << "\t" << beta;
+      if(paramnames[0] != ""){
+        for (int k = 0; k < paramnames.n; ++k){
+          file << "\t" << params[paramnames[k]];
+        }
+      }
+      if(monitornames[0] != ""){
+        for (int k = 0; k < monitornames.n; ++k){
+          file << "\t" << monitors[monitornames[k]];
+        }
+      }
+      file << endl;
+    }
+  }
+  if (saveflag && cuspfileout != ""){
+    IFMACRO(!getmonitors)
+      XMhg defu(tempu), defu(ubg), defu(umg), defu(umag);
+      tempu[](restu) = ub[];
+      mpiAllReduce(tempu[], ubg[], mpiCommWorld, mpiSUM);
+      tempu[](restu) = um[];
+      mpiAllReduce(tempu[], umg[], mpiCommWorld, mpiSUM);
+      tempu[](restu) = uma[];
+      mpiAllReduce(tempu[], umag[], mpiCommWorld, mpiSUM);
+    ENDIFMACRO
+    if(mpirank == 0){
+      cout << "  Saving '" + cuspfileout + ".cusp' on '" + meshfile + "' in '" + workdir + "'." << endl;
+      {
+        ofstream file(workdir + cuspfileout + ".cusp", binary);
+        file.precision(17);
+        file << "mesh\t" << meshfile << endl;
+        if(paramnames[0] != ""){
+          for (int k = 0; k < paramnames.n; ++k){
+            file << "alpha[" + paramnames[k] + "]\t" << alpha1[paramnames[k]] << "\t" << alpha2[paramnames[k]] << endl;
+          }
+        }
+        file << "beta\t" << beta << endl;
+        if(paramnames[0] != ""){
+          for (int k = 0; k < paramnames.n; ++k){
+            file << paramnames[k] << "\t" << params[paramnames[k]] << endl;
+          }
+        }
+        if(monitornames[0] != ""){
+          for (int k = 0; k < monitornames.n; ++k){
+            file << monitornames[k] << "\t" << monitors[monitornames[k]] << endl;
+          }
+        }
+        file << ubg[] << endl;
+        file << umg[] << endl;
+        file << umag[] << endl;
+      }
+      if (paraviewflag > 0){
+        cout << "  Saving '" + cuspfileout + "_cusp_[base,dirmode,adjmode].vtu' in '" + workdir + "'." << endl;
+        meshN Thgpv;
+        real[int] qpv = ubg[], qmpv = umg[], qmapv = umag[];
+        if (paraviewflag > 1){
+          meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+          fespace XMhs(Thgs, Pk);
+          XMhs defu(us) = defu(umg);
+          qpv.resize(us[].n);
+          qmpv.resize(us[].n);
+          qmapv.resize(us[].n);
+          qmpv = us[];
+          defu(us) = defu(umag);
+          qmapv = us[];
+          defu(us) = defu(ubg);
+          qpv = us[];
+          Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+        }
+        else Thgpv = movemesh(Thg, [coordinatetransform(ubg)]);
+        fespace XMhgpv(Thgpv, Pk);
+        XMhgpv defu(ugr);
+        ugr[] = qpv;
+        savevtk(workdir + cuspfileout + "_cusp_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
+        ugr[] = qmpv;
+        savevtk(workdir + cuspfileout + "_cusp_dirmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
+        ugr[] = qmapv;
+        savevtk(workdir + cuspfileout + "_cusp_adjmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
+      }
+    }
+  }
+}//EOM
+
 macro saveporb(porbfileout, statsfile, meshfile, sym, omega, Nh, saveflag, monitorflag){
   IFMACRO(getmonitors)
     XMhg defu(tempu), defu(ubg);
@@ -3015,6 +3132,64 @@ func real[int] loadfoho(string inputfilename, string meshfilename, complex[int] 
       q1malocal = u1mag[](restu);
       q2mlocal = u2mg[](restu);
       q2malocal = u2mag[](restu);
+      return qlocal;
+    }
+
+func real[int] loadcusp(string inputfilename, string meshfilename, real[int] & qmlocal, real[int] & qmalocal, real[string] & alpha1, real[string] & alpha2, real & beta) {
+      XMhg defu(ubg), defu(umg), defu(umag);
+      if (mpirank == 0) cout << "  Loading '" + inputfilename + ".cusp' on '" + meshfilename + "' from '" + workdir + "'." << endl;
+      string dummy, filemesh;
+      ifstream file(workdir + inputfilename + ".cusp");
+      file >> filemesh >> filemesh;
+      if(paramnames[0] != ""){
+        for (int k = 0; k < paramnames.n; ++k){
+          file >> dummy >> alpha1[paramnames[k]] >> alpha2[paramnames[k]];
+        }
+      }
+      file >> dummy >> beta;
+      if(paramnames[0] != ""){
+        for (int k = 0; k < paramnames.n; ++k){
+          file >> paramnames[k] >> params[paramnames[k]];
+        }
+      }
+      if(monitornames[0] != ""){
+        for (int k = 0; k < monitornames.n; ++k){
+          file >> monitornames[k] >> monitors[monitornames[k]];
+        }
+      }
+      if (mpirank == 0) {
+        cout << "\t";
+        if(paramnames[0] != ""){
+          for (int k = 0; k < paramnames.n; ++k){
+            cout << "alpha[" + paramnames[k] + "] = [" + alpha1[paramnames[k]] + ", " + alpha2[paramnames[k]] + "], ";
+          }
+        }
+        cout << "beta = " + (beta);
+        if(paramnames[0] != "") cout << ", " + listparams(paramnames, params);
+        if(monitornames[0] != "") cout << ", " + listparams(monitornames, monitors);
+        cout << "." << endl;
+      }
+      if (filemesh == meshfilename){ // no interpolation needed
+        file >> ubg[];
+        file >> umg[];
+        file >> umag[];
+      }
+      else { // must interpolate
+        if (mpirank == 0) cout << "\tMesh mismatch. Interpolating from '" << filemesh << "'." << endl;
+        meshN Thg1 = readmeshN(workdir + filemesh);
+        fespace XMhg1(Thg1, Pk);
+        XMhg1 defu(ubg1), defu(umg1), defu(umag1);
+        file >> ubg1[];
+        file >> umg1[];
+        file >> umag1[];
+        defu(ubg) = defu(ubg1);
+        defu(umg) = defu(umg1);
+        defu(umag) = defu(umag1);
+      }
+      setparams(paramnames, params);
+      real[int] qlocal = ubg[](restu);
+      qmlocal = umg[](restu);
+      qmalocal = umag[](restu);
       return qlocal;
     }
 

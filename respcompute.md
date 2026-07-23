@@ -54,6 +54,12 @@ else if(fileext == "fold") {
   real[int] qm, qma;
   ub[] = loadfold(fileroot, meshin, qm, qma, alpha, beta);
 }
+else if(fileext == "cusp") {
+  real[string] alpha, alphaR;
+  real beta;
+  real[int] qm, qma;
+  ub[] = loadcusp(fileroot, meshin, qm, qma, alpha, alphaR, beta);
+}
 else if(fileext == "hopf") {
   real omega;
   complex[string] alpha;

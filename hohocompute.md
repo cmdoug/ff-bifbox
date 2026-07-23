@@ -191,6 +191,12 @@ else if(basefileext == "fold") {
   real[int] qm, qma;
   ub[].re = loadfold(basefileroot, meshin, qm, qma, alpha, beta);
 }
+else if(basefileext == "cusp") {
+  real[string] alpha, alphaR;
+  real beta;
+  real[int] qm, qma;
+  ub[].re = loadcusp(basefileroot, meshin, qm, qma, alpha, alphaR, beta);
+}
 else if(basefileext == "hopf") {
   real omega;
   complex[string] alpha;

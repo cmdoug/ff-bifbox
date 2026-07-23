@@ -77,9 +77,11 @@ DmeshCreate(Th);
 restu = restrict(XMh, XMhg, n2o);
 XMh<complex> defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
 if (fileext2 == "fold") {
-  real[string] alphaR;
-  real betaR;
   ub[].re = loadfold(fileroot2, meshin, um2[].re, um3[].re, alpha2, beta22);
+}
+else if(fileext2 == "cusp") {
+  real[string] alphaR;
+  ub[] = loadcusp(fileroot, meshin, um2[].re, um3[].re, alpha2, alphaR, beta23);
 }
 else if(fileext2 == "foho") {
   real omega;
@@ -148,6 +150,12 @@ else if(basefileext == "fold") {
   real beta;
   real[int] qm, qma;
   ub[].re = loadfold(basefileroot, meshin, qm, qma, alpha, beta);
+}
+else if(basefileext == "cusp") {
+  real[string] alpha, alphaR;
+  real beta;
+  real[int] qm, qma;
+  ub[].re = loadcusp(basefileroot, meshin, qm, qma, alpha, alphaR, beta);
 }
 else if(basefileext == "hopf") {
   real omega;
@@ -307,7 +315,7 @@ complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), p1P(J.n), q1P(J.n), q2m(J.n), q2ma(
       omega = zerofreq ? 0.0 : paramvals(1);
       updateparam(param2, paramvals(2-zerofreq));
       sym = 0;
-      R = vR(0, XMh, tgv = -1);
+      R = vR(0, XMh, tgv = TGV);
       complex[int] Ra;
       ChangeNumbering(J, R, Ra); // FreeFEM to PETSc
       iomega = 1i*omega;
@@ -348,7 +356,7 @@ complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), p1P(J.n), q1P(J.n), q2m(J.n), q2ma(
       updateparam(param, paramvals(0) + eps);
       omega = zerofreq ? 0.0 : paramvals(1);
       updateparam(param2, paramvals(2-zerofreq));
-      um2[] = vR(0, XMh, tgv = -1);
+      um2[] = vR(0, XMh, tgv = TGV);
       um2[] -= R;
       um2[] /= eps;
       complex[int] temp1(J.n), temp3(J.n);
@@ -364,7 +372,7 @@ complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), p1P(J.n), q1P(J.n), q2m(J.n), q2ma(
       updateparam(param2, paramvals(2-zerofreq) + eps2);
       complex[int] Hl2 = vJ(0, XMh, tgv = -10);
       sym = 0;
-      um2[] = vR(0, XMh, tgv = -1);
+      um2[] = vR(0, XMh, tgv = TGV);
       um2[] -= R;
       um2[] /= eps2;
       ChangeNumbering(J, um2[], temp3); // FreeFEM to PETSc
@@ -418,7 +426,7 @@ complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), p1P(J.n), q1P(J.n), q2m(J.n), q2ma(
       if (zerofreq) tempPms = [[temp1, temp3]];
       else tempPms = [[temp1, q2m, temp3]]; // dense array to sparse matrix
       ChangeOperator(gqPM, tempPms, parent = Ja); // send to Mat
-      J = vJ(XMh, XMh, tgv = -1);
+      J = vJ(XMh, XMh, tgv = TGV);
       return 0;
   }
 // set up Mat parameters
@@ -543,16 +551,16 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um2[], p2P);
     tempPms = [[p2P]]; // dense array to sparse matrix
     ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
-    J = vJ(XMh, XMh, tgv = -1);
+    J = vJ(XMh, XMh, tgv = TGV);
     if(paramnames[0] != ""){
       for (int k = 0; k < paramnames.n; ++k){
         real paramval = getparam(paramnames[k]);
         updateparam(paramnames[k], paramval + eps);
-        um[] = vR(0, XMh, tgv = -1);
+        um2[] = vR(0, XMh, tgv = TGV);
         updateparam(paramnames[k], paramval);
-        um[] -= R;
-        um[] /= -eps;
-        ChangeNumbering(J, um[], q1P); // FreeFEM to PETSc
+        um2[] -= R;
+        um2[] /= -eps;
+        ChangeNumbering(J, um2[], q1P); // FreeFEM to PETSc
         q1P.resize(Ja.n);
         if(mpirank == 0) q1P(Ja.n-1) = 0.0;
         KSPSolve(Ja, q1P, q1P);
@@ -562,7 +570,6 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       }
     }
     //  B: base modifications due to quadratic nonlinear interactions
-    ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
     um2[] = -0.5*um[];
     um3[] = vH(0, XMh, tgv = -10);
     ChangeNumbering(J, um3[], p2P); // FreeFEM to PETSc
@@ -599,7 +606,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um3[], p1P); // FreeFEM to PETSc
     ik.im = sym;
     iomega = 2i*omega;
-    J = vJ(XMh, XMh, tgv = -1);
+    J = vJ(XMh, XMh, tgv = TGV);
     KSPSolve(J, p1P, p1P);
         
     ik.im = sym1;
@@ -617,7 +624,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um2[], q2P);
     tempPms = [[q2P]]; // dense array to sparse matrix
     ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
-    J = vJ(XMh, XMh, tgv = -1);
+    J = vJ(XMh, XMh, tgv = TGV);
     ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
     um3[] = vH(0, XMh, tgv = -10);
     um3[] *= -1.0;
@@ -780,7 +787,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       if(paramnames[0] != ""){
         for (int k = 0; k < paramnames.n; ++k){
           ChangeNumbering(J, vec[0][], qDa(k, :), inverse = true); // FreeFEM to PETSc
-          savemode(fileout + "_wnl_param" + k, "", fileout + ".hoho", meshout, vec, val, sym, true);
+          savemode(fileout + "_wnl_param" + k, "", fileout + ".foho", meshout, vec, val, sym, true);
         }
       }
       ChangeNumbering(J, vec[0][], p2P, inverse = true); // FreeFEM to PETSc
