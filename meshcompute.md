@@ -57,7 +57,7 @@ for (ii = 0; ii < filecount; ii++) {
   if(meshin == "") meshin = readmeshname(workdir + fileins[ii]); // get mesh file
   if( fileexts[ii] == "base" || fileexts[ii] == "tdns" ) nuvec++;
   else if ( fileexts[ii] == "mode" || fileexts[ii] == "tdls" || fileexts[ii] == "resp" ) nuvec += 2;
-  else if ( fileexts[ii] == "fold" ) nuvec += 3;
+  else if ( fileexts[ii] == "fold" || fileexts[ii] == "cusp" ) nuvec += 3;
   else if ( fileexts[ii] == "hopf" || fileexts[ii] == "porb" ) nuvec += 5;
   else if ( fileexts[ii] == "foho" ) nuvec += 7;
   else if ( fileexts[ii] == "hoho" ) nuvec += 9;
@@ -111,6 +111,14 @@ if (mpirank==0){ // Perform mesh adaptation (serially) on processor 0
       real beta;
       real[int] qm(XMhg.ndof), qma(XMhg.ndof);
       uvecs(jj++, :) = loadfold(fileroots[ii], meshin, qm, qma, alpha, beta);
+      if(adaptto == "bd" || adaptto == "bda") uvecs(jj++, :) = qm;
+      if(adaptto == "ba" || adaptto == "bda") uvecs(jj++, :) = qma;
+    }
+    else if(fileexts[ii] == "cusp") {
+      real[string] alpha, alphaR;
+      real beta;
+      real[int] qm(XMhg.ndof), qma(XMhg.ndof);
+      uvecs(jj++, :) = loadcusp(fileroots[ii], meshin, qm, qma, alpha, alphaR, beta);
       if(adaptto == "bd" || adaptto == "bda") uvecs(jj++, :) = qm;
       if(adaptto == "ba" || adaptto == "bda") uvecs(jj++, :) = qma;
     }

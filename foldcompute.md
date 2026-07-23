@@ -37,7 +37,7 @@ ff-mpirun -np 4 foldcompute.md -param <PARAM> -fi <FILEIN> -fo <FILEOUT> -mo <ME
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [foldcontinue.md](./foldcontinue.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [cuspcompute.md](./cuspcompute.md), [foldcontinue.md](./foldcontinue.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md)
 
 ```freefem
 load "iovtk"
@@ -79,6 +79,11 @@ if(fileext == "base") {
 }
 else if(fileext == "fold") {
   ub[] = loadfold(fileroot, meshin, um[], uma[], alpha, beta);
+}
+else if(fileext == "cusp") {
+  real[string] alphaR;
+  real betaR;
+  ub[] = loadcusp(fileroot, meshin, um[], uma[], alpha, alphaR, betaR);
 }
 else if(fileext == "foho") {
   real omega, beta23, gamma22, gamma23;

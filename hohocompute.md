@@ -191,6 +191,12 @@ else if(basefileext == "fold") {
   real[int] qm, qma;
   ub[].re = loadfold(basefileroot, meshin, qm, qma, alpha, beta);
 }
+else if(basefileext == "cusp") {
+  real[string] alpha, alphaR;
+  real beta;
+  real[int] qm, qma;
+  ub[].re = loadcusp(basefileroot, meshin, qm, qma, alpha, alphaR, beta);
+}
 else if(basefileext == "hopf") {
   real omega;
   complex[string] alpha;
@@ -639,17 +645,16 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       for (int k = 0; k < paramnames.n; ++k){
         real paramval = getparam(paramnames[k]);
         updateparam(paramnames[k], paramval + eps);
-        um[] = vR(0, XMh, tgv = TGV);
+        um2[] = vR(0, XMh, tgv = TGV);
         updateparam(paramnames[k], paramval);
-        um[] -= R;
-        um[] /= -eps;
-        ChangeNumbering(J, um[], q1P); // FreeFEM to PETSc
+        um2[] -= R;
+        um2[] /= -eps;
+        ChangeNumbering(J, um2[], q1P); // FreeFEM to PETSc
         KSPSolve(J, q1P, q1P);
         qDa(k, :) = q1P;
       }
     }
     //  B: base modifications due to quadratic nonlinear interactions
-    ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
     um2[] = conj(um[]);
     ik.im = sym2;
     ik2.im = -sym2;

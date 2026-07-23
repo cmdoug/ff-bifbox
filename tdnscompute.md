@@ -102,6 +102,14 @@ if (count == 0){
     if(adj) qm = qma;
     um[] = qm;
   }
+  else if(fileext == "cusp") {
+    real[string] alpha, alphaR;
+    real beta;
+    real[int] qm(um[].n), qma(um[].n);
+    ub[] = loadfold(fileroot, meshin, qm, qma, alpha, alphaR, beta);
+    if(adj) qm = qma;
+    um[] = qm;
+  }
   else if(fileext == "hopf") {
     real omega;
     complex[string] alpha;
@@ -182,6 +190,12 @@ if (count == 0){
     real beta;
     real[int] qm, qma;
     ub[] = loadfold(basefileroot, meshin, qm, qma, alpha, beta);
+  }
+  else if(basefileext == "cusp") {
+    real[string] alpha, alphaR;
+    real beta;
+    real[int] qm, qma;
+    ub[] = loadcusp(basefileroot, meshin, qm, qma, alpha, alphaR, beta);
   }
   else if(basefileext == "hopf") {
     real omega;

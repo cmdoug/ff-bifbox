@@ -153,6 +153,37 @@ if (mpirank==0){
     ugr[] = qmapv;
     savevtk(workdir + fileout + "_fold_adjmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
   }
+  else if (fileext == "cusp"){
+    XMhg defu(ubg), defu(umg), defu(umag);
+    real[string] alpha1, alpha2;
+    real beta;
+    ubg[] = loadcusp(fileroot, meshin, umg[], umag[], alpha1, alpha2, beta);
+    cout << "  Saving '" + fileout + "_cusp_[base,dirmode,adjmode].vtu' in '" + workdir + "'." << endl;
+    real[int] qpv = ubg[], qmpv = umg[], qmapv = umag[];
+    if (paraviewflag > 1){
+      meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+      fespace XMhs(Thgs, Pk);
+      XMhs defu(us) = defu(umg);
+      qpv.resize(us[].n);
+      qmpv.resize(us[].n);
+      qmapv.resize(us[].n);
+      qmpv = us[];
+      defu(us) = defu(umag);
+      qmapv = us[];
+      defu(us) = defu(ubg);
+      qpv = us[];
+      Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+    }
+    else Thgpv = movemesh(Thg, [coordinatetransform(ubg)]);
+    fespace XMhgpv(Thgpv, Pk);
+    XMhgpv defu(ugr);
+    ugr[] = qpv;
+    savevtk(workdir + fileout + "_cusp_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
+    ugr[] = qmpv;
+    savevtk(workdir + fileout + "_cusp_dirmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
+    ugr[] = qmapv;
+    savevtk(workdir + fileout + "_cusp_adjmode.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
+  }
   else if (fileext == "hopf"){
     XMhg defu(ubg);
     XMhg<complex> defu(umg), defu(umag);

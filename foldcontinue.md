@@ -13,7 +13,7 @@ ff-mpirun -np 4 foldcontinue.md -param <PARAM1> -param2 <PARAM2> -fi <FILEIN> -f
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [foldcompute.md](./foldcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [foldcompute.md](./foldcompute.md), [cuspcompute.md](./cuspcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md)
 
 ```freefem
 load "iovtk"
@@ -62,7 +62,7 @@ if(count > 0) {
   fileroot = fileroot(0:fileroot.rfind("_" + count)-1); // get file root
   meshroot = meshroot(0:meshroot.rfind("_" + count)-1); // get file root
 }
-assert(fileext == "fold" || fileext == "foho");
+assert(fileext == "fold" || fileext == "cusp" || fileext == "foho");
 Th = readmeshN(workdir + meshin);
 Thg = Th;
 DmeshCreate(Th);
@@ -71,6 +71,11 @@ XMh defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
 if (count == 0){
   if(fileext == "fold"){
     ub[] = loadfold(fileroot, meshin, um[], uma[], alpha, beta);
+  }
+  else if(fileext == "cusp") {
+    real[string] alphaR;
+    real betaR;
+    ub[] = loadcusp(fileroot, meshin, um[], uma[], alpha, alphaR, betaR);
   }
   else if(fileext == "foho") {
     real omega, gamma22, gamma23, beta23;
