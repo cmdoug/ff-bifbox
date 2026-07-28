@@ -1,0 +1,144 @@
+//
+// eqns_schulke_etal_2026.idp
+// Chris Douglas
+// christopher.douglas@duke.edu
+//
+// Define KSP parameters
+  string KSPparams = "-ksp_type preonly -pc_type lu";
+// term macros ------------------------------------------------------
+  macro gdotf(f, g) ( y*(g)*(f) )//EOM
+  macro vdotu(v, u) ( y*(v*u + v#y*u#y + v#z*u#z) ) //EOM
+  macro ndotu(u) ( N.x*u + N.y*u#y ) //EOM
+  
+  macro ndotvisc(v, ik, u)( N.x*(v*(y*dx(u) - 2./3.*div(ik, u)) + y*v#y*dy(u) + v#z*(ik)*u ) + N.y*(y*v*dx(u#y) + v#y*(y*dy(u#y) - 2./3.*div(ik, u)) + v#z*((ik)*u#y - u#z)) ) //EOM
+//  macro ndotvisc(v, ik, u)( N.x*(y*(v*dx(u) + v#y*dy(u)) + v#z*(ik)*u ) + N.y*(y*(v*dx(u#y) + v#y*dy(u#y)) + v#z*((ik)*u#y - u#z)) ) //EOM
+  
+  macro div(ik, u) ( y*(dx(u) + dy(u#y)) + u#y + (ik)*u#z ) // velocity divergence
+
+  macro ugradu(v, U, ik, u) ( y*(v*(U*dx(u) + U#y*dy(u)) + v#y*(U*dx(u#y) + U#y*dy(u#y)) + v#z*(U*dx(u#z) + U#y*dy(u#z)) ) + U#z*((ik)*u*v + v#y*((ik)*u#y - u#z) + v#z*((ik)*u#z + u#y)) ) // scaled convection term
+
+  macro visc(ij, v, ik, u) ( y*(2.0*(dx(v)*dx(u) + dy(v#y)*dy(u#y)) + (dx(v#y) + dy(v))*(dx(u#y) + dy(u))) + 2.0/y*((ij)*v#z + v#y)*((ik)*u#z + u#y) + (ij)*v*(dx(u#z) + (ik)/y*u) + dx(v#z)*(y*dx(u#z) + (ik)*u) + ((ij)*v#y - v#z)*(((ik)*u#y - u#z)/y + dy(u#z)) + dy(v#z)*((ik)*u#y - u#z + y*dy(u#z)) ) // EOM
+
+  macro visc2(v, ij, f, ik, u) ( 2.0*(y*(dx(f)*v*dx(u) + dy(f)*v#y*dy(u#y)) + (ij)*f*v#z*(u#y + (ik)*u#z)/y) + y*(dy(f)*v + dx(f)*v#y)*(dx(u#y) + dy(u)) + (ij)*f*(v*(dx(u#z) + (ik)*u/y) + v#y*(dy(u#z) + ((ik)*u#y - u#z)/y)) + v#z*(dx(f)*(y*dx(u#z) + (ik)*u) + dy(f)*(y*dy(u#z) + (ik)*u#y - u#z))) // other viscous term
+
+  macro diff(ij, g, ik, f) ( y*(dx(g)*dx(f) + dy(g)*dy(f)) + (ij)*(ik)*g*f/y ) // EOM
+  
+  macro ugradf(U, ik, f) ( y*(U*dx(f) + U#y*dy(f)) + (ik)*U#z*f ) // EOM
+
+// Arrhenius reaction rate macro
+  macro TQ() ( y*params["Da"]*(1.0 + paramTs)*(paramAFR + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["Re"]*paramAs*(params["phi"] + 2.0/paramvfO2)^1.5)*(RRY(ub)*RRTT(ub)) ) // EOM
+  macro TQp(u) ( y*params["Da"]*(1.0 + paramTs)*(paramAFR + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["Re"]*paramAs*(params["phi"] + 2.0/paramvfO2)^1.5)*(dRRY(ub)*u#Y*RRTT(ub) + RRY(ub)*dRRTT(ub)*u#T) ) //EOM
+  macro TQpp(u, uu) ( y*params["Da"]*(1.0 + paramTs)*(paramAFR + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["Re"]*paramAs*(params["phi"] + 2.0/paramvfO2)^1.5)*(d2RRY(ub)*RRTT(ub)*u#Y*uu#Y + dRRY(ub)*dRRTT(ub)*(u#Y*uu#T + u#T*uu#Y) + RRY(ub)*d2RRTT(ub)*u#T*uu#T) ) //EOM
+  macro TQppp(u, uu, uuu) ( y*params["Da"]*(1.0 + paramTs)*(paramAFR + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["Re"]*paramAs*(params["phi"] + 2.0/paramvfO2)^1.5)*(d3RRY(ub)*RRTT(ub)*u#Y*uu#Y*uuu#Y + d2RRY(ub)*dRRTT(ub)*(u#Y*uu#Y*uuu#T + (u#Y*uu#T + u#T*uu#Y)*uuu#Y) + dRRY(ub)*d2RRTT(ub)*((u#Y*uu#T + u#T*uu#Y)*uuu#T + u#T*uu#T*uuu#Y) + RRY(ub)*d3RRTT(ub)*u#T*uu#T*uuu#T) ) //EOM
+  macro TQpppp(u, uu, uuu, uuuu) ( y*params["Da"]*(1.0 + paramTs)*(paramAFR + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["Re"]*paramAs*(params["phi"] + 2.0/paramvfO2)^1.5)*(
+    d4RRY(ub)*RRTT(ub)*u#Y*uu#Y*uuu#Y*uuuu#Y 
+    + d3RRY(ub)*dRRTT(ub)*(u#Y*uu#Y*uuu#Y*uuuu#T + (u#Y*uu#Y*uuu#T + u#Y*uu#T*uuu#Y + u#T*uu#Y*uuu#Y)*uuuu#Y) 
+    + d2RRY(ub)*d2RRTT(ub)*((u#Y*uu#Y*uuu#T + (u#Y*uu#T + u#T*uu#Y)*uuu#Y)*uuuu#T + (u#T*uu#T*uuu#Y + (u#T*uu#Y + u#Y*uu#T)*uuu#T)*uuuu#Y) 
+    + dRRY(ub)*d3RRTT(ub)*(u#T*uu#T*uuu#T*uuuu#Y + (u#T*uu#T*uuu#Y + u#T*uu#Y*uuu#T + u#Y*uu#T*uuu#T)*uuuu#T) 
+    + RRY(ub)*d4RRTT(ub)*u#T*uu#T*uuu#T*uuuu#T
+    )) //EOM
+
+// Sutherland law viscosity macro
+  macro mu() ( (1.0 + paramTs)/params["Re"]*ubT^1.5/(ubT + paramTs) ) // EOM
+  macro mup(u) ( (1.0 + paramTs)/params["Re"]*(paramTs/(ubT + paramTs) + 0.5)*sqrt(ubT)/(ubT + paramTs)*u#T ) // EOM
+  macro mupp(u, uu) ( (1.0 + paramTs)/params["Re"]*((2.0*ubT/(ubT + paramTs) - 3.0)*sqrt(ubT)/(ubT + paramTs) + 0.75/sqrt(ubT))/(ubT + paramTs)*u#T*uu#T) // EOM  
+  macro muppp(u, uu, uuu) ( (1.0 + paramTs)/params["Re"]*(((9.0 - 6.0*ubT/(paramTs + ubT))*sqrt(ubT)/(paramTs + ubT) - 2.25/sqrt(ubT))/(paramTs + ubT) - 0.375/ubT^1.5)/(paramTs + ubT)*u#T*uu#T*uuu#T ) // EOM
+  macro mupppp(u, uu, uuu, uuuu) ( (1.0 + paramTs)/params["Re"]*(0.5625/ubT^2.5 + (((ubT/(paramTs + ubT) - 1.5)*24.0*sqrt(ubT)/(paramTs + ubT) + 9.0/sqrt(ubT))/(paramTs + ubT) + 1.5/ubT^1.5)/(paramTs + ubT))/(paramTs + ubT)*u#T*uu#T*uuu#T*uuuu#T) // EOM
+
+// Boundary conditions
+  macro inletPl(Di)( 2.0*(1.0 - 4.0*y^2. - (1.0 - Di^2.)*log(2.*y)/log(Di))/(1.0 + Di^2. + (1.0 - Di^2.)/log(Di)) ) //EOM
+
+  macro BoundaryConditions(u, U)
+    on(BCinflow, u = U - inletPl(0.272727272727272727), u#y = U#y, u#z = U#z, u#Y = U#Y - 1.0, u#T = U#T - 1.0)
+  + on(BCchannel, u = U, u#y = U#y, u#z = U#z)
+  + on(BClateral, u#Y = U#Y, u#T = U#T - 1.0)
+  + on(BCwall, u = U, u#y = U#y, u#z = U#z, u#T = U#T - 1.0)
+  + on(BCcenterbody, u = U, u#y = U#y, u#z = U#z, u#T = U#T - params["Tr"])
+  + on(BCaxis, u#y = U#y, u#z = U#z )
+  // EOM
+  macro HomBoundaryConditions(u)
+    on(BCinflow, u = 0, u#y = 0, u#z = 0, u#Y = 0, u#T = 0)
+  + on(BCchannel, u = 0, u#y = 0, u#z = 0)
+  + on(BClateral, u#Y = 0, u#T = 0)
+  + on(BCwall, BCcenterbody, u = 0, u#y = 0, u#z = 0, u#T = 0)
+  + on((abs(int(sym(0))) != 1)*BCaxis, u#y = 0, u#z = 0 )
+  + on((abs(int(sym(0)))  > 0)*BCaxis, u = 0, u#Y = 0, u#T = 0 )
+  // EOM
+// RESIDUAL OPERATOR
+  varf vR(defu(um), defu(v))
+    = int2d(Th)(
+      ugradu(v, ub, 0, ub) - (ubT*div(0, v) + ugradf(v, 0, ubT))*ubp
+      + vY*ugradf(ub, 0, ubY)
+      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFR + params["phi"])*vT)*TQ
+      + (vT + vp)*ugradf(ub, 0, ubT)
+      - vp*ubT*div(0, ub)
+      // viscous + diffusion terms
+      + mu*(ubT*(visc(0, v, 0, ub) + diff(0, vY, 0, ubY)/paramSc + diff(0, vT, 0, ubT)/paramPr) + visc2(v, 0, ubT, 0, ub) + vY*diff(0, ubT, 0, ubY)/paramSc + vT*diff(0, ubT, 0, ubT)/paramPr)
+    )
+    - int1d(Th, BCopen, BClateral)(ubT*mu*ndotvisc(v, 0, ub) + 0.5*vdotu(v, ub)*min(0.0, real(ndotu(ub))))
+    + BoundaryConditions(um, ub);
+
+// JACOBIAN OPERATOR
+  varf vJ(defu(dum), defu(v))
+    = int2d(Th)(
+      iomega*(vdotu(v, dum) + gdotf(vY, dumY) + gdotf(vp + vT, dumT))
+      + ugradu(v, dum, 0, ub) + ugradu(v, ub, ik(0), dum) - (dumT*div(-ik(0), v) + ugradf(v, ik(0), dumT))*ubp - (ubT*div(-ik(0), v) + ugradf(v, 0, ubT))*dump
+      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFR + params["phi"])*vT)*TQp(dum)
+      + vY*(ugradf(dum, 0, ubY) + ugradf(ub, ik(0), dumY))
+      + (vT + vp)*(ugradf(dum, 0, ubT) + ugradf(ub, ik(0), dumT))
+      - vp*(dumT*div(0, ub) + ubT*div(ik(0), dum))
+      // viscous + diffusion terms
+      + mup(dum)*(ubT*(visc(-ik(0), v, 0, ub) + diff(-ik(0), vY, 0, ubY)/paramSc + diff(-ik(0), vT, 0, ubT)/paramPr) + visc2(v, 0, ubT, 0, ub) + vY*diff(0, ubT, 0, ubY)/paramSc + vT*diff(0, ubT, 0, ubT)/paramPr)
+      + mu*(dumT*(visc(-ik(0), v, 0, ub) + diff(-ik(0), vY, 0, ubY)/paramSc + diff(-ik(0), vT, 0, ubT)/paramPr) + ubT*(visc(-ik(0), v, ik(0), dum) + diff(-ik(0), vY, ik(0), dumY)/paramSc + diff(-ik(0), vT, ik(0), dumT)/paramPr) + visc2(v, ik(0), dumT, 0, ub) + visc2(v, 0, ubT, ik(0), dum) + vY*(diff(ik(0), dumT, 0, ubY) + diff(0, ubT, ik(0), dumY))/paramSc + 2.0*vT*diff(0, ubT, ik(0), dumT)/paramPr)
+    )
+    - int1d(Th, BCopen, BClateral)(ubT*mu*ndotvisc(v, ik(0), dum) + (dumT*mu + ubT*mup(dum))*ndotvisc(v, 0, ub) + 0.5*(real(ndotu(ub))<0)*(vdotu(v, dum)*ndotu(ub) + vdotu(v, ub)*ndotu(dum)))
+    + int2d(Th)(
+      iomega*(vdotu(v, um) + gdotf(vY, umY) + gdotf(vp + vT, umT))
+      + ugradu(v, um, 0, ub) + ugradu(v, ub, ik(0), um) - (umT*div(-ik(0), v) + ugradf(v, ik(0), umT))*ubp - (ubT*div(-ik(0), v) + ugradf(v, 0, ubT))*ump
+      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFR + params["phi"])*vT)*TQp(um)
+      + vY*(ugradf(um, 0, ubY) + ugradf(ub, ik(0), umY))
+      + (vT + vp)*(ugradf(um, 0, ubT) + ugradf(ub, ik(0), umT))
+      - vp*(umT*div(0, ub) + ubT*div(ik(0), um))
+      // viscous + diffusion terms
+      + mup(um)*(ubT*(visc(-ik(0), v, 0, ub) + diff(-ik(0), vY, 0, ubY)/paramSc + diff(-ik(0), vT, 0, ubT)/paramPr) + visc2(v, 0, ubT, 0, ub) + vY*diff(0, ubT, 0, ubY)/paramSc + vT*diff(0, ubT, 0, ubT)/paramPr)
+      + mu*(umT*(visc(-ik(0), v, 0, ub) + diff(-ik(0), vY, 0, ubY)/paramSc + diff(-ik(0), vT, 0, ubT)/paramPr) + ubT*(visc(-ik(0), v, ik(0), um) + diff(-ik(0), vY, ik(0), umY)/paramSc + diff(-ik(0), vT, ik(0), umT)/paramPr) + visc2(v, ik(0), umT, 0, ub) + visc2(v, 0, ubT, ik(0), um) + vY*(diff(ik(0), umT, 0, ubY) + diff(0, ubT, ik(0), umY))/paramSc + 2.0*vT*diff(0, ubT, ik(0), umT)/paramPr)
+    )
+    - int1d(Th, BCopen, BClateral)(ubT*mu*ndotvisc(v, ik(0), um) + (umT*mu + ubT*mup(um))*ndotvisc(v, 0, ub) + 0.5*(real(ndotu(ub))<0)*(vdotu(v, um)*ndotu(ub) + vdotu(v, ub)*ndotu(um)))
+    + HomBoundaryConditions(dum);
+
+// MASS OPERATOR
+  varf vM(defu(dum), defu(v))
+    = int2d(Th)( vdotu(v, dum) + gdotf(vY, dumY) + gdotf(vp + vT, dumT) )
+    + int2d(Th)( vdotu(v, um) + gdotf(vY, umY) + gdotf(vp + vT, umT) )
+    + HomBoundaryConditions(dum);
+
+// MASS DERIVATIVE OPERATOR
+  varf vdM(defu(dum), defu(v))
+    = HomBoundaryConditions(dum);
+
+// MASS 2ND DERIVATIVE OPERATOR
+  varf vddM(defu(dum), defu(v))
+    = HomBoundaryConditions(dum);
+
+// FORCING/RESPONSE OPERATORS
+  varf vMq(defu(dum), defu(v))
+    = int2d(Th)( vdotu(v, dum) )
+    + HomBoundaryConditions(dum);
+
+  varf vMf(deff(dum), deff(v))
+    = int2d(Th)( vdotu(v, dum) );
+
+  varf vP(deff(fm), defu(v))
+    = int2d(Th)( vdotu(v, fm) );
+
+// HESSIAN OPERATOR
+  varf vH(defu(dum), defu(v))
+    = HomBoundaryConditions(dum);
+
+// TRESSIAN OPERATOR
+  varf vT(defu(dum), defu(v))
+    =  HomBoundaryConditions(dum);
+
+// QUARTIC DERIVATIVE OPERATOR
+  varf vQ(defu(dum), defu(v))
+   = HomBoundaryConditions(dum);
