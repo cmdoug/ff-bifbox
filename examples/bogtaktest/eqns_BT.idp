@@ -9,16 +9,16 @@
     macro vdotu(v, u) ( v*u + v#B*u#B) // EOM
     macro grad(u) [dx(u), dy(u)] // EOM
 // Boundary conditions
-  macro BoundaryConditions(u, U) on(BCwall, u = U - 0.0) // EOM
-  macro HomBoundaryConditions(u) on(BCwall, u = 0) // EOM
+  macro BoundaryConditions(u, U) on(BCwall, u = U - 0.0, u#B = U#B) // EOM
+  macro HomBoundaryConditions(u) on(BCwall, u = 0, u#B = 0) // EOM
 
 // RESIDUAL OPERATOR
   varf vR(defu(dum), defu(v))
     = int2d(Th)(
         - v * ubB + params["D"] * grad(v)' * grad(ub)
         - vB * (params["a1"] + (params["a2"] + ub)*ubB + ub^2) + params["D"] * grad(vB)' * grad(ubB)
-    );
-//    + BoundaryConditions(dum, ub);
+    )
+    + BoundaryConditions(dum, ub);
 // JACOBIAN OPERATOR
   varf vJ(defu(dum), defu(v))
     = int2d(Th)(
@@ -30,13 +30,13 @@
         iomega * vdotu(v, um)
         - v * umB + params["D"] * grad(v)' * grad(um)
         - vB * ((params["a2"] + ub)*umB + (2.0*ub + ubB)*um) + params["D"] * grad(vB)' * grad(umB)
-    );
-//    + HomBoundaryConditions(dum);
+    )
+    + HomBoundaryConditions(dum);
 // MASS OPERATOR
     varf vM(defu(dum), defu(v))
         = int2d(Th)( vdotu(v, dum) )
-        + int2d(Th)( vdotu(v, um) );
-//        + HomBoundaryConditions(dum);
+        + int2d(Th)( vdotu(v, um) )
+        + HomBoundaryConditions(dum);
 // MASS DERIVATIVE OPERATOR
     varf vdM(defu(dum), defu(v))
         = HomBoundaryConditions(dum);
@@ -62,5 +62,5 @@
     )
     + int2d(Th)(
         - vB * (um2*umB + (2.0*um2 + um2B)*um)
-    );
-//    + HomBoundaryConditions(dum);
+    )
+    + HomBoundaryConditions(dum);

@@ -62,7 +62,7 @@ if(count > 0) {
   fileroot = fileroot(0:fileroot.rfind("_" + count)-1); // get file root
   meshroot = meshroot(0:meshroot.rfind("_" + count)-1); // get file root
 }
-assert(fileext == "fold" || fileext == "cusp" || fileext == "foho");
+assert(fileext == "fold" || fileext == "cusp" || fileext == "foho" || fileext == "bota");
 Th = readmeshN(workdir + meshin);
 Thg = Th;
 DmeshCreate(Th);
@@ -76,6 +76,11 @@ if (count == 0){
     real[string] alphaR;
     real betaR;
     ub[] = loadcusp(fileroot, meshin, um[], uma[], alpha, alphaR, betaR);
+  }
+  else if(fileext == "bota"){
+    real[string] alpha1, alpha2;
+    real beta1, beta2;
+    ub[] = loadbota(fileroot, meshin, um[], uma[], alpha1, alpha2, beta1, beta2);
   }
   else if(fileext == "foho") {
     real omega, gamma22, gamma23, beta23;

@@ -1,22 +1,25 @@
-# Steady-state theory of thermal explosions in a homogeneous mixture
+# Identification of Bogdanov--Takens bifurcation point in model system
 
-This example reproduces the classical Frank–Kamenetskii bifurcation diagram of Damköhler number $\mathrm{Da}$ versus temperature $u$ in a cylindrical domain using `ff-bifbox`.
+This example identifies a Bogdanov-Takens bifurcation for a reaction--diffusion equation in a cylindrical domain using `ff-bifbox`.
 
 In strong form, the governing equations are given as:
 
 $$
-\Delta u + \mathrm{Da} \exp(u) = 0
+\begin{align*}
+\dot{u} - v - D \nabla^2 u &= 0 \\
+\dot{v} - \alpha_1 - \alpha_2 v - u^2 - uv - D \nabla^2 v &= 0
+\end{align*}
 $$
 
-together with homogeneous Dirichlet boundary conditions $u=0$.
+together with homogeneous Dirichlet boundary conditions $u=v=0$.
 
-The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the planar domain $\Omega$ with boundary $\partial\Omega$. Solutions $u$ are then sought, in the appropriate space, such that for all test functions $\check{u}$,
+The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the planar domain $\Omega$ with boundary $\partial\Omega$. Solutions $u,v$ are then sought, in the appropriate spaces, such that for all test functions $\check{u},\check{v}$,
 
 $$
--\left(\frac{\partial \check{u}}{\partial x_i},\frac{\partial u}{\partial x_i}\right)_{\Omega} + \left(\check{u},\mathrm{Da}\exp\left(u\right)\right)_{\Omega} = 0
+\left(\check{u}, \dot{u}-v\right)_{\Omega} +\left(\frac{\partial \check{u}}{\partial x_i},D\frac{\partial u}{\partial x_i}\right)_{\Omega} + \left(\check{v}, \dot{v}-\alpha_1-\alpha_2v-u^2-uv\right)_{\Omega} +\left(\frac{\partial \check{v}}{\partial x_i},D\frac{\partial v}{\partial x_i}\right)_{\Omega} = 0
 $$
 
-This weak formulation has been implemented in the equations file for this example: [eqns_FK.idp](./eqns_FK.idp).
+This weak formulation has been implemented in the equations file for this example: [eqns_BT.idp](./eqns_BT.idp).
 
 
 ## Setup environment for `ff-bifbox`
@@ -39,33 +42,39 @@ ln -sf examples/bogtaktest/settings_BT.idp settings.idp
 
 #### Build initial mesh using BAMG in FreeFEM
 ```sh
-FreeFem++-mpi -v 0 examples/bogtaktest/vessel.md -mo $workdir/vessel
+FreeFem++-mpi -v 0 examples/FK_problem/vessel.md -mo $workdir/vessel
 ```
 
 ## Perform parallel computations using `ff-bifbox`
-### Continue base state along the parameter $Da$ from trivial solution
+### Continue base state along the parameters $\alpha_1$ and $\alpha_2$
 
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi vessel.msh -D 1 -a1 1 -a2 1 -fo BT
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi BT.base -fo BT -param a2 -h0 -1 -scount 2 -maxcount 20 -amax 10 -dmax 0.5 -kmax 1 -contorder 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi vessel.msh -D 0.1 -a1 -0.1 -a2 0 -fo BT
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi BT.base -fo BTf -param a1 -h0 1 -scount 2 -maxcount 16 -amax 10 -dmax 0.5 -kmax 1 -contorder 1
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi BT.base -fo BTh -param a2 -h0 1 -scount 2 -maxcount 10 -amax 10 -dmax 0.5 -kmax 1 -contorder 1
 ```
 This step computes the steady-state bifurcation diagram.
 
 
-### Compute fold bifurcation 
+### Compute fold bifurcation curve
 ```sh
-cd "$workdir" && declare -a foldguesslist=(BT_*specialpt.base) && cd -
+cd "$workdir" && declare -a foldguesslist=(BTf_*specialpt.base) && cd -
 for guess in "${foldguesslist[@]}"; do
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi "$guess" -fo BT_fold -param a2 -pv 1
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi "$guess" -fo BTf -param a1 -pv 1
 done
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi BT_fold.fold -fo BT_fold -param a2 -param2 a1 -h0 -1 -scount 4 -adaptto bda -mo test -pv 1
-````
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi BTf.fold -fo BTf -param a2 -param2 a1 -h0 -1 -scount 2 -maxcount 10 -amax 90 -dmax 0.5 -kmax 1 -contorder 1
+```
 
-### Stability analysis 
+### Compute Hopf bifurcation curve
 Compute eigenvalues along the branch:
 ```sh
-cd "$workdir" && declare -a baselist=(FK_*[0-9].base) && cd -
-for base in "${baselist[@]}"; do
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi "$base" -so FK -eps_target 1.0+0.0i -eps_gen_hermitian -nev 3
-done
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fo BTh_10 -fi BTh_10.base -eps_target 1.0+1.0i -eps_pos_gen_non_hermitian -eps_nev 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi BTh_10.mode -fo BTh -param a2
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi BTh.hopf -fo BTh -param a1 -param2 a2 -h0 -1 -scount 2 -maxcount 16 -amax 90 -dmax 0.5 -kmax 1 -contorder 1
+```
+
+### Identify Bogdanov-Takens point
+```sh
+cd "$workdir" && set -- BTh_*specialpt.hopf && export guess="$1" && cd -
+ff-mpirun -np $nproc botacompute.md -v 0 -dir $workdir -fi "$guess" -fo BT -param a1 -param2 a2
 ```

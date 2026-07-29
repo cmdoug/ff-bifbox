@@ -57,8 +57,8 @@ for (ii = 0; ii < filecount; ii++) {
   if(meshin == "") meshin = readmeshname(workdir + fileins[ii]); // get mesh file
   if( fileexts[ii] == "base" || fileexts[ii] == "tdns" ) nuvec++;
   else if ( fileexts[ii] == "mode" || fileexts[ii] == "tdls" || fileexts[ii] == "resp" ) nuvec += 2;
-  else if ( fileexts[ii] == "fold" || fileexts[ii] == "cusp" ) nuvec += 3;
-  else if ( fileexts[ii] == "hopf" || fileexts[ii] == "bota" || fileexts[ii] == "baut" || fileexts[ii] == "porb" ) nuvec += 5;
+  else if ( fileexts[ii] == "fold" || fileexts[ii] == "bota" || fileexts[ii] == "cusp" ) nuvec += 3;
+  else if ( fileexts[ii] == "hopf" || fileexts[ii] == "baut" || fileexts[ii] == "porb" ) nuvec += 5;
   else if ( fileexts[ii] == "foho" ) nuvec += 7;
   else if ( fileexts[ii] == "hoho" ) nuvec += 9;
   else if ( fileexts[ii] == "rslv" ) {nuvec += 2; nfvec += 2;}
@@ -138,18 +138,12 @@ if (mpirank==0){ // Perform mesh adaptation (serially) on processor 0
       }
     }
     else if(fileexts[ii] == "bota") {
-      complex[string] alpha1, alpha2;
-      complex beta1, beta2;
-      complex[int] qm(XMhg.ndof), qma(XMhg.ndof);
-      uvecs(jj++, :) = loadbota(fileroots[ii], meshin, qm, qma, sym, alpha1, alpha2, beta1, beta2);
-      if(adaptto == "bd" || adaptto == "bda") { 
-        uvecs(jj++, :) = qm.re; 
-        uvecs(jj++, :) = qm.im;
-      }
-      if(adaptto == "ba" || adaptto == "bda") {
-        uvecs(jj++, :) = qma.re;
-        uvecs(jj++, :) = qma.im;
-      }
+      real[string] alpha1, alpha2;
+      real beta1, beta2;
+      real[int] qm(XMhg.ndof), qma(XMhg.ndof);
+      uvecs(jj++, :) = loadbota(fileroots[ii], meshin, qm, qma, alpha1, alpha2, beta1, beta2);
+      if(adaptto == "bd" || adaptto == "bda") uvecs(jj++, :) = qm; 
+      if(adaptto == "ba" || adaptto == "bda") uvecs(jj++, :) = qma;
     }
     else if(fileexts[ii] == "porb") {
       int Nh=1;

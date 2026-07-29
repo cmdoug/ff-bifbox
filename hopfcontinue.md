@@ -79,9 +79,9 @@ if (count == 0){
     ub[].re = loadhopf(fileroot, meshin, um[], uma[], sym1, omega, alpha, beta);
   }
   else if(fileext == "bota") {
-    complex[string] alpha1, alpha2;
-    complex beta1, beta2;
-    ub[].re = loadbota(fileroot, meshin, um[], uma[], sym1, alpha1, alpha2, beta1, beta2);
+    real[string] alpha1, alpha2;
+    real beta1, beta2;
+    ub[].re = loadbota(fileroot, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2);
   }
   else if (fileext == "foho") {
     real[string] alpha2;

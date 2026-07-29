@@ -30,13 +30,13 @@ We can directly compute the residual using the varf `vR()`.
 To build the augmented residual `Ra`, we must additionally compute the Hopf residual augmentation:
 
 $$
-g = \langle{}v,\mathcal{J}w\rangle = v^H\mathcal{J}w
+g = \langle{}v,\mathcal{J}w\rangle = v^T\mathcal{J}w
 $$
 
 and the Bogdanov-Takens residual augmentation:
 
 $$
-h = \langle{}v,\mathcal{M}w\rangle = v^H\mathcal{M}w
+h = \langle{}v,\mathcal{M}w\rangle = v^T\mathcal{M}w
 $$
 
 where $`g`$ is the Hopf residual and $`v`$ and $`w`$ are the adjoint and direct eigenvectors, respectively.
@@ -47,7 +47,7 @@ $$
 \begin{equation}
 \begin{bmatrix}
 -\mathcal{J} & \mathcal{M}p_0 \\
-(\mathcal{M}q_0)^H & 0
+(\mathcal{M}q_0)^T & 0
 \end{bmatrix}
 \begin{bmatrix}
 w \\
@@ -64,25 +64,25 @@ where $`q_0`$, $`p_0`$ are initial approximations of the direct & adjoint eigenv
 This implies:
 
 $$
-\mathcal{J}w = \mathcal{M}p_0g\qquad{}\text{and}\qquad{}(\mathcal{M}q_0)^Hw = 1
+\mathcal{J}w = \mathcal{M}p_0g\qquad{}\text{and}\qquad{}(\mathcal{M}q_0)^Tw = 1
 $$
 
 so
 
 $$
-w = \mathcal{J}^{-1}\mathcal{M}p_0g\qquad{}\text{and}\qquad{}g = \frac{1}{(\mathcal{M}q_0)^H\mathcal{J}^{-1}\mathcal{M}p_0}.
+w = \mathcal{J}^{-1}\mathcal{M}p_0g\qquad{}\text{and}\qquad{}g = \frac{1}{(\mathcal{M}q_0)^T\mathcal{J}^{-1}\mathcal{M}p_0}.
 $$
 
-Note that, at $`g = 0`$, we have $`\mathcal{J}w = 0`$ and $`(\mathcal{M}q_0)^Hw = 1`$.
+Note that, at $`g = 0`$, we have $`\mathcal{J}w = 0`$ and $`(\mathcal{M}q_0)^Tw = 1`$.
 
 Similarly, we can find the adjoint eigenmode using the related system:
 
 $$
 \begin{bmatrix}
-v^H & g
+v^T & g
 \end{bmatrix}\begin{bmatrix}
 -\mathcal{J} & \mathcal{M}p_0 \\
-(\mathcal{M}q_0)^H & 0
+(\mathcal{M}q_0)^T & 0
 \end{bmatrix} = \begin{bmatrix}
 0 & 1
 \end{bmatrix}
@@ -91,20 +91,20 @@ $$
 This implies:
 
 $$
-v^H\mathcal{J} = g(\mathcal{M}q_0)^H\qquad{}\text{and}\qquad{}v^H\mathcal{M}p_0 = 1
+v^T\mathcal{J} = g(\mathcal{M}q_0)^T\qquad{}\text{and}\qquad{}v^T\mathcal{M}p_0 = 1
 $$
 
-or, taking the complex conjugate transpose:
+or, taking the transpose:
 
 $$
 \begin{equation}
 \begin{bmatrix}
--\mathcal{J}^H & \mathcal{M}q_0 \\
-(\mathcal{M}p_0)^H & 0
+-\mathcal{J}^T & \mathcal{M}q_0 \\
+(\mathcal{M}p_0)^T & 0
 \end{bmatrix}
 \begin{bmatrix}
 v \\
-g^\ast
+g
 \end{bmatrix} = \begin{bmatrix}
 0 \\
 1
@@ -115,34 +115,34 @@ $$
 giving, equivalently,
 
 $$
-\mathcal{J}^Hv = \mathcal{M}q_0g^\ast\qquad{}\text{and}\qquad{}(\mathcal{M}p_0)^Hv = 1
+\mathcal{J}^Tv = \mathcal{M}q_0g\qquad{}\text{and}\qquad{}(\mathcal{M}p_0)^Tv = 1
 $$
 
 so
 
 $$
-v = \mathcal{J}^{-H}\mathcal{M}q_0g^\ast\qquad{}\text{and}\qquad{}g^\ast = \frac{1}{(\mathcal{M}p_0)^H\mathcal{J}^{-H}\mathcal{M}q_0}
+v = \mathcal{J}^{-T}\mathcal{M}q_0g\qquad{}\text{and}\qquad{}g = \frac{1}{(\mathcal{M}p_0)^T\mathcal{J}^{-T}\mathcal{M}q_0}
 $$
 
-At $`g^\ast = 0`$, we have $`\mathcal{J}^Hv = 0`$ and $`~`(\mathcal{M}p_0)^Hv = 1`$, so $`v^H\mathcal{J} = 0`$ and $`v^H\mathcal{M}p_0 = 1`$.
+At $`g = 0`$, we have $`\mathcal{J}^Tv = 0`$ and $`~`(\mathcal{M}p_0)^Tv = 1`$, so $`v^T\mathcal{J} = 0`$ and $`v^T\mathcal{M}p_0 = 1`$.
 
 Finally, the augmented Bogdanov-Takens residual can be computed directly:
 
 $$
 \begin{equation}
-h = \langle{}v,\mathcal{M}w\rangle = v^H\mathcal{M}w
+h = \langle{}v,\mathcal{M}w\rangle = v^T\mathcal{M}w
 \end{equation}
 $$
 
 #### JACOBIAN CONSTRUCTION IN MINIMALLY AUGMENTED FORMULATION
-Having computed the RHS of the augmented system in `funcRa`, we now have to build the complex augmented Jacobian matrix for the Newton scheme:
+Having computed the RHS of the augmented system in `funcRa`, we now have to build the augmented Jacobian matrix for the Newton scheme:
 
 $$
 \begin{equation}
 \begin{bmatrix}
 \mathcal{J} & \frac{\partial\mathcal{J}}{\partial \lambda_1} & \frac{\partial\mathcal{J}}{\partial \lambda_2} \\
-(\frac{\partial{}g}{\partial q})^H& \frac{\partial{}g}{\partial\lambda_1} & \frac{\partial{}g}{\partial \lambda_2} \\
-(\frac{\partial{}h}{\partial q})^H& \frac{\partial{}h}{\partial\lambda_1} & \frac{\partial{}h}{\partial \lambda_2}
+(\frac{\partial{}g}{\partial q})^T& \frac{\partial{}g}{\partial\lambda_1} & \frac{\partial{}g}{\partial \lambda_2} \\
+(\frac{\partial{}h}{\partial q})^T& \frac{\partial{}h}{\partial\lambda_1} & \frac{\partial{}h}{\partial \lambda_2}
 \end{bmatrix}
 \begin{bmatrix}
 \delta{}q \\
@@ -156,7 +156,7 @@ h
 \end{equation}
 $$
 
-where $`g = v^H\mathcal{J}w`$ and $`h = v^H\mathcal{M}w`$.
+where $`g = v^T\mathcal{J}w`$ and $`h = v^T\mathcal{M}w`$.
 
 To determine the matrix entries, we differentiate Eq. (1) along each $`z`$ in $`q, \lambda_1, \lambda_2`$ to find:
 
@@ -164,7 +164,7 @@ $$
 \begin{equation}
 \begin{bmatrix}
 -\mathcal{J} & \mathcal{M}p_0 \\
-(\mathcal{M}q_0)^H & 0
+(\mathcal{M}q_0)^T & 0
 \end{bmatrix}
 \begin{bmatrix}
 \frac{\partial w}{\partial z} \\
@@ -176,10 +176,10 @@ $$
 \end{equation}
 $$
 
-We now left-multiply Eq. (4) by $\begin{bmatrix}v^H & g\end{bmatrix}$, finding due to Eq. (2) that:
+We now left-multiply Eq. (4) by $\begin{bmatrix}v^T & g\end{bmatrix}$, finding due to Eq. (2) that:
 
 $$
-\frac{\partial g}{\partial z} = v^H\frac{\partial \mathcal{J}}{\partial z}w
+\frac{\partial g}{\partial z} = v^T\frac{\partial \mathcal{J}}{\partial z}w
 $$
 
 This also implies that:
@@ -193,36 +193,36 @@ Similarly differentiating Eq. (2), we find:
 $$
 \begin{equation}
 \begin{bmatrix}
--\mathcal{J}^H & \mathcal{M}q_0 \\
-(\mathcal{M}p_0)^H & 0
+-\mathcal{J}^T & \mathcal{M}q_0 \\
+(\mathcal{M}p_0)^T & 0
 \end{bmatrix}
 \begin{bmatrix}
 \frac{\partial v}{\partial z} \\
-\left(\frac{\partial g}{\partial z}\right)^H
+\left(\frac{\partial g}{\partial z}\right)^T
 \end{bmatrix} = \begin{bmatrix}
-\left(\frac{\partial\mathcal{J}}{\partial z}\right)^Hv \\
+\left(\frac{\partial\mathcal{J}}{\partial z}\right)^Tv \\
 0
 \end{bmatrix}
 \end{equation}
 $$
 
-which similarly yields after left-multiplying by $\left[w^H\quad{}g\right]$ and application of Eq. (1):
+which similarly yields after left-multiplying by $\left[w^T\quad{}g\right]$ and application of Eq. (1):
 
 $$
-\left(\frac{\partial g}{\partial z}\right)^H = w^H\left(\frac{\partial \mathcal{J}}{\partial z}\right)^Hv
+\left(\frac{\partial g}{\partial z}\right)^T = w^T\left(\frac{\partial \mathcal{J}}{\partial z}\right)^Tv
 $$
 
 This also implies that:
 
 $$
-\mathcal{J}^H\frac{\partial v}{\partial z}=-\left(\frac{\partial\mathcal{J}}{\partial z}\right)^Hv+\mathcal{M}q_0\left(\frac{\partial g}{\partial z}\right)^H
+\mathcal{J}^T\frac{\partial v}{\partial z}=-\left(\frac{\partial\mathcal{J}}{\partial z}\right)^Tv+\mathcal{M}q_0\left(\frac{\partial g}{\partial z}\right)^T
 $$
 
 To determine the augmented matrix entries in the third row, we differentiate Eq. (3) along each $`z`$ in $`q, \lambda_1, \lambda_2`$ to find:
 
 $$
 \begin{equation}
-\frac{\partial h}{\partial z} = \left(\frac{\partial v}{\partial z}\right)^H\mathcal{M}w + v^H\frac{\partial \mathcal{M}}{\partial z}w + v^H\mathcal{M}\frac{\partial w}{\partial z}
+\frac{\partial h}{\partial z} = \left(\frac{\partial v}{\partial z}\right)^T\mathcal{M}w + v^T\frac{\partial \mathcal{M}}{\partial z}w + v^T\mathcal{M}\frac{\partial w}{\partial z}
 \end{equation}
 $$
 
@@ -231,7 +231,7 @@ However, it is not desirable or necessary to ever construct $`\frac{\partial w}{
 For the first term in Eq. (7), we have:
 
 $$
-\left(\frac{\partial v}{\partial z}\right)^H\mathcal{M}w=\left(-v^H\frac{\partial\mathcal{J}}{\partial z}+\frac{\partial g}{\partial z}\left(\mathcal{M}q_0\right)^H\right)\mathcal{J}^{-1}\mathcal{M}w=-v^H\frac{\partial\mathcal{J}}{\partial z}\hat{w}+\frac{\partial g}{\partial z}\left(\mathcal{M}q_0\right)^H\hat{w}
+\left(\frac{\partial v}{\partial z}\right)^T\mathcal{M}w=\left(-v^T\frac{\partial\mathcal{J}}{\partial z}+\frac{\partial g}{\partial z}\left(\mathcal{M}q_0\right)^T\right)\mathcal{J}^{-1}\mathcal{M}w=-v^T\frac{\partial\mathcal{J}}{\partial z}\hat{w}+\frac{\partial g}{\partial z}\left(\mathcal{M}q_0\right)^T\hat{w}
 $$
 
 where $`\hat{w}`$ solves the non-singular system:
@@ -239,7 +239,7 @@ where $`\hat{w}`$ solves the non-singular system:
 $$
 \begin{bmatrix}
 \mathcal{J} & \mathcal{M}p_0 \\
-(\mathcal{M}q_0)^H & 0
+(\mathcal{M}q_0)^T & 0
 \end{bmatrix}
 \begin{bmatrix}
 \hat{w} \\
@@ -253,33 +253,33 @@ $$
 giving equivalently,
 
 $$
-\mathcal{J}\hat{w}=\mathcal{M}w-\mathcal{M}p_0h\qquad{}\text{and}\qquad{}(\mathcal{M}q_0)^H\hat{w}=0
+\mathcal{J}\hat{w}=\mathcal{M}w-\mathcal{M}p_0h\qquad{}\text{and}\qquad{}(\mathcal{M}q_0)^T\hat{w}=0
 $$
 
-so, using the identities derived above that $`w=\mathcal{J}^{-1}\mathcal{M}p_0g`$ and $`v=\mathcal{J}^{-H}\mathcal{M}q_0g^\ast`$,
+so, using the identities derived above that $`w=\mathcal{J}^{-1}\mathcal{M}p_0g`$ and $`v=\mathcal{J}^{-T}\mathcal{M}q_0g`$,
 
 $$
-\hat{w}=\mathcal{J}^{-1}\mathcal{M}w-w\frac{h}{g}\qquad{}\text{and}\qquad{}h=v^H\mathcal{M}w
+\hat{w}=\mathcal{J}^{-1}\mathcal{M}w-w\frac{h}{g}\qquad{}\text{and}\qquad{}h=v^T\mathcal{M}w
 $$
 
 Then, similarly, for the last term in Eq. (7), we have:
 
 $$
-v^H\mathcal{M}\frac{\partial w}{\partial z}=v^H\mathcal{M}\mathcal{J}^{-1}\left(-\frac{\partial\mathcal{J}}{\partial z}w+\mathcal{M}p_0\frac{\partial g}{\partial z}\right)=-\hat{v}^H\frac{\partial\mathcal{J}}{\partial z}w+\hat{v}^H\mathcal{M}p_0\frac{\partial g}{\partial z}
+v^T\mathcal{M}\frac{\partial w}{\partial z}=v^T\mathcal{M}\mathcal{J}^{-1}\left(-\frac{\partial\mathcal{J}}{\partial z}w+\mathcal{M}p_0\frac{\partial g}{\partial z}\right)=-\hat{v}^T\frac{\partial\mathcal{J}}{\partial z}w+\hat{v}^T\mathcal{M}p_0\frac{\partial g}{\partial z}
 $$
 
 where $`\hat{v}`$ solves the non-singular system:
 
 $$
 \begin{bmatrix}
-\mathcal{J}^H & \mathcal{M}q_0 \\
-(\mathcal{M}p_0)^H & 0
+\mathcal{J}^T & \mathcal{M}q_0 \\
+(\mathcal{M}p_0)^T & 0
 \end{bmatrix}
 \begin{bmatrix}
 \hat{v} \\
-h^\ast
+h
 \end{bmatrix} = \begin{bmatrix}
-\mathcal{M}^Hv \\
+\mathcal{M}^Tv \\
 0
 \end{bmatrix}
 $$
@@ -287,13 +287,13 @@ $$
 giving equivalently,
 
 $$
-\mathcal{J}^H\hat{v}=\mathcal{M}^Hv-\mathcal{M}q_0h^\ast\qquad{}\text{and}\qquad{}(\mathcal{M}p_0)^H\hat{v}=0
+\mathcal{J}^T\hat{v}=\mathcal{M}^Tv-\mathcal{M}q_0h\qquad{}\text{and}\qquad{}(\mathcal{M}p_0)^T\hat{v}=0
 $$
 
-so, using the identities derived above that $`w=\mathcal{J}^{-1}\mathcal{M}p_0g`$ and $`v=\mathcal{J}^{-H}\mathcal{M}q_0g^\ast`$,
+so, using the identities derived above that $`w=\mathcal{J}^{-1}\mathcal{M}p_0g`$ and $`v=\mathcal{J}^{-T}\mathcal{M}q_0g`$,
 
 $$
-\hat{v}=\mathcal{J}^{-H}\mathcal{M}^Hv-v\frac{h^\ast}{g^\ast}\qquad{}\text{and}\qquad{}h^\ast=w^H\mathcal{M}^Hv
+\hat{v}=\mathcal{J}^{-T}\mathcal{M}^Tv-v\frac{h}{g}\qquad{}\text{and}\qquad{}h=w^T\mathcal{M}^Tv
 $$
 
 So we can write Eq. (3) explicitly as
@@ -301,7 +301,7 @@ So we can write Eq. (3) explicitly as
 $$
 \begin{bmatrix}
 \mathcal{J} & \frac{\partial\mathcal{J}}{\partial \lambda_1} & \frac{\partial\mathcal{J}}{\partial \lambda_2} \\
-\Re\left(v^H\frac{\partial \mathcal{J}}{\partial q}w\right) & \Re\left(v^H\frac{\partial \mathcal{J}}{\partial \lambda_1}w\right) & \Re\left(v^H\frac{\partial \mathcal{J}}{\partial \lambda_2}w\right) \\
+\Re\left(v^T\frac{\partial \mathcal{J}}{\partial q}w\right) & \Re\left(v^T\frac{\partial \mathcal{J}}{\partial \lambda_1}w\right) & \Re\left(v^T\frac{\partial \mathcal{J}}{\partial \lambda_2}w\right) \\
 \Re\left(\frac{\partial h}{\partial q}\right) & \Re\left(\frac{\partial h}{\partial \lambda_1}\right) & \Re\left(\frac{\partial h}{\partial \lambda_1}\right)
 \end{bmatrix}
 \begin{bmatrix}
@@ -318,7 +318,7 @@ $$
 where
 
 $$
-\frac{\partial h}{\partial z} = -v^H\frac{\partial\mathcal{J}}{\partial z}\hat{w} + v^H\frac{\partial \mathcal{M}}{\partial z}w - \hat{v}^H\frac{\partial\mathcal{J}}{\partial z}w + \left(\left(\mathcal{M}q_0\right)^H\hat{w}+\hat{v}^H\mathcal{M}p_0\right)\frac{\partial g}{\partial z}
+\frac{\partial h}{\partial z} = -v^T\frac{\partial\mathcal{J}}{\partial z}\hat{w} + v^T\frac{\partial \mathcal{M}}{\partial z}w - \hat{v}T\frac{\partial\mathcal{J}}{\partial z}w + \left(\left(\mathcal{M}q_0\right)^T\hat{w}+\hat{v}^T\mathcal{M}p_0\right)\frac{\partial g}{\partial z}
 $$
 
 ## EXAMPLE USAGE:
@@ -348,7 +348,7 @@ SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md)
 
 ```freefem
 load "iovtk"
-load "PETSc-complex"
+load "PETSc"
 include "settings.idp"
 include "macros_bifbox.idp"
 // arguments
@@ -367,9 +367,8 @@ real eps = getARGV("-eps", 1e-7);
 real eps2 = getARGV("-eps2", 1e-7);
 string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 real TGV = getARGV("-tgv", -1);
-real[int] sym1(sym.n);
-complex[string] alpha1, alpha2;
-complex beta1, beta2;
+real[string] alpha1, alpha2;
+real beta1, beta2;
 
 // Load mesh, make FE basis
 string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension
@@ -383,97 +382,122 @@ Th = readmeshN(workdir + meshin);
 Thg = Th;
 DmeshCreate(Th);
 restu = restrict(XMh, XMhg, n2o);
-XMh<complex> defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
+XMh defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
 if (fileext == "bota") {
-  ub[].re = loadbota(fileroot, meshin, um[], uma[], sym1, alpha1, alpha2, beta1, beta2);
+  ub[] = loadbota(fileroot, meshin, um[], uma[], alpha1, alpha2, beta1, beta2);
 }
 else if (fileext == "hopf") {
   real omega;
-  ub[].re = loadhopf(fileroot, meshin, um[], uma[], sym1, omega, alpha1, beta1);
+  complex[string] alpha;
+  complex beta;
+  real[int] sym1(sym.n);
+  complex[int] qm(um[].n), qma(um[].n);
+  ub[] = loadhopf(fileroot, meshin, qm, qma, sym1, omega, alpha, beta);
+  um[] = qm.re;
+  uma[] = qma.re;
 }
 else if (fileext == "fold") {
-  real[int] qm(um[].n), qma(um[].n);
   real[string] alpha; 
   real beta;
-  ub[].re = loadfold(fileroot, meshin, qm, qma, alpha, beta);
-  um[].re = qm;
-  uma[].re = qma;
+  ub[] = loadfold(fileroot, meshin, um[], uma[], alpha, beta);
 }
 else if (fileext == "foho") {
   real omega;
+  complex[string] alpha1;
   real[string] alpha2;
+  real[int] sym1(sym.n);
   real beta22, beta23, gamma22, gamma23;
-  complex gamma12, gamma13;
-  real[int] q2m, q2ma;
-  ub[].re = loadfoho(fileroot, meshin, um[], uma[], q2m, q2ma, sym1, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  complex beta1, gamma12, gamma13;
+  complex[int] q1m(um[].n), q1ma(um[].n);
+  if(select == 1){
+    ub[] = loadfoho(fileroot, meshin, q1m, q1ma, um[], uma[], sym1, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+    um[] = q1m.re;
+    uma[] = q1ma.re;
+  }
+  else if(select == 2){
+    ub[] = loadfoho(fileroot, meshin, q1m, q1ma, um[], uma[], sym1, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  }
 }
 else if(fileext == "hoho") {
   real omega, omegaN;
-  complex gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
-  complex[int] qNm, qNma;
+  complex[string] alpha1, alpha2;
+  real[int] sym1(sym.n), symN(sym.n);
+  complex gamma11, gamma12, gamma13, gamma21, gamma22, gamma23, beta1, beta2;
+  complex[int] q1m(um[].n), q1ma(um[].n), qNm, qNma;
   if(select == 1){
-    ub[].re = loadhoho(fileroot, meshin, um[], uma[], qNm, qNma, sym1, sym, omega, omegaN, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
+    ub[] = loadhoho(fileroot, meshin, q1m, q1ma, qNm, qNma, sym1, symN, omega, omegaN, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
   }
   else if(select == 2){
-    ub[].re = loadhoho(fileroot, meshin, qNm, qNma, um[], uma[], sym, sym1, omegaN, omega, alpha2, alpha1, beta2, beta1, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
+    ub[] = loadhoho(fileroot, meshin, qNm, qNma, q1m, q1ma, symN, sym1, omegaN, omega, alpha2, alpha1, beta2, beta1, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
   }
+  um[] = q1m.re;
+  uma[] = q1ma.re;
 }
 else if (fileext == "mode") {
   complex eigenvalue;
-  um[] = loadmode(fileroot, meshin, sym1, eigenvalue);
+  real[int] sym1(sym.n);
+  complex[int] q1m = loadmode(fileroot, meshin, sym1, eigenvalue);
+  um[] = q1m.re;
 }
 else if (fileext == "resp") {
   real omega;
-  um[] = loadresp(fileroot, meshin, sym1, omega);
+  real[int] sym1(sym.n);
+  complex[int] q1m = loadresp(fileroot, meshin, sym1, omega);
+  um[] = q1m.re;
 }
 else if (fileext == "rslv") {
   real omega, gain;
+  real[int] sym1(sym.n);
   complex[int] fm;
-  um[] = loadrslv(fileroot, meshin, fm, sym1, omega, gain);
+  complex[int] q1m = loadrslv(fileroot, meshin, fm, sym1, omega, gain);
+  um[] = q1m.re;
 }
 else if(fileext == "porb") {
   int Nh=1;
   real omega;
+  real[int] sym1(sym.n);
   complex[int, int] qh(um[].n, Nh);
-  ub[].re = loadporb(fileroot, meshin, qh, sym1, omega, Nh);
-  um[] = qh(:, 0);
+  ub[] = loadporb(fileroot, meshin, qh, sym1, omega, Nh);
+  um[] = qh(:, 0).re;
 }
 else if(fileext == "floq") {
   int Nh=1;
   real omega;
+  real[int] sym1(sym.n);
   complex[int, int] qh(um[].n, 2);
   complex eigenvalue;
   real[int] symtemp(sym.n);
-  um[] = loadfloq(fileroot, meshin, qh, sym1, eigenvalue, symtemp, omega, Nh);
+  complex[int] q1m = loadfloq(fileroot, meshin, qh, sym1, eigenvalue, symtemp, omega, Nh);
+  um[] = q1m.re;
 }
 else assert(false); // invalid input filetype
 if (basefileext == "base") {
-  ub[].re = loadbase(basefileroot, meshin);
+  ub[] = loadbase(basefileroot, meshin);
 }
 else if(basefileext == "fold") {
   real[string] alpha;
   real beta;
   real[int] qm, qma;
-  ub[].re = loadfold(basefileroot, meshin, qm, qma, alpha, beta);
+  ub[] = loadfold(basefileroot, meshin, qm, qma, alpha, beta);
 }
 else if(basefileext == "cusp") {
   real[string] alpha, alphaR;
   real beta;
   real[int] qm, qma;
-  ub[].re = loadcusp(basefileroot, meshin, qm, qma, alpha, alphaR, beta);
+  ub[] = loadcusp(basefileroot, meshin, qm, qma, alpha, alphaR, beta);
 }
 else if(basefileext == "hopf") {
   real omega;
   complex[string] alpha;
   complex beta;
   complex[int] qm, qma;
-  ub[].re = loadhopf(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
+  ub[] = loadhopf(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
 }
 else if(basefileext == "bota") {
-  complex[string] alpha1, alpha2;
-  complex beta1, beta2;
-  complex[int] qm, qma;
-  ub[].re = loadbota(basefileroot, meshin, qm, qma, sym, alpha1, alpha2, beta1, beta2);
+  real[string] alpha1, alpha2;
+  real beta1, beta2;
+  real[int] qm, qma;
+  ub[] = loadbota(basefileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2);
 }
 else if(basefileext == "foho") {
   real omega;
@@ -483,7 +507,7 @@ else if(basefileext == "foho") {
   real beta22, beta23, gamma22, gamma23;
   complex[int] q1m, q1ma;
   real[int] q2m, q2ma;
-  ub[].re = loadfoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadfoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
 }
 else if(basefileext == "hoho") {
   real[int] sym2(sym.n);
@@ -491,23 +515,23 @@ else if(basefileext == "hoho") {
   complex[string] alpha1, alpha2;
   complex beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23;
   complex[int] q1m, q1ma, q2m, q2ma;
-  ub[].re = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
+  ub[] = loadhoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, sym2, omega1, omega2, alpha1, alpha2, beta1, beta2, gamma11, gamma12, gamma13, gamma21, gamma22, gamma23);
 }
 else if(basefileext == "tdns") {
   real time;
-  ub[].re = loadtdns(basefileroot, meshin, time);
+  ub[] = loadtdns(basefileroot, meshin, time);
 }
 else if(basefileext == "porb") {
   int Nh=1;
   real omega;
   complex[int, int] qh(um[].n, Nh);
-  ub[].re = loadporb(basefileroot, meshin, qh, sym, omega, Nh);
+  ub[] = loadporb(basefileroot, meshin, qh, sym, omega, Nh);
 }
 real[int] paramvals(2);
 paramvals(0) = getparam(param);
 paramvals(1) = getparam(param2);
 // Create distributed Mat
-Mat<complex> J;
+Mat J;
 createMatu(Th, J, Pk);
 // MESH ADAPTATION
 bool adapt = false;
@@ -515,40 +539,33 @@ if(meshout == "") meshout = meshin; // if no adaptation
 else { // if output meshfile is given, adapt mesh
   adapt = true;
   meshout = meshout + "." + meshext;
-  complex[int] q;
+  real[int] q;
   ChangeNumbering(J, ub[], q);
   ChangeNumbering(J, ub[], q, inverse = true);
   ChangeNumbering(J, um[], q);
   ChangeNumbering(J, um[], q, inverse = true);
   ChangeNumbering(J, uma[], q);
   ChangeNumbering(J, uma[], q, inverse = true);
-  XMhg defu(uG), defu(umrG), defu(umiG), defu(umarG), defu(umaiG), defu(tempu), defu(uoG);
-  tempu[](restu) = ub[].re; // populate local portion of global soln
+  XMhg defu(uG), defu(umG), defu(umaG), defu(tempu), defu(uoG);
+  tempu[](restu) = ub[]; // populate local portion of global soln
   mpiAllReduce(tempu[], uG[], mpiCommWorld, mpiSUM);
-  tempu[](restu) = um[].re; // populate local portion of global soln
-  mpiAllReduce(tempu[], umrG[], mpiCommWorld, mpiSUM);
-  tempu[](restu) = um[].im; // populate local portion of global soln
-  mpiAllReduce(tempu[], umiG[], mpiCommWorld, mpiSUM);
-  tempu[](restu) = uma[].re; // populate local portion of global soln
-  mpiAllReduce(tempu[], umarG[], mpiCommWorld, mpiSUM);
-  tempu[](restu) = uma[].im; // populate local portion of global soln
-  mpiAllReduce(tempu[], umaiG[], mpiCommWorld, mpiSUM);
+  tempu[](restu) = um[]; // populate local portion of global soln
+  mpiAllReduce(tempu[], umG[], mpiCommWorld, mpiSUM);
+  tempu[](restu) = uma[]; // populate local portion of global soln
+  mpiAllReduce(tempu[], umaG[], mpiCommWorld, mpiSUM);
   if(mpirank == 0) {  // Perform mesh adaptation (serially) on processor 0
     if(adaptto == "bo") {
-      defu(uoG) = initu(defu(umarG)'*defu(umarG));
-      defu(tempu) = initu(defu(umaiG)'*defu(umaiG));
-      tempu[] += uoG[];
+      defu(tempu) = initu(defu(umaG)'*defu(umaG));
       tempu[] = sqrt(tempu[]);
-      uoG[] = (umrG[].*umrG[]);
-      uoG[] += (umiG[].*umiG[]);
+      uoG[] = (umG[].*umG[]);
       uoG[] = sqrt(uoG[]);
       uoG[] .*= tempu[];
     }
     IFMACRO(dimension,2)
       if(adaptto == "b") Thg = adaptmesh(Thg, adaptu(uG), adaptmeshoptions);
-      else if(adaptto == "bd") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umrG), adaptu(umiG), adaptmeshoptions);
-      else if(adaptto == "ba") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umarG), adaptu(umaiG), adaptmeshoptions);
-      else if(adaptto == "bda") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umrG), adaptu(umiG), adaptu(umarG), adaptu(umaiG), adaptmeshoptions);
+      else if(adaptto == "bd") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umG), adaptmeshoptions);
+      else if(adaptto == "ba") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umaG), adaptmeshoptions);
+      else if(adaptto == "bda") Thg = adaptmesh(Thg, adaptu(uG), adaptu(umG), adaptu(umaG), adaptmeshoptions);
       else if(adaptto == "bo") Thg = adaptmesh(Thg, adaptu(uG), adaptu(uoG), adaptmeshoptions);
     ENDIFMACRO
     IFMACRO(dimension,3)
@@ -558,9 +575,9 @@ else { // if output meshfile is given, adapt mesh
       real anisomax = getARGV("-anisomax",1.0);
       real[int] met((bool(anisomax > 1) ? 6 : 1)*Thg.nv);
       if(adaptto == "b") met = mshmet(Thg, adaptu(uG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
-      else if(adaptto == "bd") met = mshmet(Thg, adaptu(uG), adaptu(umrG), adaptu(umiG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
-      else if(adaptto == "ba") met = mshmet(Thg, adaptu(uG), adaptu(umarG), adaptu(umaiG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
-      else if(adaptto == "bda") met = mshmet(Thg, adaptu(uG), adaptu(umrG), adaptu(umiG), adaptu(umarG), adaptu(umaiG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "bd") met = mshmet(Thg, adaptu(uG), adaptu(umG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "ba") met = mshmet(Thg, adaptu(uG), adaptu(umaG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
+      else if(adaptto == "bda") met = mshmet(Thg, adaptu(uG), adaptu(umG), adaptu(umaG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
       else if(adaptto == "bo") met = mshmet(Thg, adaptu(uG), adaptu(uoG), normalization = getARGV("-normalization",1), aniso = bool(anisomax > 1.0),hmin = getARGV("-hmin", 1.0e-6), hmax = getARGV("-hmax", 1.0e+2), err = getARGV("-err", 1.0e-2));
       if(anisomax > 1.0) {
         load "aniso"
@@ -571,12 +588,10 @@ else { // if output meshfile is given, adapt mesh
   }
   broadcast(processor(0), Thg);
   defu(uG) = defu(uG);
-  defu(umrG) = defu(umrG);
-  defu(umiG) = defu(umiG);
-  defu(umarG) = defu(umarG);
-  defu(umaiG) = defu(umaiG);
+  defu(umG) = defu(umG);
+  defu(umaG) = defu(umaG);
   Th = Thg;
-  Mat<complex> Adapt;
+  Mat Adapt;
   createMatu(Th, Adapt, Pk);
   J = Adapt;
   defu(ub) = initu(0.0);
@@ -586,41 +601,37 @@ else { // if output meshfile is given, adapt mesh
   defu(um3) = initu(0.0);
   restu.resize(ub[].n); // Change size of restriction operator
   restu = restrict(XMh, XMhg, n2o); // Compute new restriction from global mesh to local mesh
-  ub[].re = uG[](restu);
-  um[].re = umrG[](restu);
-  um[].im = umiG[](restu);
-  uma[].re = umarG[](restu);
-  uma[].im = umaiG[](restu);
+  ub[] = uG[](restu);
+  um[] = umG[](restu);
+  uma[] = umaG[](restu);
 }
+
 // Build bordered block matrix from only Mat components
-complex[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
-complex iomega = 0.0, iomega2 = 0.0, iomega3 = 0.0;
+sym = 0;
+real[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
+real iomega = 0.0, iomega2 = 0.0, iomega3 = 0.0;
 include "eqns.idp"
-Mat<complex> JlPM(J.n, mpirank == 0 ? 2 : 0), gqPM(J.n, mpirank == 0 ? 2 : 0), glPM(mpirank == 0 ? 2 : 0, mpirank == 0 ? 2 : 0); // Initialize Mat objects for bordered matrix
-Mat<complex> Ja = [[J, JlPM], [gqPM', glPM]]; // make dummy Jacobian
-complex[int] R(ub[].n), qm(J.n), qma(J.n), qpm(J.n), qpma(J.n), pP(J.n), qP(J.n);
-PetscScalar ginv, h;
+Mat JlPM(J.n, mpirank == 0 ? 2 : 0), gqPM(J.n, mpirank == 0 ? 2 : 0), glPM(mpirank == 0 ? 2 : 0, mpirank == 0 ? 2 : 0); // Initialize Mat objects for bordered matrix
+Mat Ja = [[J, JlPM], [gqPM', glPM]]; // make dummy Jacobian
+real[int] R(ub[].n), qm(J.n), qma(J.n), qpm(J.n), qpma(J.n), pP(J.n), qP(J.n);
+real ginv, h;
 // FUNCTIONS
-  func PetscScalar[int] funcRa(PetscScalar[int]& qa) {
+  func real[int] funcRa(real[int]& qa) {
       ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
-      if(mpirank == 0) paramvals = qa(J.n:Ja.n-1).re;
+      if(mpirank == 0) paramvals = qa(J.n:Ja.n-1);
       broadcast(processor(0), paramvals);
       updateparam(param, paramvals(0));
       updateparam(param2, paramvals(1));
-      sym = 0;
-      ik = 0.0;
       R = vR(0, XMh, tgv = TGV);
-      PetscScalar[int] Ra;
+      real[int] Ra;
       ChangeNumbering(J, R, Ra); // FreeFEM to PETSc
-      sym = sym1;
-      ik.im = sym1;
       J = vJ(XMh, XMh, tgv = -2);
       KSPSolve(J, pP, qm);
-      KSPSolveHermitianTranspose(J, qP, qma);
-      PetscScalar ginvl = (qP'*qm);
+      KSPSolveTranspose(J, qP, qma);
+      real ginvl = (qP'*qm);
       mpiAllReduce(ginvl, ginv, mpiCommWorld, mpiSUM);
       qm /= ginv; // rescale direct mode
-      qma /= conj(ginv); // rescale adjoint mode
+      qma /= ginv; // rescale adjoint mode
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       ChangeNumbering(J, uma[], qma, inverse = true);
       um3[] = vM(0, XMh, tgv = -10);
@@ -629,37 +640,32 @@ PetscScalar ginv, h;
       if(mpirank == 0) {
         Ra(J.n) = real(1.0/ginv);
         Ra(Ja.n-1) = real(h);
-        cout << 1.0/ginv << " " << h << endl;
       }
       return Ra;
   }
 
-  func int funcJa(PetscScalar[int]& qa) {
+  func int funcJa(real[int]& qa) {
       ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
-      if(mpirank == 0) paramvals = qa(J.n:Ja.n-1).re;
+      if(mpirank == 0) paramvals = qa(J.n:Ja.n-1);
       broadcast(processor(0), paramvals);
-      complex[int] temp1, temp3;
+      real[int] temp1, temp3;
       ChangeNumbering(J, um3[], qpm);
       KSPSolve(J, qpm, qpm);
       qpm -= h*ginv*qm;
       ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
       um2[] = vM(0, XMh, tgv = -10);
       ChangeNumbering(J, um2[], temp3);
-      KSPSolveHermitianTranspose(J, temp3, qpma);
-      qpma -= conj(h)*conj(ginv)*qma;
+      KSPSolveTranspose(J, temp3, qpma);
+      qpma -= h*ginv*qma;
       qpma *= -1.0;
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       updateparam(param, paramvals(0) + eps);
-      sym = 0;
-      ik = 0.0;
       um3[] = vR(0, XMh, tgv = TGV);
       um3[] -= R;
       um3[] /= eps;
       ChangeNumbering(J, um3[], temp1);
-      sym = sym1;
-      ik.im = sym1;
-      PetscScalar[int] Jl1 = vJ(0, XMh, tgv = -10);
-      PetscScalar[int] Ml1 = vM(0, XMh, tgv = -10);
+      real[int] Jl1 = vJ(0, XMh, tgv = -10);
+      real[int] Ml1 = vM(0, XMh, tgv = -10);
       ChangeNumbering(J, um[], qpm, inverse = true, exchange = true);
       um3[] = vJ(0, XMh, tgv = -10);
       Ml1 -= um3[];
@@ -672,16 +678,12 @@ PetscScalar ginv, h;
       um3[] = vM(0, XMh, tgv = -10);
       Ml1 -= um3[];
       updateparam(param2, paramvals(1) + eps2);
-      sym = 0;
-      ik = 0.0;
       um3[] = vR(0, XMh, tgv = TGV);
       um3[] -= R;
       um3[] /= eps2;
       ChangeNumbering(J, um3[], temp3);
-      matrix<PetscScalar> tempPms = [[temp1, temp3]];
+      matrix tempPms = [[temp1, temp3]];
       ChangeOperator(JlPM, tempPms, parent = Ja);
-      sym = sym1;
-      ik.im = sym1;
       R = vJ(0, XMh, tgv = -10);
       um2[] = vM(0, XMh, tgv = -10);
       ChangeNumbering(J, um[], qpm, inverse = true, exchange = true);
@@ -695,29 +697,25 @@ PetscScalar ginv, h;
       R -= um3[];
       um3[] = vM(0, XMh, tgv = -10);
       um2[] -= um3[];
-      sym = 0;
       J = vH(XMh, XMh, tgv = 0);
-      MatMultHermitianTranspose(J, qma, temp3);
-      MatMultHermitianTranspose(J, qpma, qm);
+      MatMultTranspose(J, qma, temp3);
+      MatMultTranspose(J, qpma, qm);
       J = vdM(XMh, XMh, tgv = 0);
-      MatMultHermitianTranspose(J, qma, temp1);
+      MatMultTranspose(J, qma, temp1);
       qm += temp1;
       ChangeNumbering(J, um[], qpm, inverse = true, exchange = true);
       J = vH(XMh, XMh, tgv = 0);
-      MatMultHermitianTranspose(J, qma, temp1);
+      MatMultTranspose(J, qma, temp1);
       qm -= temp1;
-      temp3.im = 0.0;
-      qm.im = 0.0;
       tempPms = [[temp3, qm]];
       ChangeOperator(gqPM, tempPms, parent = Ja);
-      PetscScalar gl1 = J(uma[], Jl1)/eps;
-      PetscScalar gl2 = J(uma[], R)/eps2;
+      real gl1 = J(uma[], Jl1)/eps;
+      real gl2 = J(uma[], R)/eps2;
       ChangeNumbering(J, um3[], qpma, inverse = true);
-      PetscScalar hl1 = (J(uma[], Ml1) + J(um3[], Jl1))/eps;
-      PetscScalar hl2 = (J(uma[], um2[]) + J(um3[], R))/eps2;
-      tempPms = [[real(gl1), real(gl2)], [real(hl1), real(hl2)]];
-      ChangeOperator(glPM, tempPms, parent = Ja); 
-      ik = 0.0;
+      real hl1 = (J(uma[], Ml1) + J(um3[], Jl1))/eps;
+      real hl2 = (J(uma[], um2[]) + J(um3[], R))/eps2;
+      tempPms = [[gl1, gl2], [hl1, hl2]];
+      ChangeOperator(glPM, tempPms, parent = Ja);
       J = vJ(XMh, XMh, tgv = TGV);
       return 0;
   }
@@ -728,17 +726,11 @@ set(Ja, sparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type sch
                 + " -prefix_push fieldsplit_0_ " + KSPparams + " -prefix_pop", setup = 1);
 set(J, IFMACRO(Jsetargs) Jsetargs, ENDIFMACRO prefix = "fieldsplit_0_", parent = Ja);
 // Initialize
-complex[int] qa;
+real[int] qa;
 ChangeNumbering(J, ub[], qa);
 qa.resize(Ja.n);
-if(mpirank == 0) qa(J.n:Ja.n-1).re = paramvals;
-sym = sym1;
-ik.im = sym1;
+if(mpirank == 0) qa(J.n:Ja.n-1) = paramvals;
 um2[] = vM(0, XMh, tgv = -10);
-complex phaseref, phaserefl = um2[].sum;
-mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-um[] /= phaseref;
-um2[] /= phaseref;
 ChangeNumbering(J, um[], qm);
 ChangeNumbering(J, um[], qm, inverse = true);
 real Mnorm = sqrt(real(J(um[], um2[])));
@@ -747,7 +739,7 @@ ChangeNumbering(J, um2[], qP);
 if (fileext == "hopf" || fileext == "hoho" || fileext == "foho" || fileext == "bota" || fileext == "baut") um[] = uma[];
 else {
   J = vJ(XMh, XMh, tgv = -2);
-  KSPSolveHermitianTranspose(J, qP, qma);
+  KSPSolveTranspose(J, qP, qma);
   ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
 }
 um2[] = vM(0, XMh, tgv = 0);
@@ -760,32 +752,23 @@ SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
           sparams = "-snes_linesearch_type " + sneslinesearchtype + " -snes_monitor -snes_converged_reason -options_left no");
 if (ret > 0) { // Save solution if solver converged and output file is given
   ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true);
-  if(mpirank == 0) paramvals = qa(J.n:Ja.n-1).re;
+  if(mpirank == 0) paramvals = qa(J.n:Ja.n-1);
   broadcast(processor(0), paramvals);
   updateparam(param, paramvals(0));
   updateparam(param2, paramvals(1));
   ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-  sym = sym1;
-  ik.im = sym1;
   um2[] = vM(0, XMh, tgv = 0);
-  phaserefl = um2[].sum;
-  mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
   ChangeNumbering(J, um[], qm, inverse = true);
   ChangeNumbering(J, uma[], qma, inverse = true);
-  um[] /= phaseref;
-  um2[] /= phaseref;
   Mnorm = sqrt(real(J(um[], um2[])));
   um[] /= Mnorm; // so that <um[],M*um[]> = 1
   uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
   ChangeNumbering(J, um[], qm);
   ChangeNumbering(J, uma[], qma);
   if (normalform){
-    complex[int,int] qDa(paramnames.n, J.n);
+    real[int,int] qDa(paramnames.n, J.n);
 /*    // 2nd-order
     //  A: base modification due to parameter changes
-    ik = 0.0;
-    ik2 = 0.0;
-    sym = 0;
     J = vJ(XMh, XMh, tgv = TGV);
     if(paramnames[0] != ""){
       for (int k = 0; k < paramnames.n; ++k){
@@ -801,29 +784,21 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       }
     }
     //  B: base modification due to quadratic nonlinear interaction
-    ik.im = sym1;
-    ik2.im = -sym1;
     ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-    um2[] = conj(um[]);
+    um2[] = um[];
     um3[] = vH(0, XMh, tgv = -10);
     um3[].re *= -1.0; // -2.0/2.0
     um3[].im = 0.0;
     ChangeNumbering(J, um3[], qP);
     KSPSolve(J, qP, qP);
     //  C: harmonic generation due to quadratic nonlinear interaction
-    ik2.im = sym1;
     um2[] = -0.5*um[];
-    sym = 2*sym1;
     um3[] = vH(0, XMh, tgv = -10);
     ChangeNumbering(J, um3[], pP);
-    ik.im = 2*sym1;
     J = vJ(XMh, XMh, tgv = TGV);
     KSPSolve(J, pP, pP);
     // 3rd-order
     //  A: fundamental modification due to parameter change and quadratic interaction of fundamental with 2nd order modification A.
-    sym = sym1;
-    ik.im = sym1;
-    ik2 = 0.0;
     if(paramnames[0] != ""){
       R = vJ(0, XMh, tgv = -10);
       for (int k = 0; k < paramnames.n; ++k){
@@ -840,14 +815,11 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     }
     IFMACRO(cubic)
     //  B: fundamental modification due to cubic self-interaction of fundamental
-    ik2.im = sym1;
-    ik3.im = -sym1;
     um2[] = 0.5*um[];
-    um3[] = conj(um[]);
+    um3[] = um[];
     R = vT(0, XMh, tgv = -10);
     ENDIFMACRO
     //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
-    ik2 = 0.0;
     ChangeNumbering(J, um2[], qP, inverse = true, exchange = true);
     IFMACRO(cubic)
     um3[] = vH(0, XMh, tgv = -10);
@@ -857,9 +829,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     R = vH(0, XMh, tgv = -10);
     ENDIFMACRO
     //  D: fundamental modification due to quadratic interaction of fundamental with 2nd order modification C
-    ik.im = -sym1;
-    ik2.im = 2*sym1;
-    um[] = conj(um[]);
+    um[] = um[];
     ChangeNumbering(J, um2[], pP, inverse = true, exchange = true);
     um3[] = vH(0, XMh, tgv = -10);
     R += um3[];
@@ -867,7 +837,6 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     if(wnlsave){
       complex[int] val(1);
       XMh<complex>[int] defu(vec)(1);
-      sym = 0;
       val = 0.0;
       if(paramnames[0] != ""){
         for (int k = 0; k < paramnames.n; ++k){
@@ -878,8 +847,6 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       ChangeNumbering(J, vec[0][], qP, inverse = true);
       savemode(fileout + "_wnl_AAs", "", fileout + ".hopf", meshout, vec, val, sym, true);
       ChangeNumbering(J, vec[0][], pP, inverse = true);
-      val = 2i*omega;
-      sym = 2*sym1;
       savemode(fileout + "_wnl_AA", "", fileout + ".hopf", meshout, vec, val, sym, true);
     }*/
   } else {
@@ -898,6 +865,6 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   }
   ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true);
   ChangeNumbering(J, um[], qm, inverse = true);
-  savebota(fileout, "", meshout, sym1, alpha1, alpha2, beta1, beta2, true, true);
+  savebota(fileout, "", meshout, alpha1, alpha2, beta1, beta2, true, true);
 }
 ```
