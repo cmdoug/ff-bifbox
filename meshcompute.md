@@ -58,7 +58,7 @@ for (ii = 0; ii < filecount; ii++) {
   if( fileexts[ii] == "base" || fileexts[ii] == "tdns" ) nuvec++;
   else if ( fileexts[ii] == "mode" || fileexts[ii] == "tdls" || fileexts[ii] == "resp" ) nuvec += 2;
   else if ( fileexts[ii] == "fold" || fileexts[ii] == "cusp" ) nuvec += 3;
-  else if ( fileexts[ii] == "hopf" || fileexts[ii] == "porb" ) nuvec += 5;
+  else if ( fileexts[ii] == "hopf" || fileexts[ii] == "bota" || fileexts[ii] == "baut" || fileexts[ii] == "porb" ) nuvec += 5;
   else if ( fileexts[ii] == "foho" ) nuvec += 7;
   else if ( fileexts[ii] == "hoho" ) nuvec += 9;
   else if ( fileexts[ii] == "rslv" ) {nuvec += 2; nfvec += 2;}
@@ -128,6 +128,20 @@ if (mpirank==0){ // Perform mesh adaptation (serially) on processor 0
       complex beta;
       complex[int] qm(XMhg.ndof), qma(XMhg.ndof);
       uvecs(jj++, :) = loadhopf(fileroots[ii], meshin, qm, qma, sym, omega, alpha, beta);
+      if(adaptto == "bd" || adaptto == "bda") { 
+        uvecs(jj++, :) = qm.re; 
+        uvecs(jj++, :) = qm.im;
+      }
+      if(adaptto == "ba" || adaptto == "bda") {
+        uvecs(jj++, :) = qma.re;
+        uvecs(jj++, :) = qma.im;
+      }
+    }
+    else if(fileexts[ii] == "bota") {
+      complex[string] alpha1, alpha2;
+      complex beta1, beta2;
+      complex[int] qm(XMhg.ndof), qma(XMhg.ndof);
+      uvecs(jj++, :) = loadbota(fileroots[ii], meshin, qm, qma, sym, alpha1, alpha2, beta1, beta2);
       if(adaptto == "bd" || adaptto == "bda") { 
         uvecs(jj++, :) = qm.re; 
         uvecs(jj++, :) = qm.im;

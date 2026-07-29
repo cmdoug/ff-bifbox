@@ -12,7 +12,7 @@
   verbosity = getARGV("-v",0);
 // Define parameter and monitor names
   string[int] paramnames = ["1/Re","S"]; // set parameter names
-  string[int] monitornames = ["Sn","max(nuT/nu)","minux(x,0)"]; // set monitor names
+  string[int] monitornames = ["Sn","maxnuT","minux0"]; // set monitor names
 // Declare symmetries
   real[int] sym(1);
 // Define state vector and FE space
@@ -52,7 +52,7 @@ int BCin1  = 6;
     real[int] uonaxis(indices.n);
     for(int i=0, j=0; i<Xh1.ndof; ++i) if(onaxis[i]) {indices[j] = i; ++j;}
     for(int i=0; i<indices.n; ++i) uonaxis[i] = UX[][indices[i]];
-    monitors["max(nuT/nu)"] = UV[].max;
-    monitors["minux(x,0)"] = uonaxis.min;
+    monitors["maxnuT"] = UV[].max;
+    monitors["minux0"] = uonaxis.min;
     monitors["Sn"] = int1d(Thg, levelset=x)((y<=1.0)*UX*ubgz*y^2)/(1.0e-12+int1d(Thg, levelset=x)((y<=1.0)*y*UX*UX));
   }// EOM

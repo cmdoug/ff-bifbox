@@ -79,18 +79,24 @@ if(count == 0) {
     real[int] qm, qma;
     ub[] = loadfold(fileroot, meshin, qm, qma, alpha, beta);
   }
-else if(fileext == "cusp") {
-  real[string] alpha1, alpha2;
-  real beta;
-  real[int] qm, qma;
-  ub[] = loadcusp(fileroot, meshin, qm, qma, alpha1, alpha2, beta);
-}
+  else if(fileext == "cusp") {
+    real[string] alpha1, alpha2;
+    real beta;
+    real[int] qm, qma;
+    ub[] = loadcusp(fileroot, meshin, qm, qma, alpha1, alpha2, beta);
+  }
   else if(fileext == "hopf") {
     real omega;
     complex[string] alpha;
     complex beta;
     complex[int] qm, qma;
     ub[] = loadhopf(fileroot, meshin, qm, qma, sym, omega, alpha, beta);
+  }
+  else if(fileext == "bota") {
+    complex[string] alpha1, alpha2;
+    complex beta1, beta2;
+    complex[int] qm, qma;
+    ub[] = loadbota(fileroot, meshin, qm, qma, sym, alpha1, alpha2, beta1, beta2);
   }
   else if(fileext == "foho") {
     real omega;

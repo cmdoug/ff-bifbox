@@ -68,7 +68,7 @@ if(count > 0) {
   fileroot = fileroot(0:fileroot.rfind("_" + count)-1); // get file root
   meshroot = meshroot(0:meshroot.rfind("_" + count)-1); // get file root
 }
-assert(fileext == "hopf" || fileext == "foho" || fileext == "hoho");
+assert(fileext == "hopf" || fileext == "foho" || fileext == "hoho" || fileext == "bota" || fileext == "baut");
 Th = readmeshN(workdir + meshin);
 Thg = Th;
 DmeshCreate(Th);
@@ -77,6 +77,11 @@ XMh<complex> defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
 if (count == 0){
   if( fileext == "hopf"){
     ub[].re = loadhopf(fileroot, meshin, um[], uma[], sym1, omega, alpha, beta);
+  }
+  else if(fileext == "bota") {
+    complex[string] alpha1, alpha2;
+    complex beta1, beta2;
+    ub[].re = loadbota(fileroot, meshin, um[], uma[], sym1, alpha1, alpha2, beta1, beta2);
   }
   else if (fileext == "foho") {
     real[string] alpha2;

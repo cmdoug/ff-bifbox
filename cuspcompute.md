@@ -401,6 +401,12 @@ else if(fileext == "hopf") {
   complex[int] qm, qma;
   ub[] = loadhopf(fileroot, meshin, qm, qma, sym, omega, alpha, beta);
 }
+else if(fileext == "bota") {
+  complex[string] alpha1, alpha2;
+  complex beta1, beta2;
+  complex[int] qm, qma;
+  ub[] = loadbota(fileroot, meshin, qm, qma, sym, alpha1, alpha2, beta1, beta2);
+}
 else if(fileext == "hoho") {
   real[int] sym1(sym.n), sym2(sym.n);
   real omega1, omega2;
@@ -541,14 +547,11 @@ real h, ginv;
       ChangeNumbering(J, um3[], qpm);
       KSPSolve(J, qpm, qpm);
       qpm -= h*ginv*qm;
-      H = vH(XMh, XMh, tgv = 0);
-      MatMultTranspose(H, qma, temp3);
-      KSPSolveTranspose(J, temp3, qpma);
-      qpma -= h*ginv*qma;
-      qpma *= 2.0;
       updateparam(param, paramvals(0) + eps);
-      updateparam(param2, paramvals(1));
-      real[int] Jl = vR(0, XMh, tgv = TGV);
+      um3[] = vR(0, XMh, tgv = TGV);
+      um3[] -= R;
+      um3[] /= eps;
+      ChangeNumbering(J, um3[], temp1); // FreeFEM to PETSc
       real[int] Hl1 = vJ(0, XMh, tgv = -10);
       real[int] Tl1 = vH(0, XMh, tgv = -10);
       ChangeNumbering(J, um[], qpm, inverse = true, exchange = true);
@@ -558,35 +561,36 @@ real h, ginv;
       um3[] = vJ(0, XMh, tgv = -10);
       Tl1 += um3[];
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-      Jl -= R;
-      Jl /= eps;
-      ChangeNumbering(J, Jl, temp1); // FreeFEM to PETSc
       um3[] = vJ(0, XMh, tgv = -10);
       Hl1 -= um3[];
       um3[] = vH(0, XMh, tgv = -10);
       Tl1 -= um3[];
       updateparam(param2, paramvals(1) + eps2);
-      Jl = vR(0, XMh, tgv = TGV);
+      um3[] = vR(0, XMh, tgv = TGV);
+      um3[] -= R;
+      um3[] /= eps2;
+      ChangeNumbering(J, um3[], temp3);
+      matrix tempPms = [[temp1, temp3]];
+      ChangeOperator(JlPM, tempPms, parent = Ja);
       real[int] Hl2 = vJ(0, XMh, tgv = -10);
-      real[int] Tl2 = vH(0, XMh, tgv = -10);
+      R = vH(0, XMh, tgv = -10);
       ChangeNumbering(J, um[], qpm, inverse = true, exchange = true);
       um3[] = vJ(0, XMh, tgv = -10);
-      Tl2 -= um3[];
+      R -= um3[];
       updateparam(param2, paramvals(1));
       um3[] = vJ(0, XMh, tgv = -10);
-      Tl2 += um3[];
+      R += um3[];
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-      Jl -= R;
-      Jl /= eps2;
-      ChangeNumbering(J, Jl, qm); // FreeFEM to PETSc
-      matrix tempPms = [[temp1, qm]]; // dense array to sparse matrix
-      ChangeOperator(JlPM, tempPms, parent = Ja); // send to Mat
       um3[] = vJ(0, XMh, tgv = -10);
       Hl2 -= um3[];
       um3[] = vH(0, XMh, tgv = -10);
-      Tl2 -= um3[];
+      R -= um3[];
+      H = vH(XMh, XMh, tgv = -10);
+      MatMultTranspose(H, qma, temp3);
+      KSPSolveTranspose(J, temp3, qpma);
+      qpma -= h*ginv*qma;
+      qpma *= -2.0;
       MatMultTranspose(H, qpma, qm);
-      qm *= -1.0;
       IFMACRO(cubic)
       H = vT(XMh, XMh, tgv = 0);
       MatMultTranspose(H, qma, temp1);
@@ -596,19 +600,15 @@ real h, ginv;
       H = vH(XMh, XMh, tgv = 0);
       MatMultTranspose(H, qma, temp1);
       qm -= temp1;
-      real tt, ttl = (qP'*qpm) + (qpma'*pP);
-      mpiAllReduce(ttl, tt, mpiCommWorld, mpiSUM);
-      qm += tt*temp3;
-      tempPms = [[temp3, qm]]; // dense array to sparse matrix
-      ChangeOperator(gqPM, tempPms, parent = Ja); // send to Mat
+      tempPms = [[temp3, qm]];
+      ChangeOperator(gqPM, tempPms, parent = Ja);
       real gl1 = J(uma[], Hl1)/eps;
       real gl2 = J(uma[], Hl2)/eps2;
       ChangeNumbering(J, um3[], qpma, inverse = true);
-      real hl1 = (J(uma[], Tl1) - J(um3[], Hl1))/eps + tt*gl1;
-      real hl2 = (J(uma[], Tl2) - J(um3[], Hl2))/eps2 + tt*gl2;
-      tempPms = [[gl1, gl2],
-                 [hl1, hl2]];
-      ChangeOperator(glPM, tempPms, parent = Ja); // send to Mat
+      real hl1 = (J(uma[], Tl1) + J(um3[], Hl1))/eps;
+      real hl2 = (J(uma[], R) + J(um3[], Hl2))/eps2;
+      tempPms = [[gl1, gl2], [hl1, hl2]];
+      ChangeOperator(glPM, tempPms, parent = Ja);
       J = vJ(XMh, XMh, tgv = TGV);
       return 0;
   }
@@ -623,7 +623,7 @@ real[int] qa;
 ChangeNumbering(J, ub[], qa);
 qa.resize(Ja.n);
 if(mpirank == 0) qa(J.n:Ja.n-1) = paramvals;
-if (fileext != "fold" && fileext != "foho"){
+if (fileext != "cusp" && fileext != "fold" && fileext != "foho"){
   updateparam(param, paramvals(0) + eps);
   um2[] = vR(0, XMh);
   updateparam(param, paramvals(0));

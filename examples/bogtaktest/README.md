@@ -26,49 +26,46 @@ cd ~/your/path/to/ff-bifbox/
 ```
 2. Define working directory and number of processors:
 ```sh
-export workdir=examples/FK_problem/data
+export workdir=examples/bogtaktest/data
 export nproc=4
 ```
 3. Create symbolic links for governing equations and solver settings.
 ```sh
-ln -sf examples/FK_problem/eqns_FK.idp eqns.idp
-ln -sf examples/FK_problem/settings_FK.idp settings.idp
+ln -sf examples/bogtaktest/eqns_BT.idp eqns.idp
+ln -sf examples/bogtaktest/settings_BT.idp settings.idp
 ````
 
 ## Build initial meshes
 
 #### Build initial mesh using BAMG in FreeFEM
 ```sh
-FreeFem++-mpi -v 0 examples/FK_problem/vessel.md -mo $workdir/vessel
+FreeFem++-mpi -v 0 examples/bogtaktest/vessel.md -mo $workdir/vessel
 ```
 
 ## Perform parallel computations using `ff-bifbox`
 ### Continue base state along the parameter $Da$ from trivial solution
 
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -mi vessel.msh -fo FK -param Da -h0 1 -scount 2 -maxcount 25 -tgv -2 -amax 10 -dmax 0.5 -kmax 1 -contorder 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi vessel.msh -D 1 -a1 1 -a2 1 -fo BT
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi BT.base -fo BT -param a2 -h0 -1 -scount 2 -maxcount 20 -amax 10 -dmax 0.5 -kmax 1 -contorder 1
 ```
 This step computes the steady-state bifurcation diagram.
 
 
 ### Compute fold bifurcation 
 ```sh
-cd "$workdir" && declare -a foldguesslist=(FK_*specialpt.base) && cd -
+cd "$workdir" && declare -a foldguesslist=(BT_*specialpt.base) && cd -
 for guess in "${foldguesslist[@]}"; do
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi "$guess" -fo FK_fold -param Da -pv 1 -tgv -2
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi "$guess" -fo BT_fold -param a2 -pv 1
 done
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi BT_fold.fold -fo BT_fold -param a2 -param2 a1 -h0 -1 -scount 4 -adaptto bda -mo test -pv 1
 ````
-Example output:
-- `alpha[Da] = -2.62803`
-- `beta = -0.91967`
-- `Da = 2.00011`
-- `Tmax = 1.38626`
 
 ### Stability analysis 
 Compute eigenvalues along the branch:
 ```sh
 cd "$workdir" && declare -a baselist=(FK_*[0-9].base) && cd -
 for base in "${baselist[@]}"; do
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi "$base" -so FK -eps_target 1.0+0.0i -eps_gen_hermitian -eps_nev 3
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi "$base" -so FK -eps_target 1.0+0.0i -eps_gen_hermitian -nev 3
 done
 ```

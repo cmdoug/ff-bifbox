@@ -80,6 +80,9 @@ XMh<complex> defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
 if (fileext2 == "hopf") {
   ub[].re = loadhopf(fileroot2, meshin, um2[], um3[], sym2, omega2, alpha2, beta2);
 }
+else if(fileext2 == "bota") {
+  ub[].re = loadbota(fileroot2, meshin, um2[], um3[], sym2, alpha1, alpha2, beta1, beta2);
+}
 else if (fileext2 == "foho") {
   real[string] alphaN;
   real beta22, beta23, gamma22, gamma23;
@@ -153,6 +156,11 @@ else if (fileext1 == "foho") {
 else if (fileext1 == "hopf") {
   ub[].re = loadhopf(fileroot1, meshin, um[], uma[], sym1, omega1, alpha1, beta1);
 }
+else if(fileext1 == "bota") {
+  complex[string] alpha1, alpha2;
+  complex beta1, beta2;
+  ub[].re = loadbota(fileroot1, meshin, um[], uma[], sym1, alpha1, alpha2, beta1, beta2);
+}
 else if (fileext1 == "mode") {
   complex eigenvalue;
   um[] = loadmode(fileroot1, meshin, sym1, eigenvalue);
@@ -203,6 +211,12 @@ else if(basefileext == "hopf") {
   complex beta;
   complex[int] qm, qma;
   ub[].re = loadhopf(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(basefileext == "bota") {
+  complex[string] alpha1, alpha2;
+  complex beta1, beta2;
+  complex[int] qm, qma;
+  ub[].re = loadbota(basefileroot, meshin, qm, qma, sym, alpha1, alpha2, beta1, beta2);
 }
 else if(basefileext == "foho") {
   real omega;

@@ -89,6 +89,13 @@ if (count == 0){
     ub[] = loadhopf(fileroot, meshin, um[], qma, sym, omega, alpha, beta);
     if(adj) um[] = qma;
   }
+  else if(fileext == "bota") {
+    complex[string] alpha1, alpha2;
+    complex beta1, beta2;
+    complex[int] qma;
+    ub[] = loadbota(fileroot, meshin, um[], qma, sym, alpha1, alpha2, beta1, beta2);
+    if(adj) um[] = qma;
+  }
   else if(fileext == "foho") {
     real omega;
     complex[string] alpha1;
