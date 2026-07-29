@@ -765,91 +765,10 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
   ChangeNumbering(J, um[], qm);
   ChangeNumbering(J, uma[], qma);
-  if (normalform){
-    real[int,int] qDa(paramnames.n, J.n);
-/*    // 2nd-order
-    //  A: base modification due to parameter changes
-    J = vJ(XMh, XMh, tgv = TGV);
-    if(paramnames[0] != ""){
-      for (int k = 0; k < paramnames.n; ++k){
-        real paramval = getparam(paramnames[k]);
-        updateparam(paramnames[k], paramval + eps);
-        um[] = vR(0, XMh, tgv = TGV);
-        updateparam(paramnames[k], paramval);
-        um[] -= R;
-        um[] /= -eps;
-        ChangeNumbering(J, um[], qP);
-        KSPSolve(J, qP, qP);
-        qDa(k, :) = qP;
-      }
-    }
-    //  B: base modification due to quadratic nonlinear interaction
-    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-    um2[] = um[];
-    um3[] = vH(0, XMh, tgv = -10);
-    um3[].re *= -1.0; // -2.0/2.0
-    um3[].im = 0.0;
-    ChangeNumbering(J, um3[], qP);
-    KSPSolve(J, qP, qP);
-    //  C: harmonic generation due to quadratic nonlinear interaction
-    um2[] = -0.5*um[];
-    um3[] = vH(0, XMh, tgv = -10);
-    ChangeNumbering(J, um3[], pP);
-    J = vJ(XMh, XMh, tgv = TGV);
-    KSPSolve(J, pP, pP);
-    // 3rd-order
-    //  A: fundamental modification due to parameter change and quadratic interaction of fundamental with 2nd order modification A.
-    if(paramnames[0] != ""){
-      R = vJ(0, XMh, tgv = -10);
-      for (int k = 0; k < paramnames.n; ++k){
-        ChangeNumbering(J, um2[], qDa(k, :), inverse = true, exchange = true);
-        um3[] = vH(0, XMh, tgv = -10);
-        real paramval = getparam(paramnames[k]);
-        updateparam(paramnames[k], paramval + eps);
-        um2[] = vJ(0, XMh, tgv = -10);
-        updateparam(paramnames[k], paramval);
-        um2[] -= R;
-        um3[] += um2[]/eps;
-        alpha[paramnames[k]] = J(uma[], um3[]);
-      }
-    }
-    IFMACRO(cubic)
-    //  B: fundamental modification due to cubic self-interaction of fundamental
-    um2[] = 0.5*um[];
-    um3[] = um[];
-    R = vT(0, XMh, tgv = -10);
-    ENDIFMACRO
-    //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
-    ChangeNumbering(J, um2[], qP, inverse = true, exchange = true);
-    IFMACRO(cubic)
-    um3[] = vH(0, XMh, tgv = -10);
-    R += um3[];
-    ENDIFMACRO
-    IFMACRO(!cubic)
-    R = vH(0, XMh, tgv = -10);
-    ENDIFMACRO
-    //  D: fundamental modification due to quadratic interaction of fundamental with 2nd order modification C
-    um[] = um[];
-    ChangeNumbering(J, um2[], pP, inverse = true, exchange = true);
-    um3[] = vH(0, XMh, tgv = -10);
-    R += um3[];
-    beta = J(uma[], R);
-    if(wnlsave){
-      complex[int] val(1);
-      XMh<complex>[int] defu(vec)(1);
-      val = 0.0;
-      if(paramnames[0] != ""){
-        for (int k = 0; k < paramnames.n; ++k){
-          ChangeNumbering(J, vec[0][], qDa(k, :), inverse = true);
-          savemode(fileout + "_wnl_param" + k, "", fileout + ".hopf", meshout, vec, val, sym, true);
-        }
-      }
-      ChangeNumbering(J, vec[0][], qP, inverse = true);
-      savemode(fileout + "_wnl_AAs", "", fileout + ".hopf", meshout, vec, val, sym, true);
-      ChangeNumbering(J, vec[0][], pP, inverse = true);
-      savemode(fileout + "_wnl_AA", "", fileout + ".hopf", meshout, vec, val, sym, true);
-    }*/
-  } else {
+  if (normalform)
+    if(mpirank==0) cout << "NOTE: Center manifold reduction is not yet implemented for Bogdanov-Takens bifurcations." << endl;
+    // TODO: implement normal form reduction for Bogdanov-Takens bifurcations 
+  {
     if(paramnames[0] != ""){
       for (int k = 0; k < paramnames.n; ++k){
         alpha1[paramnames[k]] = 0.0;

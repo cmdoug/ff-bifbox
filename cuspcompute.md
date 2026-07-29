@@ -730,7 +730,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     //  B: base modification due to quadratic nonlinear interaction
     IFMACRO(cubic)
     um2[] = um[];
-    um3[] = um[]/3.0;
+    um3[] = um[]/6.0;
     R = vT(0, XMh, tgv = -10);
     ENDIFMACRO
     //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
@@ -742,7 +742,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     IFMACRO(!cubic)
     R = vH(0, XMh, tgv = -10);
     ENDIFMACRO
-    beta = 0.5*J(uma[], R);
+    beta = J(uma[], R);
     if(wnlsave){
       complex[int] val(1);
       XMh<complex>[int] defu(vec)(1);

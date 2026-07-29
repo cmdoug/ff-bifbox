@@ -713,7 +713,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     iomega2 = 0.0;
     IFMACRO(cubic)
     um2[] = um[];
-    um3[] = um[]/3.0;
+    um3[] = um[]/6.0;
     ik3 = 0.0;
     iomega3 = 0.0;
     R = vT(0, XMh, tgv = -10);
@@ -727,7 +727,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     IFMACRO(!cubic)
     R = vH(0, XMh, tgv = -10);
     ENDIFMACRO
-    beta23 = 0.5*real(J(uma[], R));
+    beta23 = real(J(uma[], R));
 
     // A|B|^2
     //  B: fundamental modification due to cubic self-interaction of fundamental
