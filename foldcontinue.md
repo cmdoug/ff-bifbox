@@ -79,8 +79,8 @@ if (count == 0){
   }
   else if(fileext == "bota"){
     real[string] alpha1, alpha2;
-    real beta1, beta2;
-    ub[] = loadbota(fileroot, meshin, um[], uma[], alpha1, alpha2, beta1, beta2);
+    real beta1, beta2, beta3, beta4;
+    ub[] = loadbota(fileroot, meshin, um[], uma[], alpha1, alpha2, beta1, beta2, beta3, beta4);
   }
   else if(fileext == "foho") {
     real omega, gamma22, gamma23, beta23;
@@ -146,13 +146,17 @@ real f, kappa, cosalpha, res, delta, maxdelta, alpha0, beta0;
       broadcast(processor(0), paramvals);
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       ChangeNumbering(J, uma[], qma, inverse = true);
+      J = vH(XMh, XMh, tgv = 0);
+      MatMultTranspose(J, qma, qm);
+      matrix<PetscScalar> tempPms = [[qm]];
+      ChangeOperator(gqPM, tempPms, parent = Ja); // send to Mat
+      J = vJ(XMh, XMh, tgv = TGV);
       updateparam(param, paramvals(0) + eps);
-      updateparam(param2, paramvals(1));
       um2[] = vR(0, XMh, tgv = TGV);
       um2[] -= R;
       um2[] /= eps;
       ChangeNumbering(J, um2[], qm); // FreeFEM to PETSc
-      matrix<PetscScalar> tempPms = [[qm]]; // dense array to sparse matrix
+      tempPms = [[qm]]; // dense array to sparse matrix
       ChangeOperator(JlPM, tempPms, parent = Ja); // send to Mat
       um2[] = vJ(0, XMh, tgv = -10);
       updateparam(param, paramvals(0));
@@ -160,11 +164,6 @@ real f, kappa, cosalpha, res, delta, maxdelta, alpha0, beta0;
       um2[] -= um3[];
       tempPms = [[J(uma[], um2[])/eps]];
       ChangeOperator(glPM, tempPms, parent = Ja); // send to Mat
-      J = vH(XMh, XMh, tgv = 0);
-      MatMultTranspose(J, qma, qm);
-      tempPms = [[qm]];
-      ChangeOperator(gqPM, tempPms, parent = Ja); // send to Mat
-      J = vJ(XMh, XMh, tgv = TGV);
       if (contorder > 0) {
         updateparam(param2, paramvals(1) + eps2);
         um2[] = vR(0, XMh, tgv = TGV);
@@ -219,7 +218,7 @@ else {
   ChangeOperator(yqPMa, tempPms, parent = Jaa); // send to Mat
 }
 yqP0 = yqP;
-alpha0 = alpha[paramnames[0]];
+alpha0 = alpha[param];
 beta0 = beta;
 while (!stopflag){
   qa = qa0;
@@ -411,8 +410,11 @@ while (!stopflag){
       beta = 0.0;
     }
     if (beta*beta0 < 0) {
-      if(mpirank == 0) cout << "\tCusp bifurcation detected." << endl;
       forcesave = true;
+      if(mpirank == 0) {
+        if(alpha0*alpha[param] < 0) cout << "\tBogdanov-Takens bifurcation detected." << endl;
+        else cout << "\tCusp bifurcation detected." << endl;
+      }
     }
     ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true);
     ChangeNumbering(J, um[], qm, inverse = true);
@@ -430,7 +432,7 @@ while (!stopflag){
     if (stricttangent && contorder > 0) funcJa(qa);
     yqP0 = yqP;
     qa0 = qa;
-    alpha0 = alpha[paramnames[0]];
+    alpha0 = alpha[param];
     beta0 = beta;
     IFMACRO(Jprecon) Jprecon(0); ENDIFMACRO
   }

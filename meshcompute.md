@@ -139,9 +139,9 @@ if (mpirank==0){ // Perform mesh adaptation (serially) on processor 0
     }
     else if(fileexts[ii] == "bota") {
       real[string] alpha1, alpha2;
-      real beta1, beta2;
+      real beta1, beta2, beta3, beta4;
       real[int] qm(XMhg.ndof), qma(XMhg.ndof);
-      uvecs(jj++, :) = loadbota(fileroots[ii], meshin, qm, qma, alpha1, alpha2, beta1, beta2);
+      uvecs(jj++, :) = loadbota(fileroots[ii], meshin, qm, qma, alpha1, alpha2, beta1, beta2, beta3, beta4);
       if(adaptto == "bd" || adaptto == "bda") uvecs(jj++, :) = qm; 
       if(adaptto == "ba" || adaptto == "bda") uvecs(jj++, :) = qma;
     }

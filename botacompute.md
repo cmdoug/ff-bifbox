@@ -6,42 +6,38 @@ This script computes the normal form at a non-degenerate Bogdanov-Takens point.
 The normal form is written for the amplitude $`A`$ as:
 
 $$
+\frac{d^2 A}{dt^2}-\alpha_1\cdot\delta\lambda-\alpha_2\cdot \delta\lambda A-\beta_1A^2+\beta_2A\left(\frac{d A}{dt}\right)-\beta_3A^3-\beta_4\left(\frac{d A}{dt}\right)^2=0.
+$$
+
+This may also be equivalently expressed as the first order system:
+
+$$
 \begin{aligned}
-\frac{dA}{dt} - B = 0 \\\\
-\frac{dB}{dt} + \alpha_1 \cdot \delta\lambda + \alpha_2 \cdot \delta\lambda A + \beta_1 A^2 + \beta_2 AB = 0
+\frac{dA}{dt}+B&=0,\\
+\frac{dB}{dt}+\alpha_1\cdot\delta\lambda+\alpha_2\cdot\delta\lambda A+\beta_1\,A^2+\beta_2AB+\beta_3A^3+\beta_4B^2&=0,
 \end{aligned}
 $$
 
-or, equivalently,
-
-$$
-\ddot{A} + \alpha_1 \cdot \delta\lambda + \alpha_2 \cdot \delta\lambda \dot{A} + \beta_1 A^2 + \beta_2 A\dot{A} = 0
-$$
-
-
 where:
-- $`\alpha`$ is the coefficient for the term from parameter changes,
+- $`\alpha_i`$ are the coefficients for the terms from parameter changes,
 - $`\delta\lambda`$ are the parameter increments,
-- $`\beta`$ is the coefficient for the term from harmonic interactions.
+- $`\beta_i`$ are the coefficients for the terms from nonlinear interactions.
 
 #### RESIDUAL EVALUATION IN MINIMALLY AUGMENTED FORMULATION
 We can directly compute the residual using the varf `vR()`.
 
-To build the augmented residual `Ra`, we must additionally compute the Hopf residual augmentation:
+To build the augmented residual `Ra`, we augment the residual with two additional functions:
 
 $$
-g = \langle{}v,\mathcal{J}w\rangle = v^T\mathcal{J}w
+\begin{aligned}
+g &= \langle{}v,\mathcal{J}w\rangle = v^T\mathcal{J}w,\\
+h &= \langle{}v,\mathcal{M}w\rangle = v^T\mathcal{M}w,
+\end{aligned}
 $$
 
-and the Bogdanov-Takens residual augmentation:
+where $`g`$ and $`h`$ are scalars and $`v`$ and $`w`$ are the adjoint and direct eigenvectors, respectively.
 
-$$
-h = \langle{}v,\mathcal{M}w\rangle = v^T\mathcal{M}w
-$$
-
-where $`g`$ is the Hopf residual and $`v`$ and $`w`$ are the adjoint and direct eigenvectors, respectively.
-
-$`g`$, $`v`$, and $`w`$ can be found using minimially augmented systems (For more details, see Govaerts, (2000), Ch. 4, particularly page 87.):
+$`g`$, $`v`$, and $`w`$ can be found using minimially augmented systems:
 
 $$
 \begin{equation}
@@ -55,7 +51,7 @@ g
 \end{bmatrix} = \begin{bmatrix}
 0 \\
 1
-\end{bmatrix}
+\end{bmatrix},
 \end{equation}
 $$
 
@@ -64,7 +60,7 @@ where $`q_0`$, $`p_0`$ are initial approximations of the direct & adjoint eigenv
 This implies:
 
 $$
-\mathcal{J}w = \mathcal{M}p_0g\qquad{}\text{and}\qquad{}(\mathcal{M}q_0)^Tw = 1
+\mathcal{J}w = \mathcal{M}p_0g\qquad{}\text{and}\qquad{}(\mathcal{M}q_0)^Tw = 1,
 $$
 
 so
@@ -85,13 +81,13 @@ v^T & g
 (\mathcal{M}q_0)^T & 0
 \end{bmatrix} = \begin{bmatrix}
 0 & 1
-\end{bmatrix}
+\end{bmatrix}.
 $$
 
 This implies:
 
 $$
-v^T\mathcal{J} = g(\mathcal{M}q_0)^T\qquad{}\text{and}\qquad{}v^T\mathcal{M}p_0 = 1
+v^T\mathcal{J} = g(\mathcal{M}q_0)^T\qquad{}\text{and}\qquad{}v^T\mathcal{M}p_0 = 1,
 $$
 
 or, taking the transpose:
@@ -108,29 +104,29 @@ g
 \end{bmatrix} = \begin{bmatrix}
 0 \\
 1
-\end{bmatrix}
+\end{bmatrix},
 \end{equation}
 $$
 
 giving, equivalently,
 
 $$
-\mathcal{J}^Tv = \mathcal{M}q_0g\qquad{}\text{and}\qquad{}(\mathcal{M}p_0)^Tv = 1
+\mathcal{J}^Tv = \mathcal{M}q_0g\qquad{}\text{and}\qquad{}(\mathcal{M}p_0)^Tv = 1,
 $$
 
 so
 
 $$
-v = \mathcal{J}^{-T}\mathcal{M}q_0g\qquad{}\text{and}\qquad{}g = \frac{1}{(\mathcal{M}p_0)^T\mathcal{J}^{-T}\mathcal{M}q_0}
+v = \mathcal{J}^{-T}\mathcal{M}q_0g\qquad{}\text{and}\qquad{}g = \frac{1}{(\mathcal{M}p_0)^T\mathcal{J}^{-T}\mathcal{M}q_0}.
 $$
 
-At $`g = 0`$, we have $`\mathcal{J}^Tv = 0`$ and $`~`(\mathcal{M}p_0)^Tv = 1`$, so $`v^T\mathcal{J} = 0`$ and $`v^T\mathcal{M}p_0 = 1`$.
+At $`g = 0`$, we have $`\mathcal{J}^Tv = 0`$ and $`(\mathcal{M}p_0)^Tv = 1`$, so $`v^T\mathcal{J} = 0`$ and $`v^T\mathcal{M}p_0 = 1`$.
 
 Finally, the augmented Bogdanov-Takens residual can be computed directly:
 
 $$
 \begin{equation}
-h = \langle{}v,\mathcal{M}w\rangle = v^T\mathcal{M}w
+h = \langle{}v,\mathcal{M}w\rangle = v^T\mathcal{M}w.
 \end{equation}
 $$
 
@@ -368,7 +364,7 @@ real eps2 = getARGV("-eps2", 1e-7);
 string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 real TGV = getARGV("-tgv", -1);
 real[string] alpha1, alpha2;
-real beta1, beta2;
+real beta1, beta2, beta3, beta4;
 
 // Load mesh, make FE basis
 string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension
@@ -384,7 +380,7 @@ DmeshCreate(Th);
 restu = restrict(XMh, XMhg, n2o);
 XMh defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
 if (fileext == "bota") {
-  ub[] = loadbota(fileroot, meshin, um[], uma[], alpha1, alpha2, beta1, beta2);
+  ub[] = loadbota(fileroot, meshin, um[], uma[], alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if (fileext == "hopf") {
   real omega;
@@ -497,7 +493,7 @@ else if(basefileext == "bota") {
   real[string] alpha1, alpha2;
   real beta1, beta2;
   real[int] qm, qma;
-  ub[] = loadbota(basefileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2);
+  ub[] = loadbota(basefileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if(basefileext == "foho") {
   real omega;
@@ -612,9 +608,8 @@ real[int] ik(sym.n), ik2(sym.n), ik3(sym.n);
 real iomega = 0.0, iomega2 = 0.0, iomega3 = 0.0;
 include "eqns.idp"
 Mat JlPM(J.n, mpirank == 0 ? 2 : 0), gqPM(J.n, mpirank == 0 ? 2 : 0), glPM(mpirank == 0 ? 2 : 0, mpirank == 0 ? 2 : 0); // Initialize Mat objects for bordered matrix
-Mat Ja = [[J, JlPM], [gqPM', glPM]]; // make dummy Jacobian
+Mat M(J), Ja = [[J, JlPM], [gqPM', glPM]]; // make dummy Jacobian
 real[int] R(ub[].n), qm(J.n), qma(J.n), qpm(J.n), qpma(J.n), pP(J.n), qP(J.n);
-real ginv, h;
 // FUNCTIONS
   func real[int] funcRa(real[int]& qa) {
       ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
@@ -624,23 +619,25 @@ real ginv, h;
       updateparam(param2, paramvals(1));
       R = vR(0, XMh, tgv = TGV);
       real[int] Ra;
-      ChangeNumbering(J, R, Ra); // FreeFEM to PETSc
       J = vJ(XMh, XMh, tgv = -2);
       KSPSolve(J, pP, qm);
       KSPSolveTranspose(J, qP, qma);
-      real ginvl = (qP'*qm);
+      real h, ginv, ginvl = (qP'*qm);
       mpiAllReduce(ginvl, ginv, mpiCommWorld, mpiSUM);
       qm /= ginv; // rescale direct mode
       qma /= ginv; // rescale adjoint mode
-      ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-      ChangeNumbering(J, uma[], qma, inverse = true);
-      um3[] = vM(0, XMh, tgv = -10);
-      h = J(uma[], um3[]);
+      M = vM(XMh, XMh, tgv = 0);
+      MatMult(M, qm, Ra);
+      ginvl = (qma'*Ra);
+      mpiAllReduce(ginvl, h, mpiCommWorld, mpiSUM);
+      KSPSolve(J, Ra, qpm);
+      qpm -= h*ginv*qm;
+      MatMultTranspose(M, qma, Ra);
+      KSPSolveTranspose(J, Ra, qpma);
+      qpma -= h*ginv*qma;
+      ChangeNumbering(J, R, Ra); // FreeFEM to PETSc
       Ra.resize(Ja.n); // Append 0 to residual vector on proc 0
-      if(mpirank == 0) {
-        Ra(J.n) = real(1.0/ginv);
-        Ra(Ja.n-1) = real(h);
-      }
+      if(mpirank == 0) Ra(J.n:Ja.n-1) = [1.0/ginv, h];
       return Ra;
   }
 
@@ -649,16 +646,8 @@ real ginv, h;
       if(mpirank == 0) paramvals = qa(J.n:Ja.n-1);
       broadcast(processor(0), paramvals);
       real[int] temp1, temp3;
-      ChangeNumbering(J, um3[], qpm);
-      KSPSolve(J, qpm, qpm);
-      qpm -= h*ginv*qm;
-      ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
-      um2[] = vM(0, XMh, tgv = -10);
-      ChangeNumbering(J, um2[], temp3);
-      KSPSolveTranspose(J, temp3, qpma);
-      qpma -= h*ginv*qma;
-      qpma *= -1.0;
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+      ChangeNumbering(J, uma[], qma, inverse = true);
       updateparam(param, paramvals(0) + eps);
       um3[] = vR(0, XMh, tgv = TGV);
       um3[] -= R;
@@ -669,14 +658,8 @@ real ginv, h;
       ChangeNumbering(J, um[], qpm, inverse = true, exchange = true);
       um3[] = vJ(0, XMh, tgv = -10);
       Ml1 -= um3[];
-      updateparam(param, paramvals(0));
-      um3[] = vJ(0, XMh, tgv = -10);
-      Ml1 += um3[];
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-      um3[] = vJ(0, XMh, tgv = -10);
-      Jl1 -= um3[];
-      um3[] = vM(0, XMh, tgv = -10);
-      Ml1 -= um3[];
+      updateparam(param, paramvals(0));
       updateparam(param2, paramvals(1) + eps2);
       um3[] = vR(0, XMh, tgv = TGV);
       um3[] -= R;
@@ -691,15 +674,19 @@ real ginv, h;
       um2[] -= um3[];
       updateparam(param2, paramvals(1));
       um3[] = vJ(0, XMh, tgv = -10);
+      Ml1 += um3[];
       um2[] += um3[];
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       um3[] = vJ(0, XMh, tgv = -10);
+      Jl1 -= um3[];
       R -= um3[];
       um3[] = vM(0, XMh, tgv = -10);
+      Ml1 -= um3[];
       um2[] -= um3[];
       J = vH(XMh, XMh, tgv = 0);
       MatMultTranspose(J, qma, temp3);
       MatMultTranspose(J, qpma, qm);
+      qm *= -1.0;
       J = vdM(XMh, XMh, tgv = 0);
       MatMultTranspose(J, qma, temp1);
       qm += temp1;
@@ -709,14 +696,14 @@ real ginv, h;
       qm -= temp1;
       tempPms = [[temp3, qm]];
       ChangeOperator(gqPM, tempPms, parent = Ja);
+      J = vJ(XMh, XMh, tgv = TGV);
       real gl1 = J(uma[], Jl1)/eps;
       real gl2 = J(uma[], R)/eps2;
       ChangeNumbering(J, um3[], qpma, inverse = true);
-      real hl1 = (J(uma[], Ml1) + J(um3[], Jl1))/eps;
-      real hl2 = (J(uma[], um2[]) + J(um3[], R))/eps2;
+      real hl1 = (J(uma[], Ml1) - J(um3[], Jl1))/eps;
+      real hl2 = (J(uma[], um2[]) - J(um3[], R))/eps2;
       tempPms = [[gl1, gl2], [hl1, hl2]];
       ChangeOperator(glPM, tempPms, parent = Ja);
-      J = vJ(XMh, XMh, tgv = TGV);
       return 0;
   }
 // set up Mat parameters
@@ -728,24 +715,25 @@ set(J, IFMACRO(Jsetargs) Jsetargs, ENDIFMACRO prefix = "fieldsplit_0_", parent =
 // Initialize
 real[int] qa;
 ChangeNumbering(J, ub[], qa);
+ChangeNumbering(J, ub[], qa, exchange = true, inverse = true);
 qa.resize(Ja.n);
 if(mpirank == 0) qa(J.n:Ja.n-1) = paramvals;
-um2[] = vM(0, XMh, tgv = -10);
 ChangeNumbering(J, um[], qm);
-ChangeNumbering(J, um[], qm, inverse = true);
-real Mnorm = sqrt(real(J(um[], um2[])));
-um2[] /= Mnorm;
-ChangeNumbering(J, um2[], qP);
-if (fileext == "hopf" || fileext == "hoho" || fileext == "foho" || fileext == "bota" || fileext == "baut") um[] = uma[];
+M = vM(XMh, XMh, tgv = -10);
+MatMult(M, qm, qP);
+real Mnorm, local = (qm'*qP);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+Mnorm = sqrt(Mnorm);
+qP /= Mnorm;
+if (fileext == "hopf" || fileext == "hoho" || fileext == "foho" || fileext == "bota" || fileext == "baut") ChangeNumbering(J, uma[], qma);
 else {
   J = vJ(XMh, XMh, tgv = -2);
   KSPSolveTranspose(J, qP, qma);
-  ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
 }
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um[], qm, inverse = true);
-um2[] *= (Mnorm/J(um[], um2[])); // so that <uma[],M*um[]> = 1
-ChangeNumbering(J, um2[], pP);
+MatMultTranspose(M, qma, pP);
+local = (qma'*qP);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+pP /= Mnorm;
 // solve nonlinear problem with SNES
 int ret;
 SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
@@ -756,19 +744,144 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   broadcast(processor(0), paramvals);
   updateparam(param, paramvals(0));
   updateparam(param2, paramvals(1));
-  ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-  um2[] = vM(0, XMh, tgv = 0);
-  ChangeNumbering(J, um[], qm, inverse = true);
-  ChangeNumbering(J, uma[], qma, inverse = true);
-  Mnorm = sqrt(real(J(um[], um2[])));
-  um[] /= Mnorm; // so that <um[],M*um[]> = 1
-  uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
-  ChangeNumbering(J, um[], qm);
-  ChangeNumbering(J, uma[], qma);
-  if (normalform)
-    if(mpirank==0) cout << "NOTE: Center manifold reduction is not yet implemented for Bogdanov-Takens bifurcations." << endl;
-    // TODO: implement normal form reduction for Bogdanov-Takens bifurcations 
-  {
+  M = vM(XMh, XMh, tgv = 0);
+  MatMult(M, qm, qP);
+  local = (qm'*qP);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  Mnorm = sqrt(Mnorm);
+  qm /= Mnorm;
+  qpm /= Mnorm;
+  local = (qpma'*qP)/Mnorm;
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  qma /= Mnorm;
+  qpma /= Mnorm;
+  MatMult(M, qpm, qP);
+  local = (qm'*qP);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  qpm -= Mnorm*qm;
+  MatMult(M, qpm, qP);
+  local = (qpma'*qP);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  qpma -= Mnorm*qma;
+  if (normalform){
+    real[int,int] qDa(paramnames.n, J.n);
+    Mat qPM(J.n, mpirank == 0 ? 1 : 0), pPM(J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
+    Ja = [[J, pPM], [qPM', 0]]; // make dummy Jacobian
+    set(Ja, sparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full"
+                    + " -prefix_push fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
+                    + " -prefix_push fieldsplit_0_ " + KSPparams + " -prefix_pop", setup = 1);
+    MatMultTranspose(M, qma, pP);
+    matrix tempPms = [[pP]]; // dense array to sparse matrix
+    ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
+    MatMult(M, qm, qP);
+    tempPms = [[qP]]; // dense array to sparse matrix
+    ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
+    // 2nd-order
+    //  A: base modification due to parameter changes
+    J = vJ(XMh, XMh, tgv = TGV);
+    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+    ChangeNumbering(J, uma[], qma, inverse = true);
+    if(paramnames[0] != ""){
+      for (int k = 0; k < paramnames.n; ++k){
+        real paramval = getparam(paramnames[k]);
+        updateparam(paramnames[k], paramval + eps);
+        um2[] = vR(0, XMh, tgv = TGV);
+        updateparam(paramnames[k], paramval);
+        um2[] -= R;
+        um2[] /= -eps;
+        alpha1[paramnames[k]] = -J(uma[], um2[]);
+        ChangeNumbering(J, um2[], qP); // FreeFEM to PETSc
+        MatMult(M, qpm, pP);
+        qP += alpha1[paramnames[k]]*pP;
+        qP.resize(Ja.n);
+        if(mpirank == 0) qP(Ja.n-1) = 0.0;
+        KSPSolve(Ja, qP, pP);
+        qDa(k, :) = pP(0:J.n-1);
+      }
+    }
+    // particular solution for quadratic interactions
+    um2[] = -0.5*um[];
+    um3[] = vH(0, XMh, tgv = -10);
+    beta1 = -J(uma[], um3[]);
+    ChangeNumbering(J, um3[], qP);
+    MatMult(M, qpm, pP);
+    qP += beta1*pP;
+    qP.resize(Ja.n);
+    if(mpirank == 0) qP(Ja.n-1) = 0.0;
+    KSPSolve(Ja, qP, pP);
+    qP.resize(J.n);
+    pP.resize(J.n);
+    // inner products
+    ChangeNumbering(J, R, qpma, inverse = true);
+    beta2 = -2.0*J(R, um3[]);
+    R = vdM(0, XMh, tgv = -10);
+    ChangeNumbering(J, um2[], qpm, inverse = true, exchange = true);
+    um3[] = vH(0, XMh, tgv = -10);
+    um3[] += 2.0*R;
+    beta2 += J(uma[], um3[]);
+    MatMult(M, pP, qP);
+    ChangeNumbering(J, R, qP, inverse = true, exchange = true);
+    um3[] -= 2.0*R;
+    ChangeNumbering(J, R, qpma, inverse = true);
+    real gamma = J(R, um3[]);
+    R = vdM(0, XMh, tgv = -10);
+    gamma -= J(uma[], R);
+    um[] = um2[];
+    um3[] = vH(0, XMh, tgv = -10);
+    beta4 = gamma - 0.5*J(uma[], um3[]);
+    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+    IFMACRO(cubic)
+    um2[] = um[];
+    um3[] = um[]/6.0;
+    R = vT(0, XMh, tgv = -10);
+    ENDIFMACRO
+    ChangeNumbering(J, um2[], pP, inverse = true, exchange = true);
+    IFMACRO(cubic)
+    um3[] = vH(0, XMh, tgv = -10);
+    R += um3[];
+    ENDIFMACRO
+    IFMACRO(!cubic)
+    R = vH(0, XMh, tgv = -10);
+    ENDIFMACRO
+    beta3 = beta1*gamma + J(uma[], R);
+    if(paramnames[0] != ""){
+      R = vJ(0, XMh, tgv = -10);
+      for (int k = 0; k < paramnames.n; ++k){
+        ChangeNumbering(J, um2[], qDa(k, :), inverse = true, exchange = true);
+        um3[] = vH(0, XMh, tgv = -10);
+        real paramval = getparam(paramnames[k]);
+        updateparam(paramnames[k], paramval + eps);
+        um2[] = vJ(0, XMh, tgv = -10);
+        updateparam(paramnames[k], paramval);
+        um2[] -= R;
+        um3[] += um2[]/eps;
+        alpha2[paramnames[k]] = alpha1[paramnames[k]]*gamma + J(uma[], um3[]);
+      }
+    }
+    if(wnlsave){
+      complex[int] val(1);
+      XMh<complex>[int] defu(vec)(1);
+      XMh<complex> defu(um);
+      ChangeNumbering(J, um3[], qpm, inverse = true);
+      vec[0][].re = um3[];
+      val(0) = 0.0;
+      savemode(fileout + "_wnl_B", "", fileout + ".bota", meshout, vec, val, sym, true);
+      ChangeNumbering(J, um3[], qpma, inverse = true);
+      vec[0][].re = um3[];
+      savemode(fileout + "_wnl_Badj", "", fileout + ".bota", meshout, vec, val, sym, true);
+      if(paramnames[0] != ""){
+        for (int k = 0; k < paramnames.n; ++k){
+          ChangeNumbering(J, um3[], qDa(k, :), inverse = true);
+          vec[0][].re = um3[];
+          savemode(fileout + "_wnl_param" + k, "", fileout + ".bota", meshout, vec, val, sym, true);
+        }
+      }
+      ChangeNumbering(J, um3[], pP, inverse = true);
+      vec[0][].re = um3[];
+      savemode(fileout + "_wnl_AA", "", fileout + ".bota", meshout, vec, val, sym, true);
+    }
+  }
+  else {
     if(paramnames[0] != ""){
       for (int k = 0; k < paramnames.n; ++k){
         alpha1[paramnames[k]] = 0.0;
@@ -777,6 +890,8 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     }
     beta1 = 0.0;
     beta2 = 0.0;
+    beta3 = 0.0;
+    beta4 = 0.0;
   }
   if(mpirank==0 && adapt) { // Save adapted mesh
     cout << "  Saving adapted mesh '" + meshout + "' in '" + workdir + "'." << endl;
@@ -784,6 +899,6 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   }
   ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true);
   ChangeNumbering(J, um[], qm, inverse = true);
-  savebota(fileout, "", meshout, alpha1, alpha2, beta1, beta2, true, true);
+  savebota(fileout, "", meshout, alpha1, alpha2, beta1, beta2, beta3, beta4, true, true);
 }
 ```

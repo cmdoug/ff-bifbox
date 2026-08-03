@@ -80,8 +80,8 @@ if (count == 0){
   }
   else if(fileext == "bota") {
     real[string] alpha1, alpha2;
-    real beta1, beta2;
-    ub[].re = loadbota(fileroot, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2);
+    real beta1, beta2, beta3, beta4;
+    ub[].re = loadbota(fileroot, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2, beta3, beta4);
   }
   else if (fileext == "foho") {
     real[string] alpha2;
@@ -271,7 +271,7 @@ else {
 }
 yqP0 = yqP;
 omega0 = omega;
-alpha0 = alpha[paramnames[0]];
+alpha0 = alpha[param];
 beta0 = beta;
 while (!stopflag){
   qa = qa0;
@@ -582,11 +582,14 @@ while (!stopflag){
       }
       beta = 0.0;
     }
-    if (real(beta)*real(beta0) < 0 || omega*omega0 < 0) {
+    if (real(beta)*real(beta0) < 0) {
       forcesave = true;
       if(mpirank == 0) {
-        if (omega*omega0 < 0) cout << "\tBogdanov-Takens bifurcation (or zero-frequency point) detected." << endl;
-        else if(real(alpha0)*real(alpha[paramnames[0]]) < 0) cout << "\tFold-Hopf bifurcation detected." << endl;
+        if(real(alpha0)*real(alpha[param]) < 0) {
+          if ( omega*omega0 < 0 || abs(omega) < 1.0e-6)
+            cout << "\tBogdanov-Takens bifurcation (or zero-frequency point) detected." << endl;
+          else cout << "\tFold-Hopf bifurcation detected." << endl;
+        }
         else cout << "\tBautin bifurcation detected." << endl;
       }
     }
@@ -609,7 +612,7 @@ while (!stopflag){
     yqP0 = yqP;
     qa0 = qa;
     omega0 = omega;
-    alpha0 = alpha[paramnames[0]];
+    alpha0 = alpha[param];
     beta0 = beta;
   }
   else h0 /= fmax;

@@ -255,8 +255,8 @@ if (fileext == "hopf") {
 }
 else if(fileext == "bota") {
   real[string] alpha1, alpha2;
-  real beta1, beta2;
-  ub[].re = loadbota(fileroot, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2);
+  real beta1, beta2, beta3, beta4;
+  ub[].re = loadbota(fileroot, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if (fileext == "foho") {
   real[string] alpha2;
@@ -328,9 +328,9 @@ else if(basefileext == "hopf") {
 }
 else if(basefileext == "bota") {
   real[string] alpha1, alpha2;
-  real beta1, beta2;
+  real beta1, beta2, beta3, beta4;
   real[int] qm, qma;
-  ub[].re = loadbota(basefileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2);
+  ub[].re = loadbota(basefileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if(basefileext == "foho") {
   real omega;

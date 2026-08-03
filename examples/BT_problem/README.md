@@ -29,13 +29,13 @@ cd ~/your/path/to/ff-bifbox/
 ```
 2. Define working directory and number of processors:
 ```sh
-export workdir=examples/bogtaktest/data
+export workdir=examples/BT_problem/data
 export nproc=4
 ```
 3. Create symbolic links for governing equations and solver settings.
 ```sh
-ln -sf examples/bogtaktest/eqns_BT.idp eqns.idp
-ln -sf examples/bogtaktest/settings_BT.idp settings.idp
+ln -sf examples/BT_problem/eqns_BT.idp eqns.idp
+ln -sf examples/BT_problem/settings_BT.idp settings.idp
 ````
 
 ## Build initial meshes
@@ -76,5 +76,7 @@ ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi BTh.hopf -fo BTh -pa
 ### Identify Bogdanov-Takens point
 ```sh
 cd "$workdir" && set -- BTh_*specialpt.hopf && export guess="$1" && cd -
-ff-mpirun -np $nproc botacompute.md -v 0 -dir $workdir -fi "$guess" -fo BT -param a1 -param2 a2
+ff-mpirun -np $nproc botacompute.md -v 0 -dir $workdir -fi "$guess" -fo BTh -param a1 -param2 a2
+cd "$workdir" && set -- BTf_*specialpt.fold && export guess="$2" && cd -
+ff-mpirun -np $nproc botacompute.md -v 0 -dir $workdir -fi "$guess" -fo BTf -param a1 -param2 a2
 ```

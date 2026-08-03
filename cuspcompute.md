@@ -403,9 +403,9 @@ else if(fileext == "hopf") {
 }
 else if(fileext == "bota") {
   real[string] alpha1, alpha2;
-  real beta1, beta2;
+  real beta1, beta2, beta3, beta4;
   real[int] qm, qma;
-  ub[] = loadbota(fileroot, meshin, um[], uma[], alpha1, alpha2, beta1, beta2);
+  ub[] = loadbota(fileroot, meshin, um[], uma[], alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if(fileext == "hoho") {
   real[int] sym1(sym.n), sym2(sym.n);
@@ -530,10 +530,10 @@ real h, ginv;
       qm /= ginv;
       qma /= ginv;
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-      ChangeNumbering(J, uma[], qma, inverse = true);
-      um2[] = um[];
-      um3[] = vH(0, XMh, tgv = -10);
-      h = J(uma[], um3[]);      
+      H = vH(XMh, XMh, tgv = -10);
+      MatMult(H, qm, qpm);
+      ginvl = (qma'*qpm);
+      mpiAllReduce(ginvl, h, mpiCommWorld, mpiSUM);
       Ra.resize(Ja.n); // Append 0 to residual vector on proc 0
       if(mpirank == 0) Ra(J.n:Ja.n-1) = [1.0/ginv, h];
       return Ra;
@@ -544,7 +544,8 @@ real h, ginv;
       if(mpirank == 0) paramvals = qa(J.n:Ja.n-1); // Extract parameter value from state vector on proc 0
       broadcast(processor(0), paramvals);
       real[int] temp1, temp3;
-      ChangeNumbering(J, um3[], qpm);
+      ChangeNumbering(J, uma[], qma, inverse = true);
+      um2[] = um[];
       KSPSolve(J, qpm, qpm);
       qpm -= h*ginv*qm;
       updateparam(param, paramvals(0) + eps);
@@ -557,14 +558,8 @@ real h, ginv;
       ChangeNumbering(J, um[], qpm, inverse = true, exchange = true);
       um3[] = vJ(0, XMh, tgv = -10);
       Tl1 -= um3[];
-      updateparam(param, paramvals(0));
-      um3[] = vJ(0, XMh, tgv = -10);
-      Tl1 += um3[];
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-      um3[] = vJ(0, XMh, tgv = -10);
-      Hl1 -= um3[];
-      um3[] = vH(0, XMh, tgv = -10);
-      Tl1 -= um3[];
+      updateparam(param, paramvals(0));
       updateparam(param2, paramvals(1) + eps2);
       um3[] = vR(0, XMh, tgv = TGV);
       um3[] -= R;
@@ -579,13 +574,15 @@ real h, ginv;
       R -= um3[];
       updateparam(param2, paramvals(1));
       um3[] = vJ(0, XMh, tgv = -10);
+      Tl1 += um3[];
       R += um3[];
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       um3[] = vJ(0, XMh, tgv = -10);
+      Hl1 -= um3[];
       Hl2 -= um3[];
       um3[] = vH(0, XMh, tgv = -10);
+      Tl1 -= um3[];
       R -= um3[];
-      H = vH(XMh, XMh, tgv = -10);
       MatMultTranspose(H, qma, temp3);
       KSPSolveTranspose(J, temp3, qpma);
       qpma -= h*ginv*qma;

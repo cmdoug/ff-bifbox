@@ -101,8 +101,8 @@ else if(fileext == "hopf") {
 }
 else if(fileext == "bota") {
   real[string] alpha1, alpha2;
-  real beta1, beta2;
-  ub[] = loadbota(fileroot, meshin, um[], uma[], alpha1, alpha2, beta1, beta2);
+  real beta1, beta2, beta3, beta4;
+  ub[] = loadbota(fileroot, meshin, um[], uma[], alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if(fileext == "hoho") {
   real[int] sym1(sym.n), sym2(sym.n);
@@ -233,24 +233,24 @@ real[int] R(ub[].n), qm(J.n), qma(J.n), pP(J.n), qP(J.n);
       broadcast(processor(0), paramval);
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       ChangeNumbering(J, uma[], qma, inverse = true);
+      J = vH(XMh, XMh, tgv = 0);
+      MatMultTranspose(J, qma, qm);
+      matrix tempPms = [[qm]]; // dense array to sparse matrix
+      ChangeOperator(gqPM, tempPms, parent = Ja); // send to Mat
+      J = vJ(XMh, XMh, tgv = TGV);
       updateparam(param, paramval + eps);
       um2[] = vR(0, XMh, tgv = TGV);
       um2[] -= R;
       um2[] /= eps;
       ChangeNumbering(J, um2[], qm); // FreeFEM to PETSc
-      matrix tempPms = [[qm]]; // dense array to sparse matrix
+      tempPms = [[qm]]; // dense array to sparse matrix
       ChangeOperator(JlPM, tempPms, parent = Ja); // send to Mat
       um3[] = vJ(0, XMh, tgv = -10);
       updateparam(param, paramval);
       um2[] = vJ(0, XMh, tgv = -10);
       um3[] -= um2[];
-      J = vH(XMh, XMh, tgv = 0);
-      MatMultTranspose(J, qma, qm);
-      tempPms = [[qm]]; // dense array to sparse matrix
-      ChangeOperator(gqPM, tempPms, parent = Ja); // send to Mat
       tempPms = [[J(uma[], um3[])/eps]]; // dense array to sparse matrix
       ChangeOperator(glPM, tempPms, parent = Ja); // send to Mat
-      J = vJ(XMh, XMh, tgv = TGV);
       return 0;
   }
 // set up Mat parameters

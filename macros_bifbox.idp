@@ -1793,7 +1793,7 @@ macro savehopf(hopffileout, statsfile, meshfile, sym, omega, alpha, beta, savefl
   }
 }//EOM
 
-macro savebota(botafileout, statsfile, meshfile, alpha1, alpha2, beta1, beta2, saveflag, monitorflag){
+macro savebota(botafileout, statsfile, meshfile, alpha1, alpha2, beta1, beta2, beta3, beta4, saveflag, monitorflag){
   IFMACRO(getmonitors) 
     XMhg defu(tempu), defu(ubg), defu(umg), defu(umag);
     tempu[](restu) = ub[];
@@ -1811,7 +1811,7 @@ macro savebota(botafileout, statsfile, meshfile, alpha1, alpha2, beta1, beta2, s
         cout << "alpha[" + paramnames[k] + "] = [" + alpha1[paramnames[k]] + ", " + alpha2[paramnames[k]] + "], ";
       }
     }
-    cout << "beta = [" + beta1 + ", " + beta2 + "]";
+    cout << "beta = [" + beta1 + ", " + beta2 + ", " + beta3 + ", " + beta4 + "]";
     if(paramnames[0] != "" ) cout << ", " << listparams(paramnames, params);
     if(monitornames[0] != "") cout << ", " << listparams(monitornames, monitors);
     cout << "." << endl;
@@ -1828,7 +1828,7 @@ macro savebota(botafileout, statsfile, meshfile, alpha1, alpha2, beta1, beta2, s
           file << "\t" << alpha1[paramnames[k]] << "\t" << alpha2[paramnames[k]];
         }
       }
-      file << "\t" << beta1 << "\t" << beta2;
+      file << "\t" << beta1 << "\t" << beta2 << "\t" << beta3 << "\t" << beta4;
       if(paramnames[0] != ""){
         for (int k = 0; k < paramnames.n; ++k){
           file << "\t" << params[paramnames[k]];
@@ -1863,7 +1863,7 @@ macro savebota(botafileout, statsfile, meshfile, alpha1, alpha2, beta1, beta2, s
             file << "alpha[" + paramnames[k] + "]\t" << alpha1[paramnames[k]] << "\t" << alpha2[paramnames[k]] << endl;
           }
         }
-        file << "beta\t" << beta1 << "\t" << beta2 << endl;
+        file << "beta\t" << beta1 << "\t" << beta2 << "\t" << beta3 << "\t" << beta4 << endl;
         if(paramnames[0] != ""){
           for (int k = 0; k < paramnames.n; ++k){
             file << paramnames[k] << "\t" << params[paramnames[k]] << endl;
@@ -2886,7 +2886,7 @@ func real[int] loadhopf(string inputfilename, string meshfilename, complex[int] 
       return qlocal;
     }
 
-func real[int] loadbota(string inputfilename, string meshfilename, real[int] & qmlocal, real[int] & qmalocal, real[string] & alpha1, real[string] & alpha2, real & beta1, real & beta2) {
+func real[int] loadbota(string inputfilename, string meshfilename, real[int] & qmlocal, real[int] & qmalocal, real[string] & alpha1, real[string] & alpha2, real & beta1, real & beta2, real & beta3, real & beta4) {
       XMhg defu(ubg), defu(umg), defu(umag);
       if (mpirank == 0) cout << "  Loading '" + inputfilename + ".bota' on '" + meshfilename + "' from '" + workdir + "'." << endl;
       string dummy, filemesh;
@@ -2897,7 +2897,7 @@ func real[int] loadbota(string inputfilename, string meshfilename, real[int] & q
           file >> dummy >> alpha1[paramnames[k]] >> alpha2[paramnames[k]];
         }
       }
-      file >> dummy >> beta1 >> beta2;
+      file >> dummy >> beta1 >> beta2 >> beta3 >> beta4;
       if(paramnames[0] != ""){
         for (int k = 0; k < paramnames.n; ++k){
           file >> paramnames[k] >> params[paramnames[k]];
@@ -2915,7 +2915,7 @@ func real[int] loadbota(string inputfilename, string meshfilename, real[int] & q
             cout << "alpha[" + paramnames[k] + "] = [" + alpha1[paramnames[k]] + ", " + alpha2[paramnames[k]] + "], ";
           }
         }
-        cout << "beta = [" + beta1 + ", " + beta2 + "]";
+        cout << "beta = [" + beta1 + ", " + beta2 + ", " + beta3 + ", " + beta4 + "]";
         if(paramnames[0] != "") cout << ", " + listparams(paramnames, params);
         if(monitornames[0] != "") cout << ", " + listparams(monitornames, monitors);
         cout << "." << endl;

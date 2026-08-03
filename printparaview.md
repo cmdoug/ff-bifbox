@@ -223,8 +223,8 @@ if (mpirank==0){
   else if (fileext == "bota"){
     XMhg defu(ubg), defu(umg), defu(umag);
     real[string] alpha1, alpha2;
-    real beta1, beta2;
-    ubg[] = loadbota(fileroot, meshin, umg[], umag[], alpha1, alpha2, beta1, beta2);
+    real beta1, beta2, beta3, beta4;
+    ubg[] = loadbota(fileroot, meshin, umg[], umag[], alpha1, alpha2, beta1, beta2, beta3, beta4);
     cout << "  Saving '" + fileout + "_bota_[base,dirmode,adjmode].vtu' in '" + workdir + "'." << endl;
     real[int] qpv = ubg[], qmpv = umg[], qmapv = umag[];
     if (paraviewflag > 1){

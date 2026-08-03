@@ -81,12 +81,12 @@ if (fileext2 == "fold") {
 }
 else if(fileext2 == "cusp") {
   real[string] alphaR;
-  ub[] = loadcusp(fileroot, meshin, um2[].re, um3[].re, alpha2, alphaR, beta23);
+  ub[] = loadcusp(fileroot2, meshin, um2[].re, um3[].re, alpha2, alphaR, beta23);
 }
 else if(fileext2 == "bota") {
   real[string] alpha1, alpha2;
-  real beta1, beta2;
-  ub[].re = loadbota(fileroot2, meshin, um2[].re, um3[].re, alpha1, alpha2, beta1, beta2);
+  real beta1, beta2, beta3, beta4;
+  ub[].re = loadbota(fileroot2, meshin, um2[].re, um3[].re, alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if(fileext2 == "foho") {
   real omega;
@@ -121,9 +121,9 @@ else if (fileext1 == "hopf") {
   ub[].re = loadhopf(fileroot1, meshin, um[], uma[], sym1, omega, alpha1, beta1);
 }
 else if(fileext1 == "bota") {
-  complex[string] alpha1;
-  complex beta1;
-  ub[].re = loadbota(fileroot, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2);
+  real[string] alpha1, alpha2;
+  real beta1, beta2, beta3, beta4;
+  ub[].re = loadbota(fileroot1, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if (fileext1 == "mode") {
   complex eigenvalue;
@@ -176,9 +176,9 @@ else if(basefileext == "hopf") {
 }
 else if(basefileext == "bota") {
   real[string] alpha1, alpha2;
-  real beta1, beta2;
+  real beta1, beta2, beta3, beta4;
   real[int] qm, qma;
-  ub[].re = loadbota(basefileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2);
+  ub[].re = loadbota(basefileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if(basefileext == "foho") {
   real omega;
