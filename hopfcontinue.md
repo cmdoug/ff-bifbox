@@ -14,7 +14,7 @@ ff-mpirun -np 4 hopfcontinue.md -param <PARAM1> -param2 <PARAM2> -fi <FILEIN> -f
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [fohocompute.md](./fohocompute.md), [hohocompute.md](./hohocompute.md), [porbcontinue.md](./porbcontinue.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [fohocompute.md](./fohocompute.md), [./botacompute.md](./botacompute.md), [hohocompute.md](./hohocompute.md), [porbcontinue.md](./porbcontinue.md)
 
 ```freefem
 load "iovtk"
@@ -252,13 +252,9 @@ qa0.resize(Jaa.n);
 if(mpirank == 0) qa0(J.n:Jaa.n-1).re = paramvals;
 sym = sym1;
 ik.im = sym1;
-iomega = 1i*omega;
-ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um2[], qP);
-ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um2[], pP);
+J = vM(XMh, XMh, tgv = 0);
+MatMult(J, qm, qP);
+MatMultTranspose(J, qma, pP);
 if (contorder > 0) {
   sym = 0;
   R = vR(0, XMh, tgv = TGV);
@@ -441,19 +437,19 @@ while (!stopflag){
     updateparam(param, paramvals(0));
     omega = zerofreq ? 0.0 : paramvals(1);
     updateparam(param2, paramvals(2-zerofreq));
-    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = 0);
-    complex phaseref, phaserefl = um2[].sum;
-    mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-    ChangeNumbering(J, um[], qm, inverse = true);
-    ChangeNumbering(J, uma[], qma, inverse = true);
-    um[] /= phaseref;
-    um2[] /= phaseref;
-    real Mnorm = sqrt(real(J(um[], um2[])));
-    um[] /= Mnorm; // so that <um[],M*um[]> = 1
-    uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
+    J = vM(XMh, XMh, tgv = 0);
     ChangeNumbering(J, um[], qm);
-    ChangeNumbering(J, uma[], qma);
+    MatMult(J, qm, qP);
+    complex phaseref, phaserefl = qP.sum;
+    mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+    qm /= phaseref;
+    qP /= phaseref;
+    real Mnorm, local = real(qm'*qP);
+    mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+    qP /= sqrt(Mnorm);
+    phaserefl = (qma'*qP);
+    mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+    qma /= phaseref;
     if (normalform){
       complex[int] temp(um[].n);
       complex[int,int] qDa(paramnames.n, J.n);

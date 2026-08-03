@@ -31,7 +31,7 @@ ff-mpirun -np 4 fohocompute.md -param <PARAM1> -param2 <PARAM2> -fi1 <FILEIN1> -
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [foldcompute.md](./foldcompute.md), [foldcontinue.md](./foldcontinue.md), [cuspcompute.md](./cuspcompute.md), [hopfcompute.md](./hopfcompute.md), [hopfcontinue.md](./hopfcontinue.md), [porbcontinue.md](./porbcontinue.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [foldcompute.md](./foldcompute.md), [foldcontinue.md](./foldcontinue.md), [cuspcompute.md](./cuspcompute.md), [./botacompute.md](./botacompute.md), [hopfcompute.md](./hopfcompute.md), [hopfcontinue.md](./hopfcontinue.md), [porbcontinue.md](./porbcontinue.md)
 
 ```freefem
 load "iovtk"
@@ -458,31 +458,29 @@ qa.resize(Ja.n);
 if(mpirank == 0) qa(J.n:Ja.n-1).re = paramvals;
 sym = sym1;
 ik.im = sym1;
-iomega = 1i*omega;
-R = vM(0, XMh, tgv = 0);
-complex phaseref, phaserefl = R.sum;
-mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-um[] /= phaseref;
-R /= phaseref;
+J = vM(XMh, XMh, tgv = 0);
 ChangeNumbering(J, um[], q1m);
-ChangeNumbering(J, um[], q1m, inverse = true);
-real Mnorm = sqrt(real(J(um[], R)));
-R /= Mnorm;
-ChangeNumbering(J, R, q1P);
-if (fileext1 == "hopf" || fileext1 == "hoho" || fileext1 == "foho") um[] = uma[];
+MatMult(J, q1m, q1P);
+complex phaseref, phaserefl = q1P.sum;
+mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+q1m /= phaseref;
+q1P /= phaseref;
+real Mnorm, local = real(q1m'*q1P);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+q1P /= sqrt(Mnorm);
+if (fileext1 == "hopf" || fileext1 == "hoho" || fileext1 == "foho" || fileext1 == "bota" || fileext1 == "baut") ChangeNumbering(J, uma[], q1ma);
 else {
-  J = vJ(XMh, XMh, tgv = -3);
+  J = vJ(XMh, XMh, tgv = -2);
   KSPSolveHermitianTranspose(J, q1P, q1ma);
-  ChangeNumbering(J, um[], q1ma, inverse = true, exchange = true);
+  J = vM(XMh, XMh, tgv = 0);
 }
-R = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um[], q1m, inverse = true);
-R *= (Mnorm/J(um[], R)); // so that <uma[],M*um[]> = 1
-ChangeNumbering(J, R, p1P);
+MatMultHermitianTranspose(J, q1ma, p1P);
+phaserefl = (q1ma'*q1P);
+mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+p1P /= phaseref;
 sym = 0;
 ik = 0.0;
-iomega = 0.0;
-if (fileext2 != "fold" && fileext2 != "foho"){
+if (fileext2 != "fold" && fileext2 != "foho" && fileext2 != "cusp" && fileext2 != "bota"){
   updateparam(param, paramvals(0) + eps);
   uma[] = vR(0, XMh);
   updateparam(param, paramvals(0));
@@ -494,18 +492,16 @@ if (fileext2 != "fold" && fileext2 != "foho"){
   um3[] = J'^-1*uma[];
 }
 ChangeNumbering(J, um2[], q2m);
+J = vM(XMh, XMh, tgv = 0);
+MatMult(J, q2m, q2P);
+real local = (q2m'*q2P);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+q2P /= sqrt(Mnorm);
 ChangeNumbering(J, um3[], q2ma);
-ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
-R = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um[], q2m, inverse = true);
-Mnorm = sqrt(real(J(um[], R)));
-R /= Mnorm;
-ChangeNumbering(J, R, q2P);
-ChangeNumbering(J, um[], q2ma, inverse = true, exchange = true);
-R = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um[], q2m, inverse = true);
-R *= (Mnorm/J(um[], R)); // so that <uma[],M*um[]> = 1
-ChangeNumbering(J, R, p2P);
+MatMultTranspose(J, q2ma, p2P);
+local = (q2ma'*q2P);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+p2P /= Mnorm;
 // solve nonlinear problem with SNES
 int ret;
 SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
@@ -517,32 +513,33 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   updateparam(param, paramvals(0));
   omega = zerofreq ? 0.0 : paramvals(1);
   updateparam(param2, paramvals(2-zerofreq));
-  ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
   sym = sym1;
   ik.im = sym1;
-  um2[] = vM(0, XMh, tgv = 0);
-  phaserefl = um2[].sum;
+  J = vM(XMh, XMh, tgv = 0);
+  MatMult(J, q1m, q1P);
+  phaserefl = q1P.sum;
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-  ChangeNumbering(J, um[], q1m, inverse = true);
-  ChangeNumbering(J, uma[], q1ma, inverse = true);
-  um[] /= phaseref;
-  um2[] /= phaseref;
-  Mnorm = sqrt(real(J(um[], um2[])));
-  um[] /= Mnorm; // so that <um[],M*um[]> = 1
-  uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
-  ChangeNumbering(J, um[], q1m);
-  ChangeNumbering(J, uma[], q1ma);
-  ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+  q1m /= phaseref;
+  q1P /= phaseref;
+  local = real(q1m'*q1P);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  local = sqrt(Mnorm);
+  q1P /= local;
+  q1m /= local;
+  phaserefl = (q1ma'*q1P);
+  mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+  q1ma /= phaseref;
   sym = 0;
   ik = 0.0;
-  um2[] = vM(0, XMh, tgv = 0);
-  ChangeNumbering(J, um[], q2m, inverse = true);
-  ChangeNumbering(J, uma[], q2ma, inverse = true);
-  Mnorm = sqrt(real(J(um[], um2[])));
-  um[] /= Mnorm; // so that <um[],M*um[]> = 1
-  uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
-  ChangeNumbering(J, um[], q2m);
-  ChangeNumbering(J, uma[], q2ma);
+  J = vM(XMh, XMh, tgv = 0);
+  local = real(q2m'*q2P);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  local = sqrt(Mnorm);
+  q2P /= local;
+  q2m /= local;
+  local = real(q2ma'*q2P);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  q2ma /= Mnorm;
   if (normalform){
     complex[int,int] qDa(paramnames.n, J.n);
     Mat<complex> qPM(J.n, mpirank == 0 ? 1 : 0), pPM(J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix

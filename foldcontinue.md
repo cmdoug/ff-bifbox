@@ -13,7 +13,7 @@ ff-mpirun -np 4 foldcontinue.md -param <PARAM1> -param2 <PARAM2> -fi <FILEIN> -f
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [foldcompute.md](./foldcompute.md), [cuspcompute.md](./cuspcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [foldcompute.md](./foldcompute.md), [cuspcompute.md](./cuspcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [./botacompute.md](./botacompute.md)
 
 ```freefem
 load "iovtk"
@@ -202,12 +202,9 @@ ChangeNumbering(J, um[], qm);
 ChangeNumbering(J, uma[], qma);
 qa0.resize(Jaa.n);
 if(mpirank == 0) qa0(J.n:Jaa.n-1) = paramvals;
-ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um2[], qP);
-ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um2[], pP);
+J = vM(XMh, XMh, tgv = 0);
+MatMult(J, qm, qP);
+MatMultTranspose(J, qma, pP);
 if (contorder > 0) {
   R = vR(0, XMh, tgv = TGV);
   funcJa(qa0);
@@ -375,15 +372,17 @@ while (!stopflag){
     broadcast(processor(0), paramvals);
     updateparam(param, paramvals(0));
     updateparam(param2, paramvals(1));
-    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = 0);
-    ChangeNumbering(J, um[], qm, inverse = true);
-    ChangeNumbering(J, uma[], qma, inverse = true);
-    real Mnorm = sqrt(J(um[], um2[]));
-    um[] /= Mnorm; // so that <um[],M*um[]> = 1
-    uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
-    ChangeNumbering(J, um[], qm);
-    ChangeNumbering(J, uma[], qma);
+    J = vM(XMh, XMh, tgv = 0);
+    MatMult(J, qm, qP);
+    real Mnorm, local = (qm'*qP);
+    mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+    local = sqrt(Mnorm);
+    qP /= local;
+    qm /= local;
+    MatMultTranspose(J, qma, pP);
+    local = (qma'*qP);
+    mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+    qma /= Mnorm;
     if(normalform){
       // 2nd-order
       //  A: base modification due to parameter changes

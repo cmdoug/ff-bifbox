@@ -37,7 +37,7 @@ ff-mpirun -np 4 foldcompute.md -param <PARAM> -fi <FILEIN> -fo <FILEOUT> -mo <ME
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [cuspcompute.md](./cuspcompute.md), [foldcontinue.md](./foldcontinue.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [cuspcompute.md](./cuspcompute.md), [foldcontinue.md](./foldcontinue.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [./botacompute.md](./botacompute.md)
 
 ```freefem
 load "iovtk"
@@ -264,7 +264,7 @@ real[int] qa;
 ChangeNumbering(J, ub[], qa);
 qa.resize(Ja.n);
 if(mpirank == 0) qa(Ja.n - 1) = paramval;
-if (fileext != "fold" && fileext != "foho"){
+if (fileext != "fold" && fileext != "foho" && fileext != "cusp" && fileext != "bota"){
   updateparam(param, paramval + eps);
   um2[] = vR(0, XMh);
   updateparam(param, paramval);
@@ -275,18 +275,17 @@ if (fileext != "fold" && fileext != "foho"){
   um[] = J^-1*um2[];
   uma[] = J'^-1*um2[];
 }
-um2[] = vM(0, XMh, tgv = 0);
 ChangeNumbering(J, um[], qm);
-ChangeNumbering(J, um[], qm, inverse = true);
-real Mnorm = sqrt(J(um[], um2[]));
-um2[] /= Mnorm;
-ChangeNumbering(J, um2[], qP);
+J = vM(XMh, XMh, tgv = 0);
+MatMult(J, qm, qP);
+real Mnorm, local = (qm'*qP);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+qP /= sqrt(Mnorm);
 ChangeNumbering(J, uma[], qma);
-ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um[], qm, inverse = true);
-um2[] *= (Mnorm/J(um[], um2[])); // so that <uma[],M*um[]> = 1
-ChangeNumbering(J, um2[], pP);
+MatMultTranspose(J, qma, pP);
+local = (qma'*qP);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+pP /= Mnorm;
 // solve nonlinear problem with SNES
 int ret;
 SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
@@ -296,15 +295,17 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   if(mpirank == 0) paramval = qa(Ja.n-1);
   broadcast(processor(0), paramval);
   updateparam(param, paramval);
-  ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-  um2[] = vM(0, XMh, tgv = 0);
-  ChangeNumbering(J, um[], qm, inverse = true);
-  ChangeNumbering(J, uma[], qma, inverse = true);
-  Mnorm = sqrt(J(um[], um2[]));
-  um[] /= Mnorm; // so that <um[],M*um[]> = 1
-  uma[] *= (Mnorm/J(uma[], um2[])); // so that <uma[],M*um[]> = 1
-  ChangeNumbering(J, um[], qm);
-  ChangeNumbering(J, uma[], qma);
+  J = vM(XMh, XMh, tgv = 0);
+  MatMult(J, qm, qP);
+  local = (qm'*qP);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  local = sqrt(Mnorm);
+  qP /= local;
+  qm /= local;
+  MatMultTranspose(J, qma, pP);
+  local = (qma'*qP);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  qma /= Mnorm;
   if (normalform){
     // 2nd-order
     //  A: base modification due to parameter changes

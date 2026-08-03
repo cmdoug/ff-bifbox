@@ -631,18 +631,17 @@ if (fileext != "cusp" && fileext != "fold" && fileext != "foho"){
   um[] = J^-1*um2[];
   uma[] = J'^-1*um2[];
 }
-um2[] = vM(0, XMh, tgv = 0);
 ChangeNumbering(J, um[], qm);
-ChangeNumbering(J, um[], qm, inverse = true);
-real Mnorm = sqrt(J(um[], um2[]));
-um2[] /= Mnorm;
-ChangeNumbering(J, um2[], qP);
+H = vM(XMh, XMh, tgv = 0);
+MatMult(H, qm, qP);
+real Mnorm, local = (qm'*qP);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+qP /= sqrt(Mnorm);
 ChangeNumbering(J, uma[], qma);
-ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um[], qm, inverse = true);
-um2[] *= (Mnorm/J(um[], um2[])); // so that <uma[],M*um[]> = 1
-ChangeNumbering(J, um2[], pP);
+MatMultTranspose(H, qma, pP);
+local = (qma'*qP);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+pP /= Mnorm;
 // solve nonlinear problem with SNES
 int ret;
 SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
@@ -653,15 +652,17 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   broadcast(processor(0), paramvals);
   updateparam(param, paramvals(0));
   updateparam(param2, paramvals(1));
-  ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-  um2[] = vM(0, XMh, tgv = 0);
-  ChangeNumbering(J, um[], qm, inverse = true);
-  ChangeNumbering(J, uma[], qma, inverse = true);
-  Mnorm = sqrt(J(um[], um2[]));
-  um[] /= Mnorm; // so that <um[],M*um[]> = 1
-  uma[] *= (Mnorm/J(uma[], um2[])); // so that <uma[],M*um[]> = 1
-  ChangeNumbering(J, um[], qm);
-  ChangeNumbering(J, uma[], qma);
+  J = vM(XMh, XMh, tgv = 0);
+  MatMult(J, qm, qP);
+  local = (qm'*qP);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  local = sqrt(Mnorm);
+  qP /= local;
+  qm /= local;
+  MatMultTranspose(J, qma, pP);
+  local = (qma'*qP);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  qma /= Mnorm;
   if (normalform){
     real[int,int] qDa(paramnames.n, J.n);
     Mat qPM(J.n, mpirank == 0 ? 1 : 0), pPM(J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix

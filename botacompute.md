@@ -340,7 +340,7 @@ ff-mpirun -np 4 botacompute.md -param <PARAM> -fi <FILEIN> -fo <FILEOUT> -mo <ME
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [hohocompute.md](./hohocompute.md), [porbcontinue.md](./porbcontinue.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [foldcompute.md](./foldcompute.md), [foldcontinue.md](./foldcontinue.md), [porbcontinue.md](./porbcontinue.md)
 
 ```freefem
 load "iovtk"
@@ -719,12 +719,11 @@ ChangeNumbering(J, ub[], qa, exchange = true, inverse = true);
 qa.resize(Ja.n);
 if(mpirank == 0) qa(J.n:Ja.n-1) = paramvals;
 ChangeNumbering(J, um[], qm);
-M = vM(XMh, XMh, tgv = -10);
+M = vM(XMh, XMh, tgv = 0);
 MatMult(M, qm, qP);
 real Mnorm, local = (qm'*qP);
 mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-Mnorm = sqrt(Mnorm);
-qP /= Mnorm;
+qP /= sqrt(Mnorm);
 if (fileext == "hopf" || fileext == "hoho" || fileext == "foho" || fileext == "bota" || fileext == "baut") ChangeNumbering(J, uma[], qma);
 else {
   J = vJ(XMh, XMh, tgv = -2);
