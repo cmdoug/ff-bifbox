@@ -620,7 +620,7 @@ real[int] qa;
 ChangeNumbering(J, ub[], qa);
 qa.resize(Ja.n);
 if(mpirank == 0) qa(J.n:Ja.n-1) = paramvals;
-if (fileext != "cusp" && fileext != "fold" && fileext != "foho"){
+if (fileext != "cusp" && fileext != "fold" && fileext != "foho" && fileext != "bota"){
   updateparam(param, paramvals(0) + eps);
   um2[] = vR(0, XMh);
   updateparam(param, paramvals(0));
