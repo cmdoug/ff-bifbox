@@ -69,6 +69,6 @@ Compute eigenvalues along the branch:
 ```sh
 cd "$workdir" && declare -a baselist=(FK_*[0-9].base) && cd -
 for base in "${baselist[@]}"; do
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi "$base" -so FK -eps_target 1.0+0.0i -eps_gen_hermitian -nev 3
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi "$base" -so FK -eps_target 1.0+0.0i -eps_gen_hermitian -eps_nev 3
 done
 ```

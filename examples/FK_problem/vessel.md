@@ -7,7 +7,7 @@ This file can be used with FreeFEM to create a mesh for the cylindrical vessel f
 assert(mpisize == 1); // Must be run with 1 processor
 include "settings.idp"
 
-int n = 350;
+int n = getARGV("-n", 350);
 
 // mesh filename, if not provided, defaults to "vessel.msh"
 string meshout = getARGV("-mo","vessel.msh"); 
