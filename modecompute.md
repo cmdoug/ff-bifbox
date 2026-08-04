@@ -81,6 +81,12 @@ else if(fileext == "hopf") {
   complex[int] qm, qma;
   ub[] = loadhopf(fileroot, meshin, qm, qma, sym, omega, alpha, beta);
 }
+else if(fileext == "bota") {
+  real[string] alpha1, alpha2;
+  real beta1, beta2, beta3, beta4;
+  real[int] qm, qma;
+  ub[] = loadbota(fileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2, beta3, beta4);
+}
 else if(fileext == "foho") {
   real omega;
   complex[string] alpha1;

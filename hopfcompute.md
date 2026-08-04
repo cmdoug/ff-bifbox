@@ -210,7 +210,7 @@ ff-mpirun -np 4 hopfcompute.md -param <PARAM> -fi <FILEIN> -fo <FILEOUT> -mo <ME
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [hohocompute.md](./hohocompute.md), [porbcontinue.md](./porbcontinue.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [./botacompute.md](./botacompute.md), [hohocompute.md](./hohocompute.md), [porbcontinue.md](./porbcontinue.md)
 
 ```freefem
 load "iovtk"
@@ -252,6 +252,11 @@ restu = restrict(XMh, XMhg, n2o);
 XMh<complex> defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
 if (fileext == "hopf") {
   ub[].re = loadhopf(fileroot, meshin, um[], uma[], sym1, omega, alpha, beta);
+}
+else if(fileext == "bota") {
+  real[string] alpha1, alpha2;
+  real beta1, beta2, beta3, beta4;
+  ub[].re = loadbota(fileroot, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if (fileext == "foho") {
   real[string] alpha2;
@@ -320,6 +325,12 @@ else if(basefileext == "hopf") {
   complex beta;
   complex[int] qm, qma;
   ub[].re = loadhopf(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(basefileext == "bota") {
+  real[string] alpha1, alpha2;
+  real beta1, beta2, beta3, beta4;
+  real[int] qm, qma;
+  ub[].re = loadbota(basefileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if(basefileext == "foho") {
   real omega;
@@ -533,27 +544,27 @@ qa.resize(Ja.n);
 if(mpirank == 0) qa(J.n:Ja.n-1).re = paramvals;
 sym = sym1;
 ik.im = sym1;
-iomega = 1i*omega;
-um2[] = vM(0, XMh, tgv = -10);
-complex phaseref, phaserefl = um2[].sum;
-mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-um[] /= phaseref;
-um2[] /= phaseref;
+J = vM(XMh, XMh, tgv = 0);
 ChangeNumbering(J, um[], qm);
-ChangeNumbering(J, um[], qm, inverse = true);
-real Mnorm = sqrt(real(J(um[], um2[])));
-um2[] /= Mnorm;
-ChangeNumbering(J, um2[], qP);
-if (fileext == "hopf" || fileext == "hoho" || fileext == "foho") um[] = uma[];
+MatMult(J, qm, qP);
+complex phaseref, phaserefl = qP.sum;
+mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+qm /= phaseref;
+qP /= phaseref;
+real Mnorm, local = real(qm'*qP);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+qP /= sqrt(Mnorm);
+if (fileext == "hopf" || fileext == "hoho" || fileext == "foho" || fileext == "bota" || fileext == "baut") ChangeNumbering(J, uma[], qma);
 else {
+  iomega = zerofreq ? 0.0 : 1i*omega;
   J = vJ(XMh, XMh, tgv = -2);
   KSPSolveHermitianTranspose(J, qP, qma);
-  ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
+  J = vM(XMh, XMh, tgv = 0);
 }
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um[], qm, inverse = true);
-um2[] *= (Mnorm/J(um[], um2[])); // so that <uma[],M*um[]> = 1
-ChangeNumbering(J, um2[], pP);
+MatMultHermitianTranspose(J, qma, pP);
+phaserefl = (qP'*qma);
+mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+pP /= phaseref;
 // solve nonlinear problem with SNES
 int ret;
 SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
@@ -564,21 +575,23 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   broadcast(processor(0), paramvals);
   updateparam(param, paramvals(0));
   omega = zerofreq ? 0.0 : paramvals(1-zerofreq);
-  ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
   sym = sym1;
   ik.im = sym1;
-  um2[] = vM(0, XMh, tgv = 0);
-  phaserefl = um2[].sum;
+  J = vM(XMh, XMh, tgv = 0);
+  MatMult(J, qm, qP);
+  phaserefl = qP.sum;
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-  ChangeNumbering(J, um[], qm, inverse = true);
+  qm /= phaseref;
+  qP /= phaseref;
+  local = real(qm'*qP);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  local = sqrt(Mnorm);
+  qP /= local;
+  qm /= local;
+  phaserefl = (qP'*qma);
+  mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+  qma /= phaseref;
   ChangeNumbering(J, uma[], qma, inverse = true);
-  um[] /= phaseref;
-  um2[] /= phaseref;
-  Mnorm = sqrt(real(J(um[], um2[])));
-  um[] /= Mnorm; // so that <um[],M*um[]> = 1
-  uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
-  ChangeNumbering(J, um[], qm);
-  ChangeNumbering(J, uma[], qma);
   if (normalform){
     complex[int,int] qDa(paramnames.n, J.n);
     // 2nd-order

@@ -10,7 +10,7 @@
   verbosity = getARGV("-v", 0);
 // Define parameter and monitor names
   string[int] paramnames = ["Re", "Pe", "dT", "Ze", "Da", "Ma", "gamma", "L", "Rin", "Rout"]; // set parameter names
-  string[int] monitornames = ["Lf", "abs(FTF)", "arg(FTF)"]; // set monitor names
+  string[int] monitornames = ["Lf", "absFTF", "argFTF"]; // set monitor names
 // Define state vector and FE space
   macro defu(u)[u, u#y, u#T, u#Y, u#p]//EOM
   macro initu(i)[i, i, i, i, i]//EOM
@@ -80,8 +80,8 @@
         complex FTFnum = int1d(Thg, levelset=x+1.0)(ubg)*int2d(Thg)(Jinv*((dubgrhodp*umgp + dubgrhodT*umgT)*ubgY*ubgArr + ubgrho*(umgY*ubgArr + ubgY*dubgArrdT*umgT)));
         complex FTFden = int1d(Thg, levelset=x+1.0)(umg)*int2d(Thg)(Jinv*wdot);
         if(FTFden == 0.) FTFden = 1.0;
-        monitors["abs(FTF)"] = abs(FTFnum/FTFden);
-        monitors["arg(FTF)"] = arg(FTFnum/FTFden);
+        monitors["absFTF"] = abs(FTFnum/FTFden);
+        monitors["argFTF"] = arg(FTFnum/FTFden);
       }
    }
   // EOM

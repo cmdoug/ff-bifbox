@@ -120,6 +120,15 @@ if (count == 0){
     qm *= exp(1i*phase);
     um[] = 2.0*qm.re;
   }
+  else if(fileext == "bota") {
+    real[string] alpha1, alpha2;
+    real beta1, beta2, beta3, beta4;
+    real[int] qm(um[].n), qma(um[].n);
+    ub[] = loadbota(fileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2, beta3, beta4);
+    if(adj) qm = qma;
+    qm *= exp(1i*phase);
+    um[] = 2.0*qm.re;
+  }
   else if(fileext == "foho") {
     real omega;
     complex[string] alpha1;
@@ -203,6 +212,12 @@ if (count == 0){
     complex beta;
     complex[int] qm, qma;
     ub[] = loadhopf(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
+  }
+  else if(basefileext == "bota") {
+    real[string] alpha1, alpha2;
+    real beta1, beta2, beta3, beta4;
+    real[int] qm, qma;
+    ub[] = loadbota(basefileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2, beta3, beta4);
   }
   else if(basefileext == "foho") {
     real omega;

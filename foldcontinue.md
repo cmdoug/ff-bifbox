@@ -13,7 +13,7 @@ ff-mpirun -np 4 foldcontinue.md -param <PARAM1> -param2 <PARAM2> -fi <FILEIN> -f
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [foldcompute.md](./foldcompute.md), [cuspcompute.md](./cuspcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [basecontinue.md](./basecontinue.md), [foldcompute.md](./foldcompute.md), [cuspcompute.md](./cuspcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [./botacompute.md](./botacompute.md)
 
 ```freefem
 load "iovtk"
@@ -62,7 +62,7 @@ if(count > 0) {
   fileroot = fileroot(0:fileroot.rfind("_" + count)-1); // get file root
   meshroot = meshroot(0:meshroot.rfind("_" + count)-1); // get file root
 }
-assert(fileext == "fold" || fileext == "cusp" || fileext == "foho");
+assert(fileext == "fold" || fileext == "cusp" || fileext == "foho" || fileext == "bota");
 Th = readmeshN(workdir + meshin);
 Thg = Th;
 DmeshCreate(Th);
@@ -76,6 +76,11 @@ if (count == 0){
     real[string] alphaR;
     real betaR;
     ub[] = loadcusp(fileroot, meshin, um[], uma[], alpha, alphaR, betaR);
+  }
+  else if(fileext == "bota"){
+    real[string] alpha1, alpha2;
+    real beta1, beta2, beta3, beta4;
+    ub[] = loadbota(fileroot, meshin, um[], uma[], alpha1, alpha2, beta1, beta2, beta3, beta4);
   }
   else if(fileext == "foho") {
     real omega, gamma22, gamma23, beta23;
@@ -141,13 +146,17 @@ real f, kappa, cosalpha, res, delta, maxdelta, alpha0, beta0;
       broadcast(processor(0), paramvals);
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       ChangeNumbering(J, uma[], qma, inverse = true);
+      J = vH(XMh, XMh, tgv = 0);
+      MatMultTranspose(J, qma, qm);
+      matrix<PetscScalar> tempPms = [[qm]];
+      ChangeOperator(gqPM, tempPms, parent = Ja); // send to Mat
+      J = vJ(XMh, XMh, tgv = TGV);
       updateparam(param, paramvals(0) + eps);
-      updateparam(param2, paramvals(1));
       um2[] = vR(0, XMh, tgv = TGV);
       um2[] -= R;
       um2[] /= eps;
       ChangeNumbering(J, um2[], qm); // FreeFEM to PETSc
-      matrix<PetscScalar> tempPms = [[qm]]; // dense array to sparse matrix
+      tempPms = [[qm]]; // dense array to sparse matrix
       ChangeOperator(JlPM, tempPms, parent = Ja); // send to Mat
       um2[] = vJ(0, XMh, tgv = -10);
       updateparam(param, paramvals(0));
@@ -155,11 +164,6 @@ real f, kappa, cosalpha, res, delta, maxdelta, alpha0, beta0;
       um2[] -= um3[];
       tempPms = [[J(uma[], um2[])/eps]];
       ChangeOperator(glPM, tempPms, parent = Ja); // send to Mat
-      J = vH(XMh, XMh, tgv = 0);
-      MatMultTranspose(J, qma, qm);
-      tempPms = [[qm]];
-      ChangeOperator(gqPM, tempPms, parent = Ja); // send to Mat
-      J = vJ(XMh, XMh, tgv = TGV);
       if (contorder > 0) {
         updateparam(param2, paramvals(1) + eps2);
         um2[] = vR(0, XMh, tgv = TGV);
@@ -198,12 +202,9 @@ ChangeNumbering(J, um[], qm);
 ChangeNumbering(J, uma[], qma);
 qa0.resize(Jaa.n);
 if(mpirank == 0) qa0(J.n:Jaa.n-1) = paramvals;
-ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um2[], qP);
-ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um2[], pP);
+J = vM(XMh, XMh, tgv = 0);
+MatMult(J, qm, qP);
+MatMultTranspose(J, qma, pP);
 if (contorder > 0) {
   R = vR(0, XMh, tgv = TGV);
   funcJa(qa0);
@@ -214,7 +215,7 @@ else {
   ChangeOperator(yqPMa, tempPms, parent = Jaa); // send to Mat
 }
 yqP0 = yqP;
-alpha0 = alpha[paramnames[0]];
+alpha0 = alpha[param];
 beta0 = beta;
 while (!stopflag){
   qa = qa0;
@@ -371,15 +372,18 @@ while (!stopflag){
     broadcast(processor(0), paramvals);
     updateparam(param, paramvals(0));
     updateparam(param2, paramvals(1));
-    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = 0);
-    ChangeNumbering(J, um[], qm, inverse = true);
+    J = vM(XMh, XMh, tgv = 0);
+    MatMult(J, qm, qP);
+    real Mnorm, local = (qm'*qP);
+    mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+    local = sqrt(Mnorm);
+    qP /= local;
+    qm /= local;
+    MatMultTranspose(J, qma, pP);
+    local = (qP'*qm);
+    mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+    qma /= Mnorm;
     ChangeNumbering(J, uma[], qma, inverse = true);
-    real Mnorm = sqrt(J(um[], um2[]));
-    um[] /= Mnorm; // so that <um[],M*um[]> = 1
-    uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
-    ChangeNumbering(J, um[], qm);
-    ChangeNumbering(J, uma[], qma);
     if(normalform){
       // 2nd-order
       //  A: base modification due to parameter changes
@@ -406,8 +410,11 @@ while (!stopflag){
       beta = 0.0;
     }
     if (beta*beta0 < 0) {
-      if(mpirank == 0) cout << "\tCusp bifurcation detected." << endl;
       forcesave = true;
+      if(mpirank == 0) {
+        if(alpha0*alpha[param] < 0) cout << "\tBogdanov-Takens bifurcation detected." << endl;
+        else cout << "\tCusp bifurcation detected." << endl;
+      }
     }
     ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true);
     ChangeNumbering(J, um[], qm, inverse = true);
@@ -425,7 +432,7 @@ while (!stopflag){
     if (stricttangent && contorder > 0) funcJa(qa);
     yqP0 = yqP;
     qa0 = qa;
-    alpha0 = alpha[paramnames[0]];
+    alpha0 = alpha[param];
     beta0 = beta;
     IFMACRO(Jprecon) Jprecon(0); ENDIFMACRO
   }

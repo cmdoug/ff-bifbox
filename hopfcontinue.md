@@ -14,7 +14,7 @@ ff-mpirun -np 4 hopfcontinue.md -param <PARAM1> -param2 <PARAM2> -fi <FILEIN> -f
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [fohocompute.md](./fohocompute.md), [hohocompute.md](./hohocompute.md), [porbcontinue.md](./porbcontinue.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [fohocompute.md](./fohocompute.md), [./botacompute.md](./botacompute.md), [hohocompute.md](./hohocompute.md), [porbcontinue.md](./porbcontinue.md)
 
 ```freefem
 load "iovtk"
@@ -68,7 +68,7 @@ if(count > 0) {
   fileroot = fileroot(0:fileroot.rfind("_" + count)-1); // get file root
   meshroot = meshroot(0:meshroot.rfind("_" + count)-1); // get file root
 }
-assert(fileext == "hopf" || fileext == "foho" || fileext == "hoho");
+assert(fileext == "hopf" || fileext == "foho" || fileext == "hoho" || fileext == "bota" || fileext == "baut");
 Th = readmeshN(workdir + meshin);
 Thg = Th;
 DmeshCreate(Th);
@@ -77,6 +77,11 @@ XMh<complex> defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
 if (count == 0){
   if( fileext == "hopf"){
     ub[].re = loadhopf(fileroot, meshin, um[], uma[], sym1, omega, alpha, beta);
+  }
+  else if(fileext == "bota") {
+    real[string] alpha1, alpha2;
+    real beta1, beta2, beta3, beta4;
+    ub[].re = loadbota(fileroot, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2, beta3, beta4);
   }
   else if (fileext == "foho") {
     real[string] alpha2;
@@ -247,13 +252,9 @@ qa0.resize(Jaa.n);
 if(mpirank == 0) qa0(J.n:Jaa.n-1).re = paramvals;
 sym = sym1;
 ik.im = sym1;
-iomega = 1i*omega;
-ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um2[], qP);
-ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
-um2[] = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um2[], pP);
+J = vM(XMh, XMh, tgv = 0);
+MatMult(J, qm, qP);
+MatMultTranspose(J, qma, pP);
 if (contorder > 0) {
   sym = 0;
   R = vR(0, XMh, tgv = TGV);
@@ -266,7 +267,7 @@ else {
 }
 yqP0 = yqP;
 omega0 = omega;
-alpha0 = alpha[paramnames[0]];
+alpha0 = alpha[param];
 beta0 = beta;
 while (!stopflag){
   qa = qa0;
@@ -436,19 +437,22 @@ while (!stopflag){
     updateparam(param, paramvals(0));
     omega = zerofreq ? 0.0 : paramvals(1);
     updateparam(param2, paramvals(2-zerofreq));
-    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = 0);
-    complex phaseref, phaserefl = um2[].sum;
-    mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-    ChangeNumbering(J, um[], qm, inverse = true);
-    ChangeNumbering(J, uma[], qma, inverse = true);
-    um[] /= phaseref;
-    um2[] /= phaseref;
-    real Mnorm = sqrt(real(J(um[], um2[])));
-    um[] /= Mnorm; // so that <um[],M*um[]> = 1
-    uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
+    J = vM(XMh, XMh, tgv = 0);
     ChangeNumbering(J, um[], qm);
-    ChangeNumbering(J, uma[], qma);
+    MatMult(J, qm, qP);
+    complex phaseref, phaserefl = qP.sum;
+    mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+    qm /= phaseref;
+    qP /= phaseref;
+    real Mnorm, local = real(qm'*qP);
+    mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+    local = sqrt(Mnorm);
+    qP /= local;
+    qm /= local;
+    phaserefl = (qP'*qma);
+    mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+    qma /= phaseref;
+    ChangeNumbering(J, uma[], qma, inverse = true);
     if (normalform){
       complex[int] temp(um[].n);
       complex[int,int] qDa(paramnames.n, J.n);
@@ -577,11 +581,14 @@ while (!stopflag){
       }
       beta = 0.0;
     }
-    if (real(beta)*real(beta0) < 0 || omega*omega0 < 0) {
+    if (real(beta)*real(beta0) < 0) {
       forcesave = true;
       if(mpirank == 0) {
-        if (omega*omega0 < 0) cout << "\tBogdanov-Takens bifurcation (or zero-frequency point) detected." << endl;
-        else if(real(alpha0)*real(alpha[paramnames[0]]) < 0) cout << "\tFold-Hopf bifurcation detected." << endl;
+        if(real(alpha0)*real(alpha[param]) < 0) {
+          if ( omega*omega0 < 0 || abs(omega) < 1.0e-6)
+            cout << "\tBogdanov-Takens bifurcation (or zero-frequency point) detected." << endl;
+          else cout << "\tFold-Hopf bifurcation detected." << endl;
+        }
         else cout << "\tBautin bifurcation detected." << endl;
       }
     }
@@ -604,7 +611,7 @@ while (!stopflag){
     yqP0 = yqP;
     qa0 = qa;
     omega0 = omega;
-    alpha0 = alpha[paramnames[0]];
+    alpha0 = alpha[param];
     beta0 = beta;
   }
   else h0 /= fmax;

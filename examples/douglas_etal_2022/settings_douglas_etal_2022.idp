@@ -10,7 +10,7 @@
   verbosity = getARGV("-v",0);
 // Define parameter and monitor names
   string[int] paramnames = ["1/Re", "S", "d"]; // set parameter names
-  string[int] monitornames = ["minux(x,0)", "S_n"]; // set monitor names
+  string[int] monitornames = ["minux0", "Sn"]; // set monitor names
 // Declare symmetries
   real[int] sym(1);
 // Define state vector and FE space
@@ -64,6 +64,6 @@
     real[int] uonaxis(indices.n);
     for(int i=0, j=0; i<Xh1.ndof; ++i) if(onaxis[i]) {indices[j] = i; ++j;}
     for(int i=0; i<indices.n; ++i) uonaxis[i] = UX[][indices[i]];
-    monitors["minux(x,0)"] = uonaxis.min;
+    monitors["minux0"] = uonaxis.min;
     monitors["Sn"] = int1d(Thg, levelset=x)( Y^2*UX*ubgz*dYdy )/int1d(Thg, levelset=x)( Y*UX*UX*dYdy );
   }// EOM

@@ -14,7 +14,7 @@
   verbosity = getARGV("-v", 0);
 // Define parameter and monitor names
   string[int] paramnames = ["U0","Tcb","As","Ts","Pr","Sc","p0","Rs","Cp","YCH4","WCH4","YO2","WO2","nCH4","nO2","Ar","Ta","Dh0f","alpha","xsg","rsg"]; // set parameter names
-  string[int] monitornames = ["Re","ux(2.7D,1.2D)","omegadotT"]; // set monitor names
+  string[int] monitornames = ["Re","uxpt","omegadotT"]; // set monitor names
 // Declare symmetries
   real[int] sym(0);
 // Define state vector and FE space
@@ -47,6 +47,6 @@
 // Define solution monitors to extract
 macro getmonitors(){
   monitors["Re"] = params["U0"]*0.011*params["p0"]/(params["Rs"]*300)/(params["As"]*300.0^0.5/(1.0 + params["Ts"]/300.0));
-  monitors["ux(2.7D,1.2D)"] = ubg(0.0297, 0.0132); /* unit: [m/s] */
+  monitors["uxpt"] = ubg(0.0297, 0.0132); /* unit: [m/s] */
   monitors["omegadotT"] = -int2d(Thg)(y*params["Dh0f"]*params["Ar"]*(params["p0"]/(params["Rs"]*ubgT))^(params["nCH4"] + params["nO2"])*(ubgY/params["WCH4"])^params["nCH4"]*(params["YO2"]/params["WO2"])^params["nO2"]*exp(-params["Ta"]/ubgT)); /* unit: [kW] */
 } // EOM

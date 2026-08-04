@@ -80,6 +80,11 @@ XMh<complex> defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
 if (fileext2 == "hopf") {
   ub[].re = loadhopf(fileroot2, meshin, um2[], um3[], sym2, omega2, alpha2, beta2);
 }
+else if(fileext2 == "bota") {
+  real[string] alpha1, alpha2;
+  real beta1, beta2, beta3, beta4;
+  ub[].re = loadbota(fileroot2, meshin, um2[].re, um3[].re, alpha1, alpha2, beta1, beta2, beta3, beta4);
+}
 else if (fileext2 == "foho") {
   real[string] alphaN;
   real beta22, beta23, gamma22, gamma23;
@@ -153,6 +158,11 @@ else if (fileext1 == "foho") {
 else if (fileext1 == "hopf") {
   ub[].re = loadhopf(fileroot1, meshin, um[], uma[], sym1, omega1, alpha1, beta1);
 }
+else if(fileext1 == "bota") {
+  real[string] alpha1, alpha2;
+  real beta1, beta2, beta3, beta4;
+  ub[].re = loadbota(fileroot1, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2, beta3, beta4);
+}
 else if (fileext1 == "mode") {
   complex eigenvalue;
   um[] = loadmode(fileroot1, meshin, sym1, eigenvalue);
@@ -203,6 +213,12 @@ else if(basefileext == "hopf") {
   complex beta;
   complex[int] qm, qma;
   ub[].re = loadhopf(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(basefileext == "bota") {
+  real[string] alpha1, alpha2;
+  real beta1, beta2, beta3, beta4;
+  real[int] qm, qma;
+  ub[].re = loadbota(basefileroot, meshin, qm, qma, alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if(basefileext == "foho") {
   real omega;
@@ -533,52 +549,51 @@ ChangeNumbering(J, ub[], qa);
 qa.resize(Ja.n);
 if(mpirank == 0) qa(J.n:Ja.n-1).re = paramvals;
 sym = sym1;
-R = vM(0, XMh, tgv = 0);
-complex phaseref, phaserefl = R.sum;
-mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-um[] /= phaseref;
-R /= phaseref;
+ik.im = sym1;
+J = vM(XMh, XMh, tgv = 0);
 ChangeNumbering(J, um[], q1m);
-ChangeNumbering(J, um[], q1m, inverse = true);
-real Mnorm = sqrt(real(J(um[], R)));
-R /= Mnorm;
-ChangeNumbering(J, R, q1P);
-if (fileext1 == "hopf" || fileext1 == "foho" || fileext1 == "hoho") um[] = uma[];
+MatMult(J, q1m, q1P);
+complex phaseref, phaserefl = q1P.sum;
+mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+q1m /= phaseref;
+q1P /= phaseref;
+real Mnorm, local = real(q1m'*q1P);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+q1P /= sqrt(Mnorm);
+if (fileext1 == "hopf" || fileext1 == "foho" || fileext1 == "hoho" || fileext1 == "bota" || fileext1 == "baut") ChangeNumbering(J, uma[], q1ma);
 else {
-  ik.im = sym1;
   iomega = 1i*omega1;
   J = vJ(XMh, XMh, tgv = -2);
   KSPSolveHermitianTranspose(J, q1P, q1ma);
-  ChangeNumbering(J, um[], q1ma, inverse = true, exchange = true);
+  J = vM(XMh, XMh, tgv = 0);
 }
-R = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um[], q1m, inverse = true);
-R *= (Mnorm/J(um[], R)); // so that <uma[],M*um[]> = 1
-ChangeNumbering(J, R, p1P);
-um[] = um2[];
-sym = sym2;
-R = vM(0, XMh, tgv = 0);
-phaserefl = R.sum;
+MatMultHermitianTranspose(J, q1ma, p1P);
+phaserefl = (q1P'*q1ma);
 mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-um[] /= phaseref;
-R /= phaseref;
-ChangeNumbering(J, um[], q2m);
-ChangeNumbering(J, um[], q2m, inverse = true);
-Mnorm = sqrt(real(J(um[], R)));
-R /= Mnorm;
-ChangeNumbering(J, R, q2P);
-if (fileext2 == "hopf" || fileext2 == "foho" || fileext2 == "hoho") um[] = um3[];
+p1P /= phaseref;
+sym = sym2;
+ik.im = sym2;
+J = vM(XMh, XMh, tgv = 0);
+ChangeNumbering(J, um2[], q2m);
+MatMult(J, q2m, q2P);
+phaserefl = q2P.sum;
+mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+q2m /= phaseref;
+q2P /= phaseref;
+local = real(q2m'*q2P);
+mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+q2P /= sqrt(Mnorm);
+if (fileext2 == "hopf" || fileext2 == "foho" || fileext2 == "hoho" || fileext2 == "bota" || fileext2 == "baut") ChangeNumbering(J, um3[], q2ma);
 else {
-  ik.im = sym2;
   iomega = 1i*omega2;
   J = vJ(XMh, XMh, tgv = -2);
   KSPSolveHermitianTranspose(J, q2P, q2ma);
-  ChangeNumbering(J, um[], q2ma, inverse = true, exchange = true);
+  J = vM(XMh, XMh, tgv = 0);
 }
-R = vM(0, XMh, tgv = 0);
-ChangeNumbering(J, um[], q2m, inverse = true);
-R *= (Mnorm/J(um[], R)); // so that <uma[],M*um[]> = 1
-ChangeNumbering(J, R, p2P);
+MatMultHermitianTranspose(J, q2ma, p2P);
+phaserefl = (q2P'*q2ma);
+mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+p2P /= phaseref;
 // solve nonlinear problem with SNES
 int ret;
 SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
@@ -591,36 +606,38 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   omega1 = zerofreq ? 0.0 : paramvals(1-zerofreq);
   updateparam(param2, paramvals(2-zerofreq));
   omega2 = zerofreq2 ? 0.0 : paramvals(3-zerofreq-zerofreq2);
-  ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
   sym = sym1;
   ik.im = sym1;
-  um2[] = vM(0, XMh, tgv = 0);
-  phaserefl = um2[].sum;
+  J = vM(XMh, XMh, tgv = 0);
+  MatMult(J, q1m, q1P);
+  phaserefl = q1P.sum;
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-  ChangeNumbering(J, um[], q1m, inverse = true);
-  ChangeNumbering(J, uma[], q1ma, inverse = true);
-  um[] /= phaseref;
-  um2[] /= phaseref;
-  Mnorm = sqrt(real(J(um[], um2[])));
-  um[] /= Mnorm; // so that <um[],M*um[]> = 1
-  uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
-  ChangeNumbering(J, um[], q1m);
-  ChangeNumbering(J, uma[], q1ma);
-  ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
+  q1m /= phaseref;
+  q1P /= phaseref;
+  local = real(q1m'*q1P);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  local = sqrt(Mnorm);
+  q1P /= local;
+  q1m /= local;
+  phaserefl = (q1P'*q1ma);
+  mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+  q1ma /= phaseref;
   sym = sym2;
   ik.im = sym2;
-  um2[] = vM(0, XMh, tgv = 0);
-  phaserefl = um2[].sum;
+  J = vM(XMh, XMh, tgv = 0);
+  MatMult(J, q2m, q2P);
+  phaserefl = q2P.sum;
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-  ChangeNumbering(J, um[], q2m, inverse = true);
-  ChangeNumbering(J, uma[], q2ma, inverse = true);
-  um[] /= phaseref;
-  um2[] /= phaseref;
-  Mnorm = sqrt(real(J(um[], um2[])));
-  um[] /= Mnorm; // so that <um[],M*um[]> = 1
-  uma[] *= (Mnorm/J(um2[], uma[])); // so that <uma[],M*um[]> = 1
-  ChangeNumbering(J, um[], q2m);
-  ChangeNumbering(J, uma[], q2ma);
+  q2m /= phaseref;
+  q2P /= phaseref;
+  local = real(q2m'*q2P);
+  mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+  local = sqrt(Mnorm);
+  q2P /= local;
+  q2m /= local;
+  phaserefl = (q2P'*q2ma);
+  mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+  q2ma /= phaseref;
   if (normalform){
     complex[int] qAB(J.n), qBB(J.n);
     complex[int,int] qDa(paramnames.n, J.n);
@@ -688,22 +705,21 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um3[], q2P); // FreeFEM to PETSc
     ik.im = sym;
     iomega = 1i*(omega1 - omega2);
-    J = vJ(XMh, XMh, tgv = TGV);
     if (res1x != 2) {
+      J = vJ(XMh, XMh, tgv = TGV);
       KSPSolve(J, q2P, q2P);
       gamma22 = 0.0;
     }
     else {
-      um[] = conj(um2[]);
-      um2[] = vM(0, XMh, tgv = -10);
-      ChangeNumbering(J, um2[], p1P);
+      J = vM(XMh, XMh, tgv = 0);
+      MatMult(J, q2m, p1P);
       matrix<complex> tempPms = [[p1P]]; // dense array to sparse matrix
       ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
       ChangeNumbering(J, um[], q2ma, inverse = true, exchange = true);
-      um2[] = vM(0, XMh, tgv = -10);
-      ChangeNumbering(J, um2[], p1P);
+      MatMultHermitianTranspose(J, q2ma, p1P);
       tempPms = [[p1P]]; // dense array to sparse matrix
       ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
+      J = vJ(XMh, XMh, tgv = TGV);
       q2P.resize(Ja.n);
       if(mpirank == 0) q2P(Ja.n-1) = 0.0;
       KSPSolve(Ja, q2P, q2P);
@@ -748,23 +764,21 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um3[], qBB); // FreeFEM to PETSc
     ik.im = sym;
     iomega = 2i*omega2;
-    J = vJ(XMh, XMh, tgv = TGV);
     if (res1x != 2) {
+      J = vJ(XMh, XMh, tgv = TGV);
       KSPSolve(J, qBB, qBB);
       gamma12 = 0.0;
     }
     else {
-      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
-      um2[] = vM(0, XMh, tgv = -10);
+      J = vM(XMh, XMh, tgv = 0);
       complex[int] tempP(J.n);
-      ChangeNumbering(J, um2[], tempP);
+      MatMult(J, q1m, tempP);
       matrix<complex> tempPms = [[tempP]]; // dense array to sparse matrix
       ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
-      ChangeNumbering(J, um[], q1ma, inverse = true, exchange = true);
-      um2[] = vM(0, XMh, tgv = -10);
-      ChangeNumbering(J, um2[], tempP);
+      MatMultHermitianTranspose(J, q1ma, tempP);
       tempPms = [[tempP]]; // dense array to sparse matrix
       ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
+      J = vJ(XMh, XMh, tgv = TGV);
       qBB.resize(Ja.n);
       if(mpirank == 0) qBB(Ja.n-1) = 0.0;
       KSPSolve(Ja, qBB, qBB);
