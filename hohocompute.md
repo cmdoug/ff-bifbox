@@ -705,22 +705,21 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um3[], q2P); // FreeFEM to PETSc
     ik.im = sym;
     iomega = 1i*(omega1 - omega2);
-    J = vJ(XMh, XMh, tgv = TGV);
     if (res1x != 2) {
+      J = vJ(XMh, XMh, tgv = TGV);
       KSPSolve(J, q2P, q2P);
       gamma22 = 0.0;
     }
     else {
-      um[] = conj(um2[]);
-      um2[] = vM(0, XMh, tgv = -10);
-      ChangeNumbering(J, um2[], p1P);
+      J = vM(XMh, XMh, tgv = 0);
+      MatMult(J, q2m, p1P);
       matrix<complex> tempPms = [[p1P]]; // dense array to sparse matrix
       ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
       ChangeNumbering(J, um[], q2ma, inverse = true, exchange = true);
-      um2[] = vM(0, XMh, tgv = -10);
-      ChangeNumbering(J, um2[], p1P);
+      MatMultHermitianTranspose(J, q2ma, p1P);
       tempPms = [[p1P]]; // dense array to sparse matrix
       ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
+      J = vJ(XMh, XMh, tgv = TGV);
       q2P.resize(Ja.n);
       if(mpirank == 0) q2P(Ja.n-1) = 0.0;
       KSPSolve(Ja, q2P, q2P);
@@ -765,23 +764,21 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     ChangeNumbering(J, um3[], qBB); // FreeFEM to PETSc
     ik.im = sym;
     iomega = 2i*omega2;
-    J = vJ(XMh, XMh, tgv = TGV);
     if (res1x != 2) {
+      J = vJ(XMh, XMh, tgv = TGV);
       KSPSolve(J, qBB, qBB);
       gamma12 = 0.0;
     }
     else {
-      ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
-      um2[] = vM(0, XMh, tgv = -10);
+      J = vM(XMh, XMh, tgv = 0);
       complex[int] tempP(J.n);
-      ChangeNumbering(J, um2[], tempP);
+      MatMult(J, q1m, tempP);
       matrix<complex> tempPms = [[tempP]]; // dense array to sparse matrix
       ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
-      ChangeNumbering(J, um[], q1ma, inverse = true, exchange = true);
-      um2[] = vM(0, XMh, tgv = -10);
-      ChangeNumbering(J, um2[], tempP);
+      MatMultHermitianTranspose(J, q1ma, tempP);
       tempPms = [[tempP]]; // dense array to sparse matrix
       ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
+      J = vJ(XMh, XMh, tgv = TGV);
       qBB.resize(Ja.n);
       if(mpirank == 0) qBB(Ja.n-1) = 0.0;
       KSPSolve(Ja, qBB, qBB);

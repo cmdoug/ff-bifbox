@@ -670,20 +670,17 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     set(Ja, sparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full"
                     + " -prefix_push fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
                     + " -prefix_push fieldsplit_0_ " + KSPparams + " -prefix_pop", setup = 1);
-    // 2nd-order
-    //  A: base modification due to parameter changes
-    ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = -10);
-    ChangeNumbering(J, um2[], pP);
+    J = vM(XMh, XMh, tgv = 0);
+    MatMultTranspose(J, qma, pP);
     matrix tempPms = [[pP]]; // dense array to sparse matrix
     ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
-    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = -10);
-    ChangeNumbering(J, um2[], qP);
+    MatMult(J, qm, qP);
     tempPms = [[qP]]; // dense array to sparse matrix
     ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
     J = vJ(XMh, XMh, tgv = TGV);
     ChangeNumbering(J, uma[], qma, inverse = true);
+    // 2nd-order
+    //  A: base modification due to parameter changes
     if(paramnames[0] != ""){
       for (int k = 0; k < paramnames.n; ++k){
         real paramval = getparam(paramnames[k]);
@@ -702,6 +699,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       }
     }
     //  B: base modifications due to quadratic nonlinear interactions
+    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
     um2[] = -0.5*um[];
     um3[] = vH(0, XMh, tgv = -10);
     ChangeNumbering(J, um3[], pP); // FreeFEM to PETSc

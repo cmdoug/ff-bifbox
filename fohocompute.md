@@ -555,14 +555,11 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     iomega = 0.0;
     iomega2 = 0.0;
     sym = 0;
-    ChangeNumbering(J, um[], q2ma, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = -10);
-    ChangeNumbering(J, um2[], p2P);
+    J = vM(XMh, XMh, tgv = 0);
+    MatMultTranspose(J, q2ma, p2P);
     matrix<complex> tempPms = [[p2P]]; // dense array to sparse matrix
     ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
-    ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = -10);
-    ChangeNumbering(J, um2[], p2P);
+    MatMult(J, q2m, p2P);
     tempPms = [[p2P]]; // dense array to sparse matrix
     ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
     J = vJ(XMh, XMh, tgv = TGV);
@@ -584,6 +581,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       }
     }
     //  B: base modifications due to quadratic nonlinear interactions
+    ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
     um2[] = -0.5*um[];
     um3[] = vH(0, XMh, tgv = -10);
     ChangeNumbering(J, um3[], p2P); // FreeFEM to PETSc
@@ -628,17 +626,15 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     iomega = 1i*omega;
     iomega2 = 0.0;
     sym = sym1;
-    ChangeNumbering(J, um[], q1ma, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = -10);
-    ChangeNumbering(J, um2[], q2P);
+    J = vM(XMh, XMh, tgv = 0);
+    MatMultHermitianTranspose(J, q1ma, q2P);
     tempPms = [[q2P]]; // dense array to sparse matrix
     ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
-    ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = -10);
-    ChangeNumbering(J, um2[], q2P);
+    MatMult(J, q1m, q2P);
     tempPms = [[q2P]]; // dense array to sparse matrix
     ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
     J = vJ(XMh, XMh, tgv = TGV);
+    ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
     ChangeNumbering(J, um2[], q2m, inverse = true, exchange = true);
     um3[] = vH(0, XMh, tgv = -10);
     um3[] *= -1.0;
