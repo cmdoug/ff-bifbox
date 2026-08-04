@@ -380,9 +380,10 @@ while (!stopflag){
     qP /= local;
     qm /= local;
     MatMultTranspose(J, qma, pP);
-    local = (qma'*qP);
+    local = (qP'*qm);
     mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
     qma /= Mnorm;
+    ChangeNumbering(J, uma[], qma, inverse = true);
     if(normalform){
       // 2nd-order
       //  A: base modification due to parameter changes

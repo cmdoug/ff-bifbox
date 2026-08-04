@@ -562,7 +562,7 @@ else {
   J = vM(XMh, XMh, tgv = 0);
 }
 MatMultHermitianTranspose(J, qma, pP);
-phaserefl = (qma'*qP);
+phaserefl = (qP'*qma);
 mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
 pP /= phaseref;
 // solve nonlinear problem with SNES
@@ -588,9 +588,10 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   local = sqrt(Mnorm);
   qP /= local;
   qm /= local;
-  phaserefl = (qma'*qP);
+  phaserefl = (qP'*qma);
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
   qma /= phaseref;
+  ChangeNumbering(J, uma[], qma, inverse = true);
   if (normalform){
     complex[int,int] qDa(paramnames.n, J.n);
     // 2nd-order

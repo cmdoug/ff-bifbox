@@ -80,8 +80,9 @@ if (fileext2 == "fold") {
   ub[].re = loadfold(fileroot2, meshin, um2[].re, um3[].re, alpha2, beta22);
 }
 else if(fileext2 == "cusp") {
-  real[string] alphaR;
-  ub[] = loadcusp(fileroot2, meshin, um2[].re, um3[].re, alpha2, alphaR, beta23);
+  real[string] alpha1, alpha2;
+  real beta;
+  ub[].re = loadcusp(fileroot2, meshin, um2[].re, um3[].re, alpha1, alpha2, beta);
 }
 else if(fileext2 == "bota") {
   real[string] alpha1, alpha2;
@@ -475,7 +476,7 @@ else {
   J = vM(XMh, XMh, tgv = 0);
 }
 MatMultHermitianTranspose(J, q1ma, p1P);
-phaserefl = (q1ma'*q1P);
+phaserefl = (q1P'*q1ma);
 mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
 p1P /= phaseref;
 sym = 0;
@@ -494,12 +495,12 @@ if (fileext2 != "fold" && fileext2 != "foho" && fileext2 != "cusp" && fileext2 !
 ChangeNumbering(J, um2[], q2m);
 J = vM(XMh, XMh, tgv = 0);
 MatMult(J, q2m, q2P);
-real local = (q2m'*q2P);
+local = real(q2m'*q2P);
 mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
 q2P /= sqrt(Mnorm);
 ChangeNumbering(J, um3[], q2ma);
 MatMultTranspose(J, q2ma, p2P);
-local = (q2ma'*q2P);
+local = real(q2P'*q2ma);
 mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
 p2P /= Mnorm;
 // solve nonlinear problem with SNES
@@ -526,7 +527,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   local = sqrt(Mnorm);
   q1P /= local;
   q1m /= local;
-  phaserefl = (q1ma'*q1P);
+  phaserefl = (q1P'*q1ma);
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
   q1ma /= phaseref;
   sym = 0;
@@ -537,7 +538,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   local = sqrt(Mnorm);
   q2P /= local;
   q2m /= local;
-  local = real(q2ma'*q2P);
+  local = real(q2P'*q2ma);
   mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
   q2ma /= Mnorm;
   if (normalform){

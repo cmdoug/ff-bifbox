@@ -891,6 +891,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     beta2 = 0.0;
     beta3 = 0.0;
     beta4 = 0.0;
+    ChangeNumbering(J, uma[], qma, inverse = true);
   }
   if(mpirank==0 && adapt) { // Save adapted mesh
     cout << "  Saving adapted mesh '" + meshout + "' in '" + workdir + "'." << endl;

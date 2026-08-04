@@ -446,10 +446,13 @@ while (!stopflag){
     qP /= phaseref;
     real Mnorm, local = real(qm'*qP);
     mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-    qP /= sqrt(Mnorm);
-    phaserefl = (qma'*qP);
+    local = sqrt(Mnorm);
+    qP /= local;
+    qm /= local;
+    phaserefl = (qP'*qma);
     mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
     qma /= phaseref;
+    ChangeNumbering(J, uma[], qma, inverse = true);
     if (normalform){
       complex[int] temp(um[].n);
       complex[int,int] qDa(paramnames.n, J.n);

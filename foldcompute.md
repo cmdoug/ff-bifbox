@@ -283,7 +283,7 @@ mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
 qP /= sqrt(Mnorm);
 ChangeNumbering(J, uma[], qma);
 MatMultTranspose(J, qma, pP);
-local = (qma'*qP);
+local = (qP'*qma);
 mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
 pP /= Mnorm;
 // solve nonlinear problem with SNES
@@ -303,9 +303,10 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   qP /= local;
   qm /= local;
   MatMultTranspose(J, qma, pP);
-  local = (qma'*qP);
+  local = (qP'*qma);
   mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
   qma /= Mnorm;
+  ChangeNumbering(J, uma[], qma, inverse = true);
   if (normalform){
     // 2nd-order
     //  A: base modification due to parameter changes

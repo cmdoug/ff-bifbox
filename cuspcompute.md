@@ -763,6 +763,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       alpha2[paramnames[k]] = 0.0;
     }
     beta = 0.0;
+    ChangeNumbering(J, uma[], qma, inverse = true);
   }
   if(mpirank==0 && adapt) { // Save adapted mesh
     cout << "  Saving adapted mesh '" + meshout + "' in '" + workdir + "'." << endl;

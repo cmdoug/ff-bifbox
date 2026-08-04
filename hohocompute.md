@@ -161,7 +161,7 @@ else if (fileext1 == "hopf") {
 else if(fileext1 == "bota") {
   real[string] alpha1, alpha2;
   real beta1, beta2, beta3, beta4;
-  ub[].re = loadbota(fileroot1, meshin, um[], uma[], alpha1, alpha2, beta1, beta2, beta3, beta4);
+  ub[].re = loadbota(fileroot1, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if (fileext1 == "mode") {
   complex eigenvalue;
@@ -560,7 +560,7 @@ q1P /= phaseref;
 real Mnorm, local = real(q1m'*q1P);
 mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
 q1P /= sqrt(Mnorm);
-if (fileext1 == "hopf" || fileext1 == "foho" || fileext1 == "hoho" || fileext1 == "bota" || fileext1 == "baut") ChangeNumbering(J, uma[], q1ma),
+if (fileext1 == "hopf" || fileext1 == "foho" || fileext1 == "hoho" || fileext1 == "bota" || fileext1 == "baut") ChangeNumbering(J, uma[], q1ma);
 else {
   iomega = 1i*omega1;
   J = vJ(XMh, XMh, tgv = -2);
@@ -568,7 +568,7 @@ else {
   J = vM(XMh, XMh, tgv = 0);
 }
 MatMultHermitianTranspose(J, q1ma, p1P);
-phaserefl = (q1ma'*q1P);
+phaserefl = (q1P'*q1ma);
 mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
 p1P /= phaseref;
 sym = sym2;
@@ -580,7 +580,7 @@ phaserefl = q2P.sum;
 mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
 q2m /= phaseref;
 q2P /= phaseref;
-real Mnorm, local = real(q2m'*q2P);
+local = real(q2m'*q2P);
 mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
 q2P /= sqrt(Mnorm);
 if (fileext2 == "hopf" || fileext2 == "foho" || fileext2 == "hoho" || fileext2 == "bota" || fileext2 == "baut") ChangeNumbering(J, um3[], q2ma);
@@ -591,7 +591,7 @@ else {
   J = vM(XMh, XMh, tgv = 0);
 }
 MatMultHermitianTranspose(J, q2ma, p2P);
-phaserefl = (q2ma'*q2P);
+phaserefl = (q2P'*q2ma);
 mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
 p2P /= phaseref;
 // solve nonlinear problem with SNES
@@ -616,9 +616,10 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   q1P /= phaseref;
   local = real(q1m'*q1P);
   mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-  q1P /= sqrt(Mnorm);
-  q1m /= sqrt(Mnorm);
-  phaserefl = (q1ma'*q1P);
+  local = sqrt(Mnorm);
+  q1P /= local;
+  q1m /= local;
+  phaserefl = (q1P'*q1ma);
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
   q1ma /= phaseref;
   sym = sym2;
@@ -634,7 +635,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   local = sqrt(Mnorm);
   q2P /= local;
   q2m /= local;
-  phaserefl = (q2ma'*q2P);
+  phaserefl = (q2P'*q2ma);
   mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
   q2ma /= phaseref;
   if (normalform){
