@@ -1,49 +1,59 @@
 # Low-Mach Inverted Conical Flame Example: Schulke, Wang & Douglas, (2026)
 This file shows an example `ff-bifbox` workflow for reproducing the results in the study:
-```tex
+```bibtex
 @article{schulke_etal_2026,
 
 }
 ```
-The commands below illustrate how to perform a bifurcation analysis of a lean premixed inverted conical flame in an axisymmetric annular jet using `ff-bifbox`.
+The commands below illustrate how to perform a bifurcation analysis of a lean premixed inverted conical flame in an axisymmetric annular jet using `ff-bifbox`. (See also the previous study [wang_etal_2024](../wang_etal_2024).) The resulting system is very stiff and exhibits strong non-normality, which both represent significant numerical challenges. As such, the workflow given here is relatively fragile and may need to be adapted using various
 
-The governing equations are given as 
+The dimensionless governing equations are given as 
 
-$$\begin{align*}
-\frac{\partial \mathbf{u}}{\partial t} + \mathbf{u} \cdot \boldsymbol{\nabla} \mathbf{u} &= - T \boldsymbol{\nabla} p + \frac{T}{\mathrm{Re}} \boldsymbol{\nabla} \cdot \boldsymbol{\tau}, \\[6pt]
-\frac{\partial Y}{\partial t} + \mathbf{u} \cdot \boldsymbol{\nabla} Y &= - T \mathcal{Q} + \frac{T}{\mathrm{Re}\, \mathrm{Pr}\, \mathrm{Le}} \boldsymbol{\nabla} \cdot \left( \mu \boldsymbol{\nabla} Y \right), \\[6pt]
-\frac{\partial T}{\partial t} + \mathbf{u} \cdot \boldsymbol{\nabla} T &= \frac{D_h \min\left(1, \phi\right)}{\mathrm{AFR}_{st} + \phi} T \mathcal{Q} - \frac{T}{\mathrm{Re}\, \mathrm{Pr}} \boldsymbol{\nabla} \cdot \left( \mu \boldsymbol{\nabla} T \right), \\[6pt]
-\frac{\partial T}{\partial t} + \mathbf{u} \cdot \boldsymbol{\nabla} T &= T \left( \boldsymbol{\nabla} \cdot \mathbf{u} \right), 
-\end{align*}
+$$
+\begin{aligned}
+\frac{\partial u_i}{\partial t} + u_i \frac{\partial u_j}{\partial x_j} + T \frac{\partial p}{\partial x_i} - \frac{T}{\mathrm{Re}} \frac{\partial\tau_{ij}}{\partial x_j} &= 0, \\
+\frac{\partial Y}{\partial t} + u_i \frac{\partial Y}{\partial x_i} + T \mathcal{Q} - \frac{T}{\mathrm{Re}\, \mathrm{Pr}\, \mathrm{Le}} \frac{\partial}{\partial x_i} \left( \mu \frac{\partial Y}{\partial x_i} \right) &= 0, \\
+\frac{\partial T}{\partial t} + u_i \frac{\partial T}{\partial x_i} - \frac{\Delta h_c \min\left(1, \phi\right)}{\mathrm{AFR}_{m,st} + \phi} T \mathcal{Q} - \frac{T}{\mathrm{Re}\, \mathrm{Pr}} \frac{\partial}{\partial x_i} \left( \mu \frac{\partial T}{\partial x_i} \right) &= 0, \\
+\frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i} - T \frac{\partial u_i}{\partial x_i} &= 0,
+\end{aligned}
 $$
 
-Note that the ideal gas equation in the low Mach numebr limit  $1 = \rho T$ has been used to eliminate density from the above equations. 
+where:
+- $`\tau_{ij} = \mu\left(\frac{\partial u_i}{\partial x_j}+\frac{\partial u_j}{\partial x_i}-\frac{2}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}\right)`$
+- $`\mu = T^{3/2}\left(\frac{1+S}{T+S}\right)`$
+- $`\mathcal{Q} = Da\sqrt{\frac{\min\left(1,\phi\right)}{\mathrm{AFR}_{m,\mathrm{st}}+\phi}}\left[\frac{Y+\max\left(0,\phi-1\right)}{T}\right]\sqrt{\frac{Y+\max\left(0,\phi^{-1}-1\right)}{T}}\exp\left(-\frac{T_a}{T}\right)`$
+- $`Da = \frac{\mathcal{A}}{Re}\left(\frac{\mathrm{AFR}_{m,\mathrm{st}}+\phi}{\mathrm{AFR}_{v,\mathrm{st}}+\phi}\right)^{3/2}.`$
+
+Note that the ideal gas equation in the low Mach number limit ($`1 = \rho T`$) has been used to eliminate density from the above equations.
 
 The boundary conditions are 
+
 | Label | Velocity | Temperature | Species |
 |---|---|---|---|
-| $\Gamma_{\text{in}}$ | $\mathbf{u} = \mathbf{u}_{\text{Pl}}(r)$ | $T = 1$ | $Y = 1$ |
-| $\Gamma_{\text{nozz}}$ | $\mathbf{u} = \boldsymbol{0}$ | $\mathbf{n} \cdot \boldsymbol{\nabla} T = 0$ | $\mathbf{n} \cdot \boldsymbol{\nabla} Y = 0$ |
-| $\Gamma_{\text{wall}}$ | $\mathbf{u} = \boldsymbol{0}$ | $T = 1$ | $\mathbf{n} \cdot \boldsymbol{\nabla} Y = 0$ |
-| $\Gamma_{\text{cb}}$ | $\mathbf{u} = \boldsymbol{0}$ | $T = \frac{7}{3}$ | $\mathbf{n} \cdot \boldsymbol{\nabla} Y = 0$ |
-| $\Gamma_{\text{axis}}$ | 3-D symmetry | 3-D symmetry | 3-D symmetry |
-| $\Gamma_{\text{lat}}$ | $\mathbf{n} \cdot \boldsymbol{\nabla} \mathbf{u} = \mathbf{0}$ | $T = 1$ | $Y = 0$ |
-| $\Gamma_{\text{out}}$ | $\mathbf{n} \cdot \boldsymbol{\nabla} \mathbf{u} = \mathbf{0}$ | $\mathbf{n} \cdot \boldsymbol{\nabla} T = 0$ | $\mathbf{n} \cdot \boldsymbol{\nabla} Y = 0$ |
+| $\Gamma_{\text{in}}$ | $u_x = u_{\text{Pl}}(r)$, $u_r=u_\theta=0$ | $T = 1$ | $Y = 1$ |
+| $\Gamma_{\text{nozz}}$ | $u_x = u_r = u_\theta = 0$ | $\hat{n}_i\frac{\partial T}{\partial x_i} = 0$ | $\hat{n}_i\frac{\partial Y}{\partial x_i} = 0$ |
+| $\Gamma_{\text{wall}}$ | $u_x = u_r = u_\theta = 0$ | $T = 1$ | $\hat{n}_i\frac{\partial Y}{\partial x_i} = 0$|
+| $\Gamma_{\text{cb}}$ | $u_x = u_r = u_\theta = 0$ | $T = \frac{7}{3}$ | $\hat{n}_i\frac{\partial Y}{\partial x_i} = 0$ |
+| $\Gamma_{\text{axis}}$ | $`\begin{cases}\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=0, & \text{if } m=0 \\\\ u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=0, & \text{if } \|m\|=1 \\\\ u_x=u_r=u_{\theta}=0, & \text{if } \|m\|>1\end{cases}`$ | $`\begin{cases}\frac{\partial T}{\partial r}=0, & \text{if } m=0 \\\\ T=0, & \text{if } \|m\|\geq1\end{cases}`$ | $`\begin{cases}\frac{\partial Y}{\partial r}=0, & \text{if } m=0 \\\\ Y=0, & \text{if } \|m\|\geq1\end{cases}`$ |
+| $\Gamma_{\text{lat}}$ | $\frac{\mu}{Re}\hat{n}_j\frac{\partial u_i}{\partial x_j}=p\hat{n}_i+\tfrac{1}{2}u_i\min\left(0,\hat{n}_ju_j\right)$| $\hat{n}_i\frac{\partial T}{\partial x_i} = 0$ | $T = 1$ | $Y = 0$ |
+| $\Gamma_{\text{out}}$ | $\frac{\mu}{Re}\hat{n}_j\frac{\partial u_i}{\partial x_j}=p\hat{n}_i+\tfrac{1}{2}u_i\min\left(0,\hat{n}_ju_j\right)$ | $\hat{n}_i\frac{\partial T}{\partial x_i} = 0$ | $\hat{n}_i\frac{\partial Y}{\partial x_i} = 0$ |
 
-*Table: List of boundary conditions.*
+where $u_{\text{Pl}}(r)=2\left(\frac{\left(1-4r^2\right)\log D_{\text{cb}}-\left(1-D^2_{\text{cb}}\right)\log(2r)}{1-D_{\text{cb}}^2+\left(1+D_{cb}^2\right)\log D_{\text{cb}}}\right)$.
 
-More detials on the formulation can be found in Schulke *et al.* (2026)
+More details on the formulation can be found in the original paper.
 
 ## Setup environment for `ff-bifbox`
 1. Navigate to the main `ff-bifbox` directory.
 ```sh
 cd ~/your/path/to/ff-bifbox/
 ```
+
 2. Export working directory and number of processors for easy reference.
 ```sh
-export workdir=examples/schulke_etal_2026/axi
-export nproc=10
+export workdir=examples/schulke_etal_2026/data
+export nproc=4
 ```
+
 3. Create symbolic links for governing equations and solver settings.
 ```sh
 ln -sf examples/schulke_etal_2026/eqns_schulke_etal_2026_axi.idp eqns.idp
@@ -52,340 +62,123 @@ ln -sf examples/schulke_etal_2026/settings_schulke_etal_2026_axi.idp settings.id
 
 ## Build initial meshes
 `ff-bifbox` uses FreeFEM for adaptive meshing during the solution process, but it needs an initial mesh to adaptively refine.
+
 #### CASE 1: Gmsh is installed - build initial mesh directly from .geo files
 ```sh
 FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/schulke_etal_2026 -dir $workdir -mi Vflame.geo
 ```
 Note: since no `-mo` argument is specified, the output files (`.msh`) inherit the names of their parents (`.geo`).
+
 #### CASE 2: Gmsh is not installed - build initial mesh using BAMG in FreeFEM
 ```sh
 FreeFem++-mpi -v 0 examples/schulke_etal_2026/Vflame.md -mo $workdir/Vflame
 ```
-
-## Build initial meshes in 3D
-```sh
-export workdir=examples/schulke_etal_2026/3D
-ln -sf examples/schulke_etal_2026/eqns_schulke_etal_2026_3D.idp eqns.idp
-ln -sf examples/schulke_etal_2026/settings_schulke_etal_2026_3D.idp settings.idp
-```
-#### CASE 1: Gmsh is installed - build initial mesh directly from .geo files
-```sh
-FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/schulke_etal_2026 -dir $workdir -mi Vflame.geo
-```
-Note: since no `-mo` argument is specified, the output files (`.msh`) inherit the names of their parents (`.geo`).
-#### CASE 2: Gmsh is not installed - build initial mesh using BAMG in FreeFEM
-```sh
-FreeFem++-mpi -v 0 examples/schulke_etal_2026/Vflame.md -mo $workdir/Vflame
-```
-
 
 ## Perform parallel computations using `ff-bifbox`
 ### Laminar base flow
-Navigate back to axisymetric directory and files 
-```sh
-export workdir=examples/schulke_etal_2026/axi
-ln -sf examples/schulke_etal_2026/eqns_schulke_etal_2026_axi.idp eqns.idp
-ln -sf examples/schulke_etal_2026/settings_schulke_etal_2026_axi.idp settings.idp
-```
 1. Compute a non-reacting base state with reference parameters on the initial mesh.
 ```sh
-
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi Vflame.msh -fo nonreacting_0 -Re 70 -Tr 2.3333333333333333 -Da 0 -phi 0.8 -Dhc 128.23469709865222 -snes_linesearch_type l2 -snes_rtol 0 -pv 1
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi nonreacting_0.base -fo nonreacting_1 -Re 350 -mo nonreacting_1 -snes_linesearch_type l2 -snes_rtol 0 -pv 1
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi nonreacting_1.base -fo nonreacting_2 -Re 1500 -mo nonreacting_2 -snes_linesearch_type l2 -snes_rtol 0 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi Vflame.msh -fo axi_nonreacting_0 -Re 70 -Tr 2.3333333333333333 -Ar 0 -phi 0.8 -Dhc 128.23469709865222 -snes_linesearch_type secant -snes_rtol 0 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting_0.base -fo axi_nonreacting_1 -Re 350 -mo nonreacting_1 -snes_linesearch_type secant -snes_rtol 0 -pv 1 -localrefinement 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting_1.base -fo axi_nonreacting_2 -Re 1500 -mo nonreacting_2 -snes_linesearch_type secant -snes_rtol 0 -pv 1 -localrefinement 0
 ```
 
-2. Turn on chemistry and ignite the U0 = 2.2 m/s flow at an elevated centrebody temperature and lower combustion enthalpy. Then perform continuation back to reference parameters. Coarse meshes are used for computational efficiency and stabilizing artificial dissipation. NOTE: replace ignite_315.base with appropriate file name if a different amount of iterations were preformed on your system 
+2. Turn on chemistry and ignite the $Re = 1500$ flow at an elevated centerbody temperature and lower combustion enthalpy. Then perform continuation back to reference parameters. Coarse meshes are used for computational efficiency and stabilizing artificial dissipation.
 
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi nonreacting_2.base -fo ignite_0 -Tr 3.3333333333333333 -Da 1090638.826627295 -Dhc 12.823469709865222 -mo ignite_0 -snes_rtol 0 -err 0.05 -pv 1
-
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi ignite_0.base -fo ignite -param Dhc -mo ignite -h0 50 -err 0.1 -scount 5 -paramtarget 128.23469709865222 -maxcount -1 -pv 1
-
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi ignite_315.base -fo ignited -Tr 2.3333333333333333 -Dhc 128.23469709865222 -mo ignited -snes_rtol 0 -err 0.1 -snes_linesearch_type l2
-
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi ignited.base -fo phi_0p8_Re_1500 -pv 1 -snes_rtol 0 -snes_linesearch_type l2 -mo phi_0p8_Re_1500 -err 0.01 -hmin 1e-5 -hmax 0.1 -snes_stol 0 -snes_atol 2.22e-14
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting_2.base -fo axi_ignite_0 -Tr 3.3333333333333333 -Ar 423521926.87072223 -Dhc 12.823469709865222 -mo ignite_0 -snes_rtol 0 -err 0.05 -pv 1
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi axi_ignite_0.base -fo axi_ignite -param Dhc -mo ignite -h0 50 -err 0.1 -scount 5 -paramtarget 128.23469709865222 -maxcount -1 -pv 1 -localrefinement 0
+cd $workdir && export lastfile=$(printf '%s\n' axi_ignite_*.base | sort -t_ -k3,3n | tail -1) && cd -
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo axi_ignited -Tr 2.3333333333333333 -Dhc 128.23469709865222 -mo ignited -snes_rtol 0 -err 0.1 -snes_linesearch_type secant -localrefinement 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_ignited.base -fo axi_ignited -pv 1 -snes_linesearch_type secant -mo ignited -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_ignited.base -fo axi_phi_0p80_Re_1500 -pv 1 -snes_rtol 0 -snes_linesearch_type secant -mo phi_0p80_Re_1500 -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14
 ```
 
 3. Save base flows over a range of $Re$. Dissipation from mesh coarsening is used to aid convergence at each step before refining the coarse solutions on the reference mesh.
 ```sh
-export phi=8
-for Re in {1600..3200..50}; do
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi phi_0p"$phi"_Re_"$(($Re-100))".base -fo U0inc -Re "$Re" -snes_linesearch_type l2 -mo U0inc -err 0.05
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo U0inc -Re "$Re" -snes_linesearch_type l2 -mo U0inc -err 0.03
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo phi_0p"$phi"_Re_"$Re".base -Re "$Re" -pv 1 -snes_rtol 0 -snes_linesearch_type l2 -mo phi_0p"$phi"_Re_"$Re" -err 0.01 -hmin 1e-5 -hmax 0.1 -anisomax 5 -snes_stol 0 -snes_atol 2.22e-14
-done
-
-export phi=8
-for Re in {1600..3200..50}; do
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi phi_0p"$phi"_Re_"$Re".base -fo phi_0p"$phi"_Re_"$Re" -Re "$Re" -pv 1 -mi phi_0p"$phi"_Re_"$Re".msh -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14
-
-done
-
-```
-
-### Laminar Base Flow in 3D 
-Navigate back to 3D directory and files
-```sh
-export workdir=examples/schulke_etal_2026/3D
-ln -sf examples/schulke_etal_2026/eqns_schulke_etal_2026_3D.idp eqns.idp
-ln -sf examples/schulke_etal_2026/settings_schulke_etal_2026_3D.idp settings.idp
-```
-
-1. Compute a non-reacting base state with reference parameters on the initial mesh.
-```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi Vflame.msh -fo nonreacting_0 -Re 70 -Tr 2.3333333333333333 -Da 0 -phi 0.8 -Dhc 128.23469709865222 -snes_linesearch_type l2 -snes_rtol 0 -pv 1
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi nonreacting_0.base -fo nonreacting_1 -Re 350 -mo nonreacting_1 -snes_linesearch_type l2 -snes_rtol 0 -pv 1
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi nonreacting_1.base -fo nonreacting_2 -Re 1500 -mo nonreacting_2 -snes_linesearch_type l2 -snes_rtol 0 -pv 1
-```
-
-2. Turn on chemistry and ignite the U0 = 2.2 m/s flow at an elevated centrebody temperature and lower combustion enthalpy. Then perform continuation back to reference parameters. Coarse meshes are used for computational efficiency and stabilizing artificial dissipation. 
-```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi nonreacting_2.base -fo ignite_0 -Tr 3.3333333333333333 -Da 1090638.826627295 -Dhc 12.823469709865222 -mo ignite_0 -snes_rtol 0 -err 0.05 -pv 1
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi ignite_0.base -fo ignite -param Dhc -mo ignite -h0 50 -err 0.05 -scount 5 -paramtarget 128.23469709865222 -maxcount -1 -pv 1
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi ignite_360.base -fo ignited -Tr 2.3333333333333333 -Dhc 128.23469709865222 -mo ignited -snes_rtol 0 -err 0.05 -snes_linesearch_type l2
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi ignited.base -fo phi_0p8_Re_1500 -pv 1 -snes_rtol 0 -snes_linesearch_type l2 -mo phi_0p8_Re_1500 -err 0.01 -hmin 1e-5 -hmax 0.2
-```
-
-3. Save base flows over a range of $Re$. Dissipation from mesh coarsening is used to aid convergence at each step before refining the coarse solutions on the reference mesh.
-```sh
-export phi=8
-for Re in {1600..3500..100}; do
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi phi_0p"$phi"_Re_"$(($Re-100))".base -fo U0inc -Re "$Re" -snes_linesearch_type l2 -mo U0inc -err 0.05
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo U0inc -Re "$Re" -snes_linesearch_type l2 -mo U0inc -err 0.05
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo phi_0p"$phi"_Re_"$Re".base -Re "$Re" -pv 1 -snes_rtol 0 -snes_linesearch_type l2 -mo phi_0p"$phi"_Re_"$Re" -err 0.01 -hmin 1e-5 -hmax 0.2
-done
-for Re in {1500..3500..100}; do
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi phi_0p"$phi"_Re_"$Re".base -fo phi_0p"$phi"_Re_"$Re".base -Re "$Re" -pv 1 -snes_rtol 0
+for Re in {1500..3200..100}; do
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$(($Re-100))".base -fo U0inc -Re "$Re" -snes_linesearch_type secant -mo U0inc -err 0.05 -localrefinement 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo U0inc -Re "$Re" -snes_linesearch_type secant -mo U0inc -err 0.03 -localrefinement 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo U0inc -Re "$Re" -snes_linesearch_type secant -mo U0inc -err 0.01
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo axi_phi_0p80_Re_"$Re" -Re "$Re" -pv 1 -snes_linesearch_type secant -mo phi_0p80_Re_"$Re" -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14
 done
 ```
 
 ### Global linear analysis
-Navigate back to axisymetric directory and files 
+4. Compute global eigenspectra for axisymmetric case
 ```sh
-export workdir=examples/schulke_etal_2026/axi
-ln -sf examples/schulke_etal_2026/eqns_schulke_etal_2026_axi.idp eqns.idp
-ln -sf examples/schulke_etal_2026/settings_schulke_etal_2026_axi.idp settings.idp
-```
-4. Compute global eigenspectra
-```sh
-export phi=8
-for Re in {1600..3200..100}; do
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi phi_0p"$phi"_Re_"$Re".base -so phi_0p"$phi"_Re1600swp3200 -eps_nev 25 -eps_target 0.1+1i -ntarget 5 -targetf 0.1+9i -eps_tol 2.22e-14
+for Re in {1500..3200..100}; do
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$Re".base -so phi_0p80_Reswp_m_0 -eps_nev 25 -eps_target 0.1+1i -ntarget 5 -targetf 0.1+9i -eps_tol 2.22e-14
 done
-
 ```
 
-4. Compute global eigenspectra in 3D
-
-Navigate back to 3D directory and files
+5. Compute global eigenspectra in 3D. First, link to settings and eqns files for 3D case and import axisymmetric files for 3D analysis.
 ```sh
-export workdir=examples/schulke_etal_2026/3D
 ln -sf examples/schulke_etal_2026/eqns_schulke_etal_2026_3D.idp eqns.idp
 ln -sf examples/schulke_etal_2026/settings_schulke_etal_2026_3D.idp settings.idp
-``` 
-```sh
-export phi=8
-for m in {0..2}; do
-for Re in {1600..3200..100}; do
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi phi_0p"$phi"_Re_"$Re".base -so phi_0p"$phi"_Reswp_m_"$m" -eps_nev 25 -eps_target 0.1+1i -ntarget 5 -targetf 0.1+9i  -sym $m -eps_tol 2.22e-14
+
+for Re in {1500..3200..100}; do
+ff-mpirun examples/schulke_etal_2026/axi_to_3D.md -v 0 -dir $workdir -fi axi_phi_0p8_Re_"$Re".base -fo 3D_phi_0p80_Re_"$Re".base
+for m in {1..2}; do
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi 3D_phi_0p80_Re_"$Re".base -so phi_0p80_Reswp_m_"$m" -eps_nev 25 -eps_target 0.1+1i -ntarget 5 -targetf 0.1+9i -sym $m -eps_tol 2.22e-14
 done
 done
 ```
 
-
-5. Compute leading critical eigenmodes
-Navigate back to axisymetric directory and files for rest of computations 
+6. Compute leading eigenmodes associated with high- and low-frequency instabilities. First, link back to settings and eqns files for axisymmetric case.
 ```sh
-export workdir=examples/schulke_etal_2026/axi
 ln -sf examples/schulke_etal_2026/eqns_schulke_etal_2026_axi.idp eqns.idp
 ln -sf examples/schulke_etal_2026/settings_schulke_etal_2026_axi.idp settings.idp
+
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_3000.base -fo axi_highfreq_phi_0p80 -eps_target 0.01+1.7i -eps_nev 1 -strict 1 -pv 1 -eps_two_sided 1
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_3100.base -fo axi_lowfreq_phi_0p80 -eps_target 0.01+0.8i -eps_nev 1 -strict 1  -pv 1 -eps_two_sided 1
 ```
+
+7. Compute Hopf bifurcations associated with critical high- and low-frequency modes.
 ```sh
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi phi_0p8_Re_2950.base -fo flametip -eps_target 0.01+1.7i -pv 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.mode -fo axi_highfreq_phi_0p80 -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 0
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_phi_0p80 -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo highfreq_phi_0p80 -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14
 
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi flametip.mode -fo flametip -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 0
-
-
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi flametip.hopf -fo flametip -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo flametip -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -anisomax 5 -nf 0
-
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi phi_0p8_Re_3100.base -fo plume -eps_target 0.01+0.8i -pv 1
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi plume.mode -fo plume -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 0
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi plume.hopf -fo plume -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo plume -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -anisomax 5 -nf 0
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.mode -fo axi_lowfreq_phi_0p80 -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 0
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_phi_0p80 -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo lowfreq_phi_0p80 -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-6. Continue leading critical eigenmodes over parameter space
+8. Continue Hopf bifurcation curves along the $(\phi,Re)$ parameter plane.
 ```sh
-export decp=782
-export name="flametip"
-export omegaguess="1"
-for dec in {61..63..1}; do
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi "$name"_phi_0p"$decp".hopf -fo $name -snes_divergence_tolerance 1e100 -snes_linesearch_type l2 -phi 0."$dec"5
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi "$name".base -fo "$name" -eps_target 0.01+"$omegaguess"i
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi "$name".mode -fo "$name" -param Re -snes_divergence_tolerance 1e100 -nf 0 -mo "$name" -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -nf 0 -anisomax 5 -snes_max_it 100 -phi 0."$decp"5 -bifmode eps -snes_linesearch_type l2
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi "$name".hopf -fo "$name" -param Re -snes_divergence_tolerance 1e100 -mo "$name" -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -nf 0 -anisomax 5 -snes_max_it 100 -phi 0."$decp"5 -bifmode eps -snes_linesearch_type l2
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi "$name".hopf -fo "$name" -snes_divergence_tolerance 1e100 -snes_linesearch_type l2 -phi 0."$dec"
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi "$name".base -fo "$name" -eps_target 0.01+"$omegaguess"i
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi "$name".mode -fo "$name" -param Re -snes_divergence_tolerance 1e100 -nf 0 -mo "$name" -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -nf 0 -anisomax 5 -snes_max_it 100 -phi 0."$dec" -bifmode eps -snes_linesearch_type l2
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi "$name".hopf -fo "$name" -param Re -snes_divergence_tolerance 1e100 -mo "$name" -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -nf 0 -anisomax 5 -snes_max_it 100 -phi 0."$dec" -bifmode eps -snes_linesearch_type l2
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi "$name".hopf -fo "$name"_phi_0p"$dec" -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo "$name"_phi_0p"$dec" -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -anisomax 5 -snes_max_it 100 -phi 0."$dec" -bifmode eps
-export decp=$dec
-done
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_dec -mo highfreq_dec -param Re -param2 phi -nf 1 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.65 -h0 -10 -mono 0 -kmax 1 -amax 45 -snes_max_it 20
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_inc -mo highfreq_inc -param Re -param2 phi -nf 1 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -scount 4 -maxcount -1 -paramtarget 3200 -param2target 1 -h0 10 -mono 0 -kmax 1 -amax 45 -snes_max_it 20
 
-export nump="0"
-export decp=68
-export num="0"
-for dec in {794..700..4}; do
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi flametip_phi_"$nump"p"$decp".hopf -fo flametip -snes_divergence_tolerance 1e100 -snes_linesearch_type l2 -phi "$num"."$dec"
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi flametip.base -fo flametip -eps_target 0.01+1.7i
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi flametip.mode -fo flametip -param Re -snes_divergence_tolerance 1e100 -nf 0 -snes_max_it 100 -phi "$num"."$dec"
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi flametip.hopf -fo flametip -param Re -snes_divergence_tolerance 1e100 -mo flametip -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -nf 0 -anisomax 5 -snes_max_it 100 -phi "$num"."$dec"
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi flametip.hopf -fo flametip_phi_"$num"p"$dec" -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo flametip_phi_"$num"p"$dec" -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -anisomax 5 -snes_max_it 100 -snes_rtol 0 -snes_atol 2.22e-14 -phi "$num"."$dec" -nf 0
-export decp=$dec
-done
-
-export num="1"
-for dec in 00; do
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi flametip_phi_"$nump"p"$decp".hopf -fo flametip -snes_divergence_tolerance 1e100 -snes_linesearch_type l2 -phi "$num"."$dec"
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi flametip.base -fo flametip -eps_target 0.01+2.1i
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi flametip.mode -fo flametip -param Re -snes_divergence_tolerance 1e100 -nf 0 -snes_max_it 100
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi flametip.hopf -fo flametip -param Re -snes_divergence_tolerance 1e100 -mo flametip -adaptto bda -err 0.01 -hmin 1e-5 -hmax 0.2 -nf 0 -anisomax 5 -snes_max_it 100
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi flametip.hopf -fo flametip_phi_"$num"p"$dec" -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo flametip_phi_"$num"p"$dec" -adaptto bda -err 0.01 -hmin 1e-5 -hmax 0.2 -anisomax 5 -snes_max_it 100 -snes_rtol 0 -snes_atol 2.22e-14
-export decp=$dec
-done
-
-
-for dec in {78..99..1}; do
-ff-mpirun -np $nproc hopfcomputeEVP.md -v 0 -dir $workdir -fi flametip_phi_0p"$dec"0.hopf -fo flametip_phi_0p"$dec" -mo flametip_phi_0p"$dec" -param Re -pv 1 -snes_divergence_tolerance 1e100 -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -anisomax 5 -snes_max_it 100 -nf 0
-done
-
-export name="flametip"
-for dec in {76..99}; do
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi "$name"_phi_0p"$dec".hopf -fo "$name"_phi_0p"$dec" -mo "$name"_phi_0p"$dec" -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 0 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5
-done
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi "$name"_phi_1p00.hopf -fo "$name"_phi_1p00 -mo "$name"_phi_1p00 -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 0 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5
-
-export name="plume"
-for dec in {64..83}; do
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi "$name"_phi_0p"$dec".hopf -fo "$name"_phi_0p"$dec" -mo "$name"_phi_0p"$dec" -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 0 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5
-done
-
-export name="flametip"
-for dec in {76..99}; do
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi "$name"_phi_0p"$dec".hopf -fo "$name" -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5
-done
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi "$name"_phi_1p00.hopf -fo "$name" -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5
-
-export name="plume"
-for dec in {64..83}; do
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi "$name"_phi_0p"$dec".hopf -fo "$name" -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5
-done
-
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi flametip_plume.hoho -fo flametip -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5
-
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi flametip_plume.hoho -fo plume -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5
-
-
-export name="plume_phi_0p68"
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi $name.hopf -fo $name -mo $name -param Re -pv 1 -snes_divergence_tolerance 1e100 -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -anisomax 5 -snes_max_it 100 -bifmode eps -nf 0
-
-export nump="0"
-export decp="78"
-export num="0"
-for dec in 77; do
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi flametip_phi_0p"$dec".hopf -fo flametip -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo flametip -adaptto bd -err 0.007 -hmin 1e-5 -hmax 0.2 -nf 0 -anisomax 5 -snes_max_it 100 -snes_linesearch_type l2
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi flametip.hopf -fo flametip_phi_"$num"p"$dec" -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo flametip_phi_"$num"p"$dec" -adaptto bd -err 0.007 -hmin 1e-5 -hmax 0.2 -anisomax 5 -snes_max_it 100 -snes_rtol 0 -snes_atol 2.22e-14
-export decp=$dec
-done
-
-for phi in 0p74 0p76 0p78 0p80 0p82 0p84 0p86 0p88 0p90 0p92 0p94 0p96 0p98 1p00; do
-ff-mpirun -np $nproc hopfcontinue.md -dir $workdir -v 0 -fi plume_phi_"$phi".hopf -fo flametip
-done
-
-
-
-export nump="0"
-export decp="68"
-export num="0"
-for dec in {67..60..1}; do
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi plume_phi_"$nump"p"$decp".hopf -fo plume -snes_divergence_tolerance 1e100 -snes_linesearch_type l2 -phi "$num"."$dec"5
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi plume.base -fo plume -eps_target 0.01+0.9i -pv 1
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi plume.mode -fo plume -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 0 -snes_max_it 100 -phi "$num"."$dec"5 -bifmode eps
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi plume.hopf -fo plume -param Re -pv 1  -snes_divergence_tolerance 1e100 -mo plume -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -nf 0 -anisomax 5 -snes_max_it 100 -phi "$num"."$dec"5 -bifmode eps
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi plume.hopf -fo plumehalf -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo plumehalf -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -anisomax 5 -snes_max_it 100 -phi "$num"."$dec"5 -bifmode eps
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi plumehalf.hopf -fo plume -snes_divergence_tolerance 1e100 -snes_linesearch_type l2 -phi "$num"."$dec"
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi plume.base -fo plume -eps_target 0.01+0.9i -pv 1
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi plume.mode -fo plume -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 0 -snes_max_it 100 -phi "$num"."$dec" -bifmode eps
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi plume.hopf -fo plume -param Re -pv 1  -snes_divergence_tolerance 1e100 -mo plume -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -nf 0 -anisomax 5 -snes_max_it 100 -phi "$num"."$dec" -bifmode eps
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi plume.hopf -fo plume_phi_"$num"p"$dec" -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo plume_phi_"$num"p"$dec" -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -anisomax 5 -snes_max_it 100 -phi "$num"."$dec" -bifmode eps
-export decp=$dec
-done
-
-
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi plume_phi_0p77.base -fo flametip_plume -snes_divergence_tolerance 1e100 -snes_linesearch_type l2 -phi 0.775
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi flametip_plume.base -fo plume -eps_target 0.01+0.8i -pv 1
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi flametip_plume.base -fo flametip -eps_target 0.01+1.5i -pv 1
-ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi plume.mode -fi2 flametip.mode -fo flametip_plume -param Re -param2 phi -pv 1 -snes_divergence_tolerance 1e100 -nf 0 -snes_max_it 100
-ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi flametip_plume.hoho -fo flametip_plume -param Re -param2 phi -pv 1 -snes_divergence_tolerance 1e100 -mo flametip_plume -adaptto bda -err 0.01 -hmin 1e-5 -hmax 0.1 -nf 0 -anisomax 5 -snes_max_it 100
-ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi flametip_plume.hoho -fo flametip_plume -param Re -param2 phi -pv 1 -snes_divergence_tolerance 1e100 -mo flametip_plume -adaptto bd -err 0.01 -hmin 1e-5 -hmax 0.1 -anisomax 5 -snes_max_it 100 -snes_rtol 0 -snes_atol 2.22e-14
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_lowfreq.hopf -fo axi_lowfreq_dec -mo lowfreq_dec -param Re -param2 phi -nf 1 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.65 -h0 -10 -mono 0 -kmax 1 -amax 45 -snes_max_it 20
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_lowfreq.hopf -fo axi_lowfreq_inc -mo lowfreq_inc -param Re -param2 phi -nf 1 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -scount 4 -maxcount -1 -paramtarget 3200 -param2target 1 -h0 10 -mono 0 -kmax 1 -amax 45 -snes_max_it 20
 ```
 
-
-7. Compute harmonic balance
+9. Compute double-Hopf point where high- and low-frequency modes exchange primacy
 ```sh
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi tip_phi_0p80.hopf -fo tip_porb_phi_0p80 -param Re -adaptto 01 -Nh 2 -mo tip_porb_phi_0p80 -hmin 1e-5 -hmax 0.15 -anisomax 5 -scount 5 -h0 0.0125
+export highfreq_guess="axi_highfreq_dec_##.hopf"
+export lowfreq_guess="axi_lowfreq_dec_##.hopf"
 
-
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi hi_phi_0p80.hopf -fo hi_Nh2 -param Re -adaptto 01 -Nh 2 -mo hi_Nh2 -hmin 1e-5 -hmax 0.15 -anisomax 5 -scount 5 -h0 0.25 -kmax 1 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -blocks 3
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi lo_phi_0p80.hopf -fo lo_Nh2 -param Re -adaptto 01 -Nh 2 -mo lo_Nh2 -hmin 1e-5 -hmax 0.15 -anisomax 5 -scount 5 -h0 0.25 -kmax 1 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -blocks 3
+ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi $highfreq_guess -fi2 $lowfreq_guess -fo axi_highlowfreq -param Re -param2 phi -nf 0
+ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi axi_highlowfreq.hoho -fo axi_highlowfreq -mo highlowfreq -param Re -param2 phi -nf 1 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5
 ```
 
+10. Continue along periodic orbits for high- and low-frequency bifurcations using harmonic balance
+```sh
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_phi_0p80_N_2 -param Re -Nh 2 -maxcount 5 -h0 0.01 -kmax 2 -amax 90 -mono 2 -scount 5 -stricttangent 0
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80_N_2_5.porb -fo axi_highfreq_phi_0p80_N_2 -param Re -Nh 2 -mo highfreq_phi_0p80_N_2 -hmin 1e-5 -hmax 0.25 -count 5 -anisomax 5 -scount 5 -h0 0.1 -stricttangent 0 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -paramtarget 3200 -amax 45 -kmax 1
+
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_phi_0p80_N_2 -param Re -Nh 2 -maxcount 5 -h0 0.01 -kmax 2 -amax 90 -mono 2 -scount 5 -stricttangent 0
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80_N_2_5.porb -fo axi_lowfreq_phi_0p80_N_2 -param Re -Nh 2 -mo lowfreq_phi_0p80_N_2 -hmin 1e-5 -hmax 0.25 -count 5 -anisomax 5 -scount 5 -h0 -0.1 -stricttangent 0 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -paramtarget 2000 -amax 45 -kmax 1
+
+cd $workdir && export lastfile=$(printf '%s\n' axi_lowfreq_phi_0p80_N_2_*.porb | sort -t_ -k7,7n | tail -1) && cd -
+ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi $lastfile -fo axi_lowfreq_phi_0p80_Re_2000_N_3 -Re 2000 -Nh 3 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -blocks 3
+ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.porb -fo axi_lowfreq_phi_0p80_Re_2000_N_3 -param Re -Nh 2 -mo lowfreq_phi_0p80_Re_2000_N_3 -hmin 1e-5 -hmax 0.25 -anisomax 5 -h0 0.25 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -blocks 3
+```
 
 ### Nonlinear analysis
-8. Compute nonlinear dynamics in time domain.
+11. Compute time evolution from slightly perturbed states "above" and "below" the saddle.
 ```sh
-ff-mpirun -np 1 examples/schulke_etal_2026/moderescale.md -v 0 -dir $workdir -fi plume_phi_0p80_Re_2000_Nh3.porb -amp 1.1 -fo plume_phi_0p80_Re_2000_plus
-ff-mpirun -np 1 examples/schulke_etal_2026/moderescale.md -v 0 -dir $workdir -fi plume_phi_0p80_Re_2000_Nh3.porb -amp 0.9 -fo plume_phi_0p80_Re_2000_minus
-ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir -fi plume_phi_0p80_Re_2000_plus.base -fo plume_phi_0p80_Re_2000_plus -ts_time_step 0.005 -ts_type dirk -ts_dirk_type s7511sal -ts_adapt_type basic -scount 5 -maxcount 10000 -mo plume_phi_0p80_Re_2000_plus -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5 -pv 1 -ts_adapt_dt_max 0.1 -ts_adapt_dt_min 0.005
-ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir  -fi plume_phi_0p80_Re_2000_minus.base -fo plume_phi_0p80_Re_2000_minus -ts_time_step 0.005 -ts_type dirk -ts_dirk_type s7511sal -ts_adapt_type basic -scount 5 -maxcount 10000 -mo plume_phi_0p80_Re_2000_minus -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5 -pv 1 -ts_adapt_dt_max 0.1 -ts_adapt_dt_min 0.005
-```
-
-```sh
-ff-mpirun -np 1 examples/schulke_etal_2026/moderescale.md -v 0 -dir $workdir -fi plume_phi_0p80_Re_2000_Nh3.porb -amp 1.01 -fo plume_phi_0p80_Re_2000_plus2
-ff-mpirun -np 1 examples/schulke_etal_2026/moderescale.md -v 0 -dir $workdir -fi plume_phi_0p80_Re_2000_Nh3.porb -amp 0.99 -fo plume_phi_0p80_Re_2000_minus2
-ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir -fi plume_phi_0p80_Re_2000_plus2.base -fo plume_phi_0p80_Re_2000_plus2 -ts_time_step 0.005 -ts_type dirk -ts_dirk_type s7511sal -ts_adapt_type basic -scount 5 -maxcount 10000 -mo plume_phi_0p80_Re_2000_plus2 -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5 -pv 1 -ts_adapt_dt_max 0.1 -ts_adapt_dt_min 0.005
-ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir  -fi plume_phi_0p80_Re_2000_minus2.base -fo plume_phi_0p80_Re_2000_minus2 -ts_time_step 0.005 -ts_type dirk -ts_dirk_type s7511sal -ts_adapt_type basic -scount 5 -maxcount 10000 -mo plume_phi_0p80_Re_2000_minus2 -snes_atol 2.22e-14 -err 0.01 -hmax 0.1 -hmin 1e-5 -anisomax 5 -pv 1 -ts_adapt_dt_max 0.1 -ts_adapt_dt_min 0.005
-```
-
-Get Saddle branch
-```sh
-
-for num in {0..200..1}; do
-for dec in {0..9..1}; do
-ff-mpirun -np 1 examples/schulke_etal_2026/moderescale.md -v 0 -dir $workdir -fi plume_phi_0p80_Re_2000_Nh3.porb -amp 1 -timeshift "$num"."$dec" -fo plume_phi_0p80_Re_2000_saddle
-done
-done
+ff-mpirun -np 1 examples/schulke_etal_2026/moderescale.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80_Re_2000_N_3.porb -amp 1.01 -fo axi_saddleplus_phi_0p80_Re_2000
+ff-mpirun -np 1 examples/schulke_etal_2026/moderescale.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80_Re_2000_N_3.porb -amp 0.99 -fo axi_saddleminus_phi_0p80_Re_2000
+ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir -fi axi_saddleplus_phi_0p80_Re_2000.base -fo axi_saddleplus_phi_0p80_Re_2000 -ts_time_step 0.005 -ts_type dirk -ts_dirk_type s7511sal -ts_adapt_type basic -scount 5 -maxcount 10000 -mo saddleplus_phi_0p80_Re_2000 -snes_atol 2.22e-14 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -pv 1 -ts_adapt_dt_max 0.1 -ts_adapt_dt_min 0.005
+ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir  -fi axi_saddleminus_phi_0p80_Re_2000.base -fo axi_saddleminus_phi_0p80_Re_2000 -ts_time_step 0.005 -ts_type dirk -ts_dirk_type s7511sal -ts_adapt_type basic -scount 5 -maxcount 10000 -mo axi_saddleminus_phi_0p80_Re_2000 -snes_atol 2.22e-14 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -pv 1 -ts_adapt_dt_max 0.1 -ts_adapt_dt_min 0.005
 ```

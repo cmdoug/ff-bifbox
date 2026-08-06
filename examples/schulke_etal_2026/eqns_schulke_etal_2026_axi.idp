@@ -1,5 +1,5 @@
 //
-// eqns_schulke_etal_2026.idp
+// eqns_schulke_etal_2026_axi.idp
 // Chris Douglas
 // christopher.douglas@duke.edu
 //
@@ -11,8 +11,6 @@
   macro ndotu(u) ( N.x*u + N.y*u#y ) //EOM
   
   macro ndotvisc(v, u)( N.x*(v*(y*dx(u) - 2./3.*div(u)) + y*v#y*dy(u)) + N.y*(y*v*dx(u#y) + v#y*(y*dy(u#y) - 2./3.*div(u))) ) //EOM
-//  macro ndotvisc(v, u)( N.x*(v*(y*dx(u) - div(u)/3.0) + y*v#y*dy(u)) + N.y*(y*v*dx(u#y) + v#y*(y*dy(u#y) - div(u)/3.0)) ) //EOM
-//  macro ndotvisc(v, u)( y*(N.x*(v*dx(u) + v#y*dy(u)) + N.y*(v*dx(u#y) + v#y*dy(u#y))) ) //EOM
   
   macro div(u) ( y*(dx(u) + dy(u#y)) + u#y ) // velocity divergence
   
@@ -27,11 +25,11 @@
   macro ugradf(U, f) ( y*(U*dx(f) + U#y*dy(f)) ) // EOM
 
 // Arrhenius reaction rate macro
-  macro TQ() ( y*params["Da"]*(1.0 + paramTs)*(paramAFR + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["Re"]*paramAs*(params["phi"] + 2.0/paramvfO2)^1.5)*(RRY(ub)*RRTT(ub)) ) // EOM
-  macro TQp(u) ( y*params["Da"]*(1.0 + paramTs)*(paramAFR + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["Re"]*paramAs*(params["phi"] + 2.0/paramvfO2)^1.5)*(dRRY(ub)*u#Y*RRTT(ub) + RRY(ub)*dRRTT(ub)*u#T) ) //EOM
-  macro TQpp(u, uu) ( y*params["Da"]*(1.0 + paramTs)*(paramAFR + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["Re"]*paramAs*(params["phi"] + 2.0/paramvfO2)^1.5)*(d2RRY(ub)*RRTT(ub)*u#Y*uu#Y + dRRY(ub)*dRRTT(ub)*(u#Y*uu#T + u#T*uu#Y) + RRY(ub)*d2RRTT(ub)*u#T*uu#T) ) //EOM
-  macro TQppp(u, uu, uuu) ( y*params["Da"]*(1.0 + paramTs)*(paramAFR + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["Re"]*paramAs*(params["phi"] + 2.0/paramvfO2)^1.5)*(d3RRY(ub)*RRTT(ub)*u#Y*uu#Y*uuu#Y + d2RRY(ub)*dRRTT(ub)*(u#Y*uu#Y*uuu#T + (u#Y*uu#T + u#T*uu#Y)*uuu#Y) + dRRY(ub)*d2RRTT(ub)*((u#Y*uu#T + u#T*uu#Y)*uuu#T + u#T*uu#T*uuu#Y) + RRY(ub)*d3RRTT(ub)*u#T*uu#T*uuu#T) ) //EOM
-  macro TQpppp(u, uu, uuu, uuuu) ( y*params["Da"]*(1.0 + paramTs)*(paramAFR + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["Re"]*paramAs*(params["phi"] + 2.0/paramvfO2)^1.5)*(
+  macro TQ() ( y*params["Ar"]/params["Re"]*(paramAFRm + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["phi"] + paramAFRv)^1.5*(RRY(ub)*RRTT(ub)) ) // EOM
+  macro TQp(u) ( y*params["Ar"]/params["Re"]*(paramAFRm + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["phi"] + paramAFRv)^1.5*(dRRY(ub)*u#Y*RRTT(ub) + RRY(ub)*dRRTT(ub)*u#T) ) //EOM
+  macro TQpp(u, uu) ( y*params["Ar"]/params["Re"]*(paramAFRm + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["phi"] + paramAFRv)^1.5*(d2RRY(ub)*RRTT(ub)*u#Y*uu#Y + dRRY(ub)*dRRTT(ub)*(u#Y*uu#T + u#T*uu#Y) + RRY(ub)*d2RRTT(ub)*u#T*uu#T) ) //EOM
+  macro TQppp(u, uu, uuu) ( y*params["Ar"]/params["Re"]*(paramAFRm + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["phi"] + paramAFRv)^1.5*(d3RRY(ub)*RRTT(ub)*u#Y*uu#Y*uuu#Y + d2RRY(ub)*dRRTT(ub)*(u#Y*uu#Y*uuu#T + (u#Y*uu#T + u#T*uu#Y)*uuu#Y) + dRRY(ub)*d2RRTT(ub)*((u#Y*uu#T + u#T*uu#Y)*uuu#T + u#T*uu#T*uuu#Y) + RRY(ub)*d3RRTT(ub)*u#T*uu#T*uuu#T) ) //EOM
+  macro TQpppp(u, uu, uuu, uuuu) ( y*params["Ar"]/params["Re"]*(paramAFRm + params["phi"])*sqrt(min(1.0, params["phi"]))/(params["phi"] + paramAFRv)^1.5*(
     d4RRY(ub)*RRTT(ub)*u#Y*uu#Y*uuu#Y*uuuu#Y 
     + d3RRY(ub)*dRRTT(ub)*(u#Y*uu#Y*uuu#Y*uuuu#T + (u#Y*uu#Y*uuu#T + u#Y*uu#T*uuu#Y + u#T*uu#Y*uuu#Y)*uuuu#Y) 
     + d2RRY(ub)*d2RRTT(ub)*((u#Y*uu#Y*uuu#T + (u#Y*uu#T + u#T*uu#Y)*uuu#Y)*uuuu#T + (u#T*uu#T*uuu#Y + (u#T*uu#Y + u#Y*uu#T)*uuu#T)*uuuu#Y) 
@@ -40,11 +38,12 @@
     )) //EOM
 
 // Sutherland law viscosity macro
-  macro mu() ( (1.0 + paramTs)/params["Re"]*ubT^1.5/(ubT + paramTs) ) // EOM
-  macro mup(u) ( (1.0 + paramTs)/params["Re"]*(paramTs/(ubT + paramTs) + 0.5)*sqrt(ubT)/(ubT + paramTs)*u#T ) // EOM
-  macro mupp(u, uu) ( (1.0 + paramTs)/params["Re"]*((2.0*ubT/(ubT + paramTs) - 3.0)*sqrt(ubT)/(ubT + paramTs) + 0.75/sqrt(ubT))/(ubT + paramTs)*u#T*uu#T) // EOM  
-  macro muppp(u, uu, uuu) ( (1.0 + paramTs)/params["Re"]*(((9.0 - 6.0*ubT/(paramTs + ubT))*sqrt(ubT)/(paramTs + ubT) - 2.25/sqrt(ubT))/(paramTs + ubT) - 0.375/ubT^1.5)/(paramTs + ubT)*u#T*uu#T*uuu#T ) // EOM
-  macro mupppp(u, uu, uuu, uuuu) ( (1.0 + paramTs)/params["Re"]*(0.5625/ubT^2.5 + (((ubT/(paramTs + ubT) - 1.5)*24.0*sqrt(ubT)/(paramTs + ubT) + 9.0/sqrt(ubT))/(paramTs + ubT) + 1.5/ubT^1.5)/(paramTs + ubT))/(paramTs + ubT)*u#T*uu#T*uuu#T*uuuu#T) // EOM
+  real paramSp1 = paramS + 1.0;
+  macro mu() ( paramSp1/params["Re"]*ubT^1.5/(ubT + paramS) ) // EOM
+  macro mup(u) ( paramSp1/params["Re"]*(paramS/(ubT + paramS) + 0.5)*sqrt(ubT)/(ubT + paramS)*u#T ) // EOM
+  macro mupp(u, uu) ( paramSp1/params["Re"]*((2.0*ubT/(ubT + paramS) - 3.0)*sqrt(ubT)/(ubT + paramS) + 0.75/sqrt(ubT))/(ubT + paramS)*u#T*uu#T) // EOM  
+  macro muppp(u, uu, uuu) ( paramSp1/params["Re"]*(((9.0 - 6.0*ubT/(paramS + ubT))*sqrt(ubT)/(paramS + ubT) - 2.25/sqrt(ubT))/(paramS + ubT) - 0.375/ubT^1.5)/(paramS + ubT)*u#T*uu#T*uuu#T ) // EOM
+  macro mupppp(u, uu, uuu, uuuu) ( paramSp1/params["Re"]*(0.5625/ubT^2.5 + (((ubT/(paramS + ubT) - 1.5)*24.0*sqrt(ubT)/(paramS + ubT) + 9.0/sqrt(ubT))/(paramS + ubT) + 1.5/ubT^1.5)/(paramS + ubT))/(paramS + ubT)*u#T*uu#T*uuu#T*uuuu#T) // EOM
 
 // Boundary conditions
   macro inletPl(Di)( 2.0*(1.0 - 4.0*y^2. - (1.0 - Di^2.)*log(2.*y)/log(Di))/(1.0 + Di^2. + (1.0 - Di^2.)/log(Di)) ) //EOM
@@ -69,7 +68,7 @@
     = int2d(Th)(
       ugradu(v, ub, ub) - (ubT*div(v) + ugradf(v, ubT))*ubp
       + vY*ugradf(ub, ubY)
-      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFR + params["phi"])*vT)*TQ
+      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFRm + params["phi"])*vT)*TQ
       + (vT + vp)*ugradf(ub, ubT)
       - vp*ubT*div(ub)
       // viscous + diffusion terms
@@ -83,7 +82,7 @@
     = int2d(Th)(
       iomega*(vdotu(v, dum) + gdotf(vY, dumY) + gdotf(vp + vT, dumT))
       + ugradu(v, dum, ub) + ugradu(v, ub, dum) - (dumT*div(v) + ugradf(v, dumT))*ubp - (ubT*div(v) + ugradf(v, ubT))*dump
-      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFR + params["phi"])*vT)*TQp(dum)
+      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFRm + params["phi"])*vT)*TQp(dum)
       + vY*(ugradf(dum, ubY) + ugradf(ub, dumY))
       + (vT + vp)*(ugradf(dum, ubT) + ugradf(ub, dumT))
       - vp*(dumT*div(ub) + ubT*div(dum))
@@ -95,7 +94,7 @@
     + int2d(Th)(
       iomega*(vdotu(v, um) + gdotf(vY, umY) + gdotf(vp + vT, umT))
       + ugradu(v, um, ub) + ugradu(v, ub, um) - (umT*div(v) + ugradf(v, umT))*ubp - (ubT*div(v) + ugradf(v, ubT))*ump
-      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFR + params["phi"])*vT)*TQp(um)
+      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFRm + params["phi"])*vT)*TQp(um)
       + vY*(ugradf(um, ubY) + ugradf(ub, umY))
       + (vT + vp)*(ugradf(um, ubT) + ugradf(ub, umT))
       - vp*(umT*div(ub) + ubT*div(um))
@@ -135,7 +134,7 @@
   varf vH(defu(dum), defu(v))
     = int2d(Th)(
       ugradu(v, um, dum) + ugradu(v, dum, um) - (umT*div(v) + ugradf(v, umT))*dump - (dumT*div(v) + ugradf(v, dumT))*ump
-      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFR + params["phi"])*vT)*TQpp(um, dum)
+      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFRm + params["phi"])*vT)*TQpp(um, dum)
       + vY*(ugradf(um, dumY) + ugradf(dum, umY))
       + (vT + vp)*(ugradf(um, dumT) + ugradf(dum, umT))
       - vp*(umT*div(dum) + dumT*div(um))
@@ -148,7 +147,7 @@
     - int1d(Th, BCopen, BClateral)((dumT*mu + ubT*mup(dum))*ndotvisc(v, um) + (umT*mu + ubT*mup(um))*ndotvisc(v, dum) + (umT*mup(dum) + dumT*mup(um) + ubT*mupp(um, dum))*ndotvisc(v, ub) + 0.5*(real(ndotu(ub))<0)*(vdotu(v, um)*ndotu(dum) + vdotu(v, dum)*ndotu(um)))
     + int2d(Th)(
       ugradu(v, um, um2) + ugradu(v, um2, um) - (umT*div(v) + ugradf(v, umT))*um2p - (um2T*div(v) + ugradf(v, um2T))*ump
-      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFR + params["phi"])*vT)*TQpp(um, um2)
+      + (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFRm + params["phi"])*vT)*TQpp(um, um2)
       + vY*(ugradf(um, um2Y) + ugradf(um2, umY))
       + (vT + vp)*(ugradf(um, um2T) + ugradf(um2, umT))
       - vp*(umT*div(um2) + um2T*div(um))
@@ -164,7 +163,7 @@
 // TRESSIAN OPERATOR
   varf vT(defu(dum), defu(v))
     = int2d(Th)(
-      (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFR + params["phi"])*vT)*TQppp(um, um2, dum)
+      (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFRm + params["phi"])*vT)*TQppp(um, um2, dum)
       // viscous + diffusion terms
       + muppp(um, um2, dum)*(ubT*(visc(v, ub) + diff(vY, ubY)/paramSc + diff(vT, ubT)/paramPr) + visc2(v, ubT, ub) + vY*diff(ubT, ubY)/paramSc + vT*diff(ubT, ubT)/paramPr)
       + mupp(um, um2)*(dumT*(visc(v, ub) + diff(vY, ubY)/paramSc + diff(vT, ubT)/paramPr) + ubT*(visc(v, dum) + diff(vY, dumY)/paramSc + diff(vT, dumT)/paramPr) + visc2(v, dumT, ub) + visc2(v, ubT, dum) + vY*(diff(dumT, ubY) + diff(ubT, dumY))/paramSc + 2.0*vT*diff(ubT, dumT)/paramPr)
@@ -176,7 +175,7 @@
     )
     - int1d(Th, BCopen, BClateral)((um2T*mup(dum) + dumT*mup(um2) + ubT*mupp(um2, dum))*ndotvisc(v, um) + (umT*mup(dum) + dumT*mup(um) + ubT*mupp(um, dum))*ndotvisc(v, um2) + (umT*mup(um2) + um2T*mup(um) + ubT*mupp(um, um2))*ndotvisc(v, dum) + (umT*mupp(um2, dum) + um2T*mupp(um, dum) + dumT*mupp(um, um2) + ubT*muppp(um, um2, dum))*ndotvisc(v, ub))
     + int2d(Th)(
-      (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFR + params["phi"])*vT)*TQppp(um, um2, um3)
+      (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFRm + params["phi"])*vT)*TQppp(um, um2, um3)
       // viscous + diffusion terms
       + muppp(um, um2, um3)*(ubT*(visc(v, ub) + diff(vY, ubY)/paramSc + diff(vT, ubT)/paramPr) + visc2(v, ubT, ub) + vY*diff(ubT, ubY)/paramSc + vT*diff(ubT, ubT)/paramPr)
       + mupp(um, um2)*(um3T*(visc(v, ub) + diff(vY, ubY)/paramSc + diff(vT, ubT)/paramPr) + ubT*(visc(v, um3) + diff(vY, um3Y)/paramSc + diff(vT, um3T)/paramPr) + visc2(v, um3T, ub) + visc2(v, ubT, um3) + vY*(diff(um3T, ubY) + diff(ubT, um3Y))/paramSc + 2.0*vT*diff(ubT, um3T)/paramPr)
@@ -192,7 +191,7 @@
 // QUARTIC DERIVATIVE OPERATOR
   varf vQ(defu(dum), defu(v))
     = int2d(Th)(
-      (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFR + params["phi"])*vT)*TQpppp(um, um2, um3, dum)
+      (vY - params["Dhc"]*min(1.0, params["phi"])/(paramAFRm + params["phi"])*vT)*TQpppp(um, um2, um3, dum)
       // viscous + diffusion terms
       + mupppp(um, um2, um3, dum)*(ubT*(visc(v, ub) + diff(vY, ubY)/paramSc + diff(vT, ubT)/paramPr) + visc2(v, ubT, ub) + vY*diff(ubT, ubY)/paramSc + vT*diff(ubT, ubT)/paramPr)
       + muppp(um, um2, um3)*(dumT*(visc(v, ub) + diff(vY, ubY)/paramSc + diff(vT, ubT)/paramPr) + ubT*(visc(v, dum) + diff(vY, dumY)/paramSc + diff(vT, dumT)/paramPr) + visc2(v, dumT, ub) + visc2(v, ubT, dum) + vY*(diff(dumT, ubY) + diff(ubT, dumY))/paramSc + 2.0*vT*diff(ubT, dumT)/paramPr)

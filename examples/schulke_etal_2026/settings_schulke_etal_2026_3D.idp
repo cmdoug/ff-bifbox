@@ -1,5 +1,5 @@
 //
-// settings_schulke_etal_2026.idp
+// settings_schulke_etal_2026_3D.idp
 // Chris Douglas
 // christopher.douglas@duke.edu
 //
@@ -7,53 +7,34 @@
 //
 // Set dimension macro for 'macro_ddm.idp' (2)
   macro dimension()2//EOM
-// Declare that cubic and quartic nonlinear terms exist and their partials are defined
-  macro cubic()//EOM
-  macro quartic()//EOM
 // Load hpddm macros
   include "macro_ddm.idp"
   verbosity = getARGV("-v", 0);
 // Define parameter and monitor names
-  real paramAFR, paramAs, paramTs, paramTa, paramvfO2;
+  real paramAFRm, paramAFRv, paramAs, paramS, paramTa;
   { 
     real WCH4 = 16.0425; // molecular weight of CH4 [g/mol]
     real WO2 = 31.9988; // molecular weight of O2 [g/mol]
-    paramvfO2 = 0.2095; // volume fraction of O2 in air [-]
+    real volfracO2 = 0.2095; // volume fraction of O2 in air [-]
     real massfracO2 = 0.2314; // mass fraction of O2 in air [-]
     real Uref = 1.0; // velocity scale [m/s]
     real Lref = 0.011; // length scale [m]
     real Tref = 300.0; // reference temperature [K]
     real pref = 1.01325e5; // reference pressure [Pa]
-    real Ar = 1.1e7; // Arrhenius frequency factor [g/m-s-K^(1/2)]
     real As = 1.67212e-3; // Sutherland constant [g/m-s-K^(1/2)]
-    real Ts = 170.672; // Sutherland temperature [K]
+    real S = 170.672; // Sutherland temperature [K]
     real Ru = 8.31446261815324; // Universal gas constant [J/K-mol]
     real Ea = 20.0e3*4.184; // molar activation energy [J/mol]
-    real Dh0fCH4 = -74.87e3; // enthalpy of formation of methane [J/mol]
-    real Dh0fH2O = -241.83e3; // enthalpy of formation of water vapor [J/mol]
-    real Dh0fCO2 = -393.52e3; // enthalpy of formation of carbon dioxide [J/mol]
-    real Dh0r = Dh0fCO2 + 2.0*Dh0fH2O - Dh0fCH4; // enthalpy of reaction [J/mol]
-    real Cp = 1.3; // specific heat at constant pressure [J/g-K]
-    paramAFR = 2.0*WO2/(massfracO2*WCH4); //stoichiometric air-fuel mass ratio [-]
-    real Dhc = -Dh0r/(Cp*Tref*WCH4); //dimensionless combustion enthalpy
-    real Da = Ar*Lref/Uref*(2*pref/(Ru*Tref))^0.5; //Damkohler number
-    paramAs = As*Uref/Lref*Ru*Tref^1.5/(WCH4*pref); //Dimensionless Sutherland constant
-    paramTs = Ts/Tref; //Dimensionless Sutherland temperature
+    paramAFRv = 2.0/volfracO2; //stoichiometric air-fuel volume ratio [-]
+    paramAFRm = 2.0*WO2/(massfracO2*WCH4); //stoichiometric air-fuel mass ratio [-]
+    paramS = S/Tref; //Dimensionless Sutherland temperature
+    paramAs = As*Uref/Lref*Ru*Tref^1.5/(WCH4*pref)/(1.0 + paramS); //Dimensionless Sutherland constant
     paramTa = Ea/Ru/Tref; //Dimensionless activation temperature
-/*    cout.precision(17);
-    if(mpirank==0) {
-      cout << "AFR = " << paramAFR << endl;
-      cout << "As = " << paramAs << endl;
-      cout << "Ts = " << paramTs << endl;
-      cout << "Ta = " << paramTa << endl;
-      cout << "Da = " << Da << endl;
-      cout << "Dhc = " << Dhc << endl;
-    }*/
   }
   real paramPr = 0.71; //Prandtl number
-  real paramSc = 0.71; //Schmidt number
-  string[int] paramnames = ["Re", "Tr", "Da", "phi", "Dhc"]; // set parameter names
-  string[int] monitornames = ["U0", "dT", "Ze", "uxpt", "omegadotT"]; // set monitor names
+  real paramSc = paramPr; //Schmidt number (unity Lewis number)
+  string[int] paramnames = ["Re", "Tr", "Ar", "phi", "Dhc"]; // set parameter names
+  string[int] monitornames = ["U0", "dT", "Ze", "Da", "uxpt", "omegadotT"]; // set monitor names
 // Declare symmetries
   real[int] sym(1);
 // Define state vector and FE space
@@ -65,22 +46,28 @@
   macro initf(i)[i, i, i]//EOM
   func Pkf = [P2, P2, P2];
 // Define quantities for mesh adaptation and plotting in Paraview
-  macro adaptu(u)[u, u#y, u#z], u#Y, u#T, u#p//EOM
+  bool localrefinement = getARGV("-localrefinement", 1);
+  real centerx0 = getARGV("-centerx", 4.0);
+  macro centerx() centerx0*params["Re"]/2000.0 //EOM
+  real centery = getARGV("-centery", 1.2);
+  real scale1 = getARGV("-scale1", 0.1);
+  real scale2 = getARGV("-scale2", 0.05);
+  real spreadx0 = getARGV("-spreadx", 3.0);
+  macro spreadx() spreadx0*params["Re"]/2000.0 //EOM
+  real spreadx2 = getARGV("-spreadx2", 1.0);
+  real spready = getARGV("spready", 0.5);
+  real spready2 = getARGV("spready2", 0.1);
+  macro adaptu(u)[u, u#y], u#Y, u#T, u#p, 
+  localrefinement*exp(-((x+0.5)/spreadx2)^2)*exp(-((y-0.5)/spready2)^2)*sin(y/scale2), localrefinement*exp(-((x+0.5)/spreadx2)^2)*exp(-((y-0.5)/spready2)^2)*cos(y/scale2), 
+  localrefinement*exp(-((x+0.5)/spreadx2)^2)*exp(-((y-0.136)/spready2)^2)*sin(y/scale2), localrefinement*exp(-((x+0.5)/spreadx2)^2)*exp(-((y-0.136)/spready2)^2)*cos(y/scale2),
+  localrefinement*exp(-((x-centerx)/spreadx)^2)*exp(-((y-centery)/spready)^2)*sin(y/scale1), localrefinement*exp(-((x-centerx)/spreadx)^2)*exp(-((y-centery)/spready)^2)*cos(y/scale1)//EOM
   macro adaptf(f)[f, f#y, f#z] //EOM
   macro paraviewu(u)[u, u#y, u#z], u#Y, u#T, u#p//EOM
   macro paraviewf(f)[f, f#y, f#z] //EOM
-// Name and order for real Paraview outputs
-  string ParaviewDataName = "velocity species temperature pressure";
-  string ParaviewDataNamef = "momentum";
-  int[int] ParaviewOrder = [1, 1, 1, 1];
-  int[int] ParaviewOrderf = [1];
-// Name and order for complex Paraview outputs
-  string ParaviewDataNamec = "velocity_r species_r temperature_r pressure_r";
-  ParaviewDataNamec = ParaviewDataNamec + " velocity_i species_i temperature_i pressure_i";
-  string ParaviewDataNamefc = "momentum_r momentum_i";
-  int[int] ParaviewOrderc = [ParaviewOrder, ParaviewOrder];
-  int[int] ParaviewOrderfc = [ParaviewOrderf, ParaviewOrderf];
-  // Initial conditions (if no file)
+// Names for ParaView outputs
+  string[int] ParaViewNames = ["velocity", "species", "temperature", "pressure"];
+  string[int] ParaViewNamesf = ["momentum", "energy", "mass"];
+// Initial conditions (if no file)
   macro InitialConditions()[0, 0, 0, 1, 1, 0]//EOM
 // Boundary labels
   int BCnull = 0;
@@ -92,7 +79,6 @@
   int BCinflow = 6;
   int BCcenterbody = 7;
 // Some helpful macros
-// possibly only act on real Y?
 macro RRY(u) ((u#Y + fdim(params["phi"], 1.0))*sqrt(u#Y + fdim(1.0/params["phi"], 1.0))) // EOM
 macro dRRY(u) (sqrt(u#Y + fdim(1.0/params["phi"], 1.0)) + 0.5*(u#Y + fdim(params["phi"], 1.0))/sqrt(u#Y + fdim(1.0/params["phi"], 1.0))) // EOM
 macro d2RRY(u) ( (1.0 - 0.25*(u#Y + fdim(params["phi"], 1.0))/(u#Y + fdim(1.0/params["phi"], 1.0)))/sqrt(u#Y + fdim(1.0/params["phi"], 1.0))) // EOM
@@ -107,9 +93,10 @@ macro d4RRTT(u) (((((paramTa/u#T - 14.0)*paramTa/u#T + 52.5)*paramTa/u#T - 52.5)
 
 // Define solution monitors to extract
 macro getmonitors(){
-  monitors["U0"] = params["Re"]/(1.0 + paramTs)*paramAs*(params["phi"] + 2.0/paramvfO2)/(paramAFR + params["phi"]);
-  monitors["dT"] = min(1.0, params["phi"])/(paramAFR + params["phi"])*params["Dhc"];
+  monitors["U0"] = params["Re"]*paramAs*(params["phi"] + paramAFRv)/(paramAFRm + params["phi"]);
+  monitors["dT"] = min(1.0, params["phi"])/(paramAFRm + params["phi"])*params["Dhc"];
   monitors["Ze"] = paramTa*monitors["dT"]/(1.0 + monitors["dT"])^2;
+  monitors["Da"] = params["Ar"]/params["Re"]*((paramAFRm+params["phi"])/(paramAFRv+params["phi"]))^1.5;
   monitors["uxpt"] = ubg(3., 1.3);
-  monitors["omegadotT"] = int2d(Thg)(y*params["Dhc"]*params["Da"]*(1.0 + paramTs)/(params["Re"]*paramAs)*(min(1.0, params["phi"])/(params["phi"] + 2.0/paramvfO2))^1.5*RRY(ubg)*RRTT(ubg)/ubgT);
+  monitors["omegadotT"] = int2d(Thg)(y*params["Dhc"]*params["Ar"]/params["Re"]*(min(1.0, params["phi"])/(params["phi"] + paramAFRv))^1.5*RRY(ubg)*RRTT(ubg)/ubgT);
 } // EOM

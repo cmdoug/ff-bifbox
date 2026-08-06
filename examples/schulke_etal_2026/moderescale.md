@@ -14,7 +14,6 @@ string fileout = getARGV("-fo", "");
 real timeshift = getARGV("-timeshift", 0.0);
 real phaseshift = getARGV("-phaseshift", 0.0);
 assert(mpisize==1);
-//string basefileroot, basefileext = parsefilename(basefilein, basefileroot);
 string fileroot, fileext = parsefilename(filein, fileroot); //extract file name and extension
 if(filein != "" && meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
 string meshroot, meshext = parsefilename(meshin, meshroot);
