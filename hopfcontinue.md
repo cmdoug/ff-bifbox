@@ -254,7 +254,7 @@ sym = sym1;
 ik.im = sym1;
 J = vM(XMh, XMh, tgv = 0);
 MatMult(J, qm, qP);
-MatMultTranspose(J, qma, pP);
+MatMultHermitianTranspose(J, qma, pP);
 if (contorder > 0) {
   sym = 0;
   R = vR(0, XMh, tgv = TGV);

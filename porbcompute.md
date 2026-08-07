@@ -4,7 +4,7 @@ Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.dougla
 ## EXAMPLE USAGE:
 ### Initialize with guess from file, solve on same mesh
 ```sh
-ff-mpirun -np 4 porbcompute.md -Re 1 -fi <FILEIN> -fo <FILEOUT> -Nh <N>
+ff-mpirun -np 4 porbcompute.md -fi <FILEIN> -fo <FILEOUT> -Nh <N>
 ```
 
 ### Initialize with guess from file, solve on different mesh

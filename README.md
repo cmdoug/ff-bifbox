@@ -56,7 +56,7 @@
 <!-- GETTING STARTED -->
 ## Getting Started
 ### Prerequisites
-Make sure you have access to a recent [FreeFEM](https://freefem.org/) build, compiled with `PETSc` and `PETSc-complex` **(with SLEPc)**. Suitable versions include the latest major release (v4.16) (found on the `master` branch) or any more recent bleeding edge version from the `develop` branch. Guides for compiling FreeFEM with PETSc can be found on the [FreeFEM GitHub page](https://github.com/FreeFem/FreeFem-sources) or in [this tutorial](https://joliv.et/FreeFem-tutorial/) by Pierre Jolivet. An example installation workflow can also be found in the continuous integration script `ci.yml` in the `ff-bifbox/.github/workflows` folder. More details about the [PETSc](https://petsc.org/release/docs/manual/) and [SLEPc](http://slepc.upv.es/documentation/slepc.pdf) options used in the solvers may be found in their respective manuals.
+Make sure you have access to a recent [FreeFEM](https://freefem.org/) build, compiled with `PETSc` and `PETSc-complex` **(with SLEPc)**. Suitable versions include the latest major release (v4.17) (found on the `master` branch) or any more recent bleeding edge version from the `develop` branch. Guides for compiling FreeFEM with PETSc can be found on the [FreeFEM GitHub page](https://github.com/FreeFem/FreeFem-sources) or in [this tutorial](https://joliv.et/FreeFem-tutorial/) by Pierre Jolivet. An example installation workflow can also be found in the continuous integration script `ci.yml` in the `ff-bifbox/.github/workflows` folder. More details about the [PETSc](https://petsc.org/release/docs/manual/) and [SLEPc](http://slepc.upv.es/documentation/slepc.pdf) options used in the solvers may be found in their respective manuals.
 
 ### Installation
 
