@@ -1,0 +1,57 @@
+cff-version: 1.2.0
+message: "If you use ff-bifbox in your research, please cite the associated Computer Physics Communications paper."
+
+title: "ff-bifbox"
+type: software
+url: "https://github.com/cmdoug/ff-bifbox"
+
+authors:
+  - family-names: "Douglas"
+    given-names: "Christopher M."
+    orcid: "https://orcid.org/0000-0002-5968-3315"
+    affiliation: "Department of Mechanical Engineering and Materials Science, Duke University"
+
+  - family-names: "Jolivet"
+    given-names: "Pierre"
+    orcid: "https://orcid.org/0009-0000-3410-0884"
+    affiliation: "CNRS, LIP6, Sorbonne Université"
+
+abstract: >-
+  ff-bifbox is a scalable, open-source toolbox for numerical continuation,
+  stability and bifurcation analysis, resolvent analysis, and time integration
+  of large, time-dependent nonlinear partial differential equations
+  discretized on adaptively refined meshes in two and three spatial
+  dimensions. Spatial discretization is performed using finite elements in
+  FreeFEM, with distributed numerical linear algebra provided by PETSc.
+
+repository-code: "https://github.com/cmdoug/ff-bifbox"
+
+license: "GPL-3.0-only"
+
+keywords:
+  - "bifurcation analysis"
+  - "branch continuation"
+  - "nonlinear PDEs"
+  - "finite elements"
+  - "FreeFEM"
+  - "PETSc"
+  - "stability analysis"
+  - "resolvent analysis"
+
+preferred-citation:
+  type: article
+  title: "ff-bifbox: A scalable, open-source toolbox for bifurcation analysis of nonlinear PDEs"
+  authors:
+    - family-names: "Douglas"
+      given-names: "Christopher M."
+      orcid: "https://orcid.org/0000-0002-5968-3315"
+
+    - family-names: "Jolivet"
+      given-names: "Pierre"
+      orcid: "https://orcid.org/0009-0000-3410-0884"
+
+  journal: "Computer Physics Communications"
+  volume: 326
+  year: 2026
+  start: "110221"
+  doi: "10.1016/j.cpc.2026.110221"
