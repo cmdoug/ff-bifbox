@@ -48,6 +48,7 @@ preferred-citation:
 
     - family-names: "Jolivet"
       given-names: "Pierre"
+      orcid: "https://orcid.org/0009-0000-3410-0884"
 
   journal: "Computer Physics Communications"
   volume: 326
