@@ -3,6 +3,7 @@ message: "If you use ff-bifbox in your research, please cite the associated Comp
 
 title: "ff-bifbox"
 type: software
+url: "https://github.com/cmdoug/ff-bifbox"
 
 authors:
   - family-names: "Douglas"
