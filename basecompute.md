@@ -4,12 +4,12 @@ Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.dougla
 ## EXAMPLE USAGE:
 ### Initialize without file:
 ```sh
-ff-mpirun -np 4 basecompute.md -Re 1 -Pe 1 -Le 1 -mi <FILEIN> -fo <FILEOUT>
+ff-mpirun -np 4 basecompute.md -mi <FILEIN> -fo <FILEOUT>
 ```
 
 ### Initialize with guess from file, solve on same mesh
 ```sh
-ff-mpirun -np 4 basecompute.md -Re 1 -Pe 1 -Le 1 -fi <FILEIN> -fo <FILEOUT>
+ff-mpirun -np 4 basecompute.md -fi <FILEIN> -fo <FILEOUT>
 ```
 
 ### Initialize with guess from file, solve on different mesh

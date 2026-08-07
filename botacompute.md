@@ -320,22 +320,22 @@ $$
 ## EXAMPLE USAGE:
 ### Initialize with Bogdanov-Takens guess from base file, solve on same mesh
 ```sh
-ff-mpirun -np 4 botacompute.md -param <PARAM> -fi <FILEIN> -bfi <BASEFILEIN> -fo <FILEOUT>
+ff-mpirun -np 4 botacompute.md -param <PARAM> -param2 <PARAM2> -fi <FILEIN> -bfi <BASEFILEIN> -fo <FILEOUT>
 ```
 
 ### Initialize with Bogdanov-Takens from base and mode file, solve on same mesh
 ```sh
-ff-mpirun -np 4 botacompute.md -param <PARAM> -fi <FILEIN> -fo <FILEOUT>
+ff-mpirun -np 4 botacompute.md -param <PARAM> -param2 <PARAM2> -fi <FILEIN> -fo <FILEOUT>
 ```
 
 ### Initialize with Bogdanov-Takens guess from file on a mesh from file
 ```sh
-ff-mpirun -np 4 botacompute.md -param <PARAM> -mi <MESHIN> -bfi <BASEFILEIN> -fi <FILEIN> -fo <FILEOUT>
+ff-mpirun -np 4 botacompute.md -param <PARAM> -param2 <PARAM2> -mi <MESHIN> -bfi <BASEFILEIN> -fi <FILEIN> -fo <FILEOUT>
 ```
 
 ### Initialize with Bogdanov-Takens from file, adapt mesh/solution
 ```sh
-ff-mpirun -np 4 botacompute.md -param <PARAM> -fi <FILEIN> -fo <FILEOUT> -mo <MESHOUT>
+ff-mpirun -np 4 botacompute.md -param <PARAM> -param2 <PARAM2> -fi <FILEIN> -fo <FILEOUT> -mo <MESHOUT>
 ```
 
 NOTE: This file should not be changed unless you know what you're doing.
