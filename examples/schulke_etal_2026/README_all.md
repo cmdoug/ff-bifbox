@@ -99,7 +99,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_ignited.base -fo 
 for Re in {1500..3200..100}; do
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$(($Re-100))".base -fo U0inc -Re "$Re" -snes_linesearch_type secant -mo U0inc -err 0.05 -localrefinement 0
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo U0inc -Re "$Re" -snes_linesearch_type secant -mo U0inc -err 0.03 -localrefinement 0
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo U0inc -Re "$Re" -snes_linesearch_type secant -mo U0inc -err 0.01
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo U0inc -Re "$Re" -snes_linesearch_type secant -mo U0inc -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo axi_phi_0p80_Re_"$Re" -Re "$Re" -pv 1 -snes_linesearch_type secant -mo phi_0p80_Re_"$Re" -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14
 done
 ```
@@ -118,7 +118,7 @@ ln -sf examples/schulke_etal_2026/eqns_schulke_etal_2026_3D.idp eqns.idp
 ln -sf examples/schulke_etal_2026/settings_schulke_etal_2026_3D.idp settings.idp
 
 for Re in {1500..3200..100}; do
-ff-mpirun examples/schulke_etal_2026/axi_to_3D.md -v 0 -dir $workdir -fi axi_phi_0p8_Re_"$Re".base -fo 3D_phi_0p80_Re_"$Re".base
+ff-mpirun examples/schulke_etal_2026/axi_to_3D.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$Re".base -fo 3D_phi_0p80_Re_"$Re".base
 for m in {1..2}; do
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi 3D_phi_0p80_Re_"$Re".base -so phi_0p80_Reswp_m_"$m" -eps_nev 25 -eps_target 0.1+1i -ntarget 5 -targetf 0.1+9i -sym $m -eps_tol 2.22e-14
 done
