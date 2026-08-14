@@ -46,10 +46,8 @@
   macro mupppp(u, uu, uuu, uuuu) ( paramSp1/params["Re"]*(0.5625/ubT^2.5 + (((ubT/(paramS + ubT) - 1.5)*24.0*sqrt(ubT)/(paramS + ubT) + 9.0/sqrt(ubT))/(paramS + ubT) + 1.5/ubT^1.5)/(paramS + ubT))/(paramS + ubT)*u#T*uu#T*uuu#T*uuuu#T) // EOM
 
 // Boundary conditions
-  macro inletPl(Di)( 2.0*(1.0 - 4.0*y^2. - (1.0 - Di^2.)*log(2.*y)/log(Di))/(1.0 + Di^2. + (1.0 - Di^2.)/log(Di)) ) //EOM
-
   macro BoundaryConditions(u, U)
-    on(BCinflow, u = U - inletPl(0.272727272727272727), u#y = U#y, u#Y = U#Y - 1.0, u#T = U#T - 1.0)
+    on(BCinflow, u = U - inletPl(Dcb), u#y = U#y, u#Y = U#Y - 1.0, u#T = U#T - 1.0)
   + on(BCchannel, u = U, u#y = U#y)
   + on(BClateral, u#Y = U#Y, u#T = U#T - 1.0)
   + on(BCwall, u = U, u#y = U#y, u#T = U#T - 1.0)

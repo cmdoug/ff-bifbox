@@ -78,29 +78,30 @@ FreeFem++-mpi -v 0 examples/schulke_etal_2026/Vflame.md -mo $workdir/Vflame
 ### Laminar base flow
 1. Compute a non-reacting base state with reference parameters on the initial mesh.
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi Vflame.msh -fo axi_nonreacting_0 -Re 70 -Tr 2.3333333333333333 -Ar 0 -phi 0.8 -Dhc 128.23469709865222 -snes_linesearch_type secant -snes_rtol 0 -pv 1
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting_0.base -fo axi_nonreacting_1 -Re 350 -mo nonreacting_1 -snes_linesearch_type secant -snes_rtol 0 -pv 1 -localrefinement 0
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting_1.base -fo axi_nonreacting_2 -Re 1500 -mo nonreacting_2 -snes_linesearch_type secant -snes_rtol 0 -pv 1 -localrefinement 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi Vflame.msh -fo axi_nonreacting -Re 70 -Tr 2.3333333333333333 -Ar 0 -phi 0.8 -Dhc 128.23469709865222 -snes_linesearch_type secant -snes_rtol 0 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting.base -fo axi_nonreacting -Re 350 -mo nonreacting -snes_linesearch_type secant -snes_rtol 0 -pv 1 -localrefinement 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting.base -fo axi_nonreacting -Re 1500 -mo nonreacting -snes_linesearch_type secant -snes_rtol 0 -pv 1 -localrefinement 0
 ```
 
 2. Turn on chemistry and ignite the $Re = 1500$ flow at an elevated centerbody temperature and lower combustion enthalpy. Then perform continuation back to reference parameters. Coarse meshes are used for computational efficiency and stabilizing artificial dissipation.
 
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting_2.base -fo axi_ignite_0 -Tr 3.3333333333333333 -Ar 423521926.87072223 -Dhc 12.823469709865222 -mo ignite_0 -snes_rtol 0 -err 0.05 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting.base -fo axi_ignite_0 -Tr 3.3333333333333333 -Ar 423521926.87072223 -Dhc 12.823469709865222 -mo ignite_0 -snes_rtol 0 -err 0.05 -pv 1
 ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi axi_ignite_0.base -fo axi_ignite -param Dhc -mo ignite -h0 50 -err 0.1 -scount 5 -paramtarget 128.23469709865222 -maxcount -1 -pv 1 -localrefinement 0
 cd $workdir && export lastfile=$(printf '%s\n' axi_ignite_*.base | sort -t_ -k3,3n | tail -1) && cd -
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo axi_ignited -Tr 2.3333333333333333 -Dhc 128.23469709865222 -mo ignited -snes_rtol 0 -err 0.1 -snes_linesearch_type secant -localrefinement 0
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_ignited.base -fo axi_ignited -pv 1 -snes_linesearch_type secant -mo ignited -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_ignited.base -fo axi_phi_0p80_Re_1500 -pv 1 -snes_rtol 0 -snes_linesearch_type secant -mo phi_0p80_Re_1500 -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo axi_phi_0p80_Re_1500 -Tr 2.3333333333333333 -Dhc 128.23469709865222 -snes_linesearch_type secant -mo phi_0p80_Re_1500 -err 0.04 -localrefinement 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_1500.base -fo axi_phi_0p80_Re_1500 -mo phi_0p80_Re_1500 -err 0.02
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_1500.base -fo axi_phi_0p80_Re_1500 -mo phi_0p80_Re_1500 -err 0.01 -hmax 0.2
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_1500.base -fo axi_phi_0p80_Re_1500 -mo phi_0p80_Re_1500 -err 0.01 -anisomax 4 -hmax 0.2 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -pv 1
 ```
 
 3. Save base flows over a range of $Re$. Dissipation from mesh coarsening is used to aid convergence at each step before refining the coarse solutions on the reference mesh.
 ```sh
-for Re in {1500..3200..100}; do
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$(($Re-100))".base -fo U0inc -Re "$Re" -snes_linesearch_type secant -mo U0inc -err 0.05 -localrefinement 0
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo U0inc -Re "$Re" -snes_linesearch_type secant -mo U0inc -err 0.03 -localrefinement 0
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo U0inc -Re "$Re" -snes_linesearch_type secant -mo U0inc -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi U0inc.base -fo axi_phi_0p80_Re_"$Re" -Re "$Re" -pv 1 -snes_linesearch_type secant -mo phi_0p80_Re_"$Re" -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14
+for Re in {1600..3200..100}; do
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$(($Re-100))".base -fo axi_phi_0p80_Re_"$Re" -Re "$Re" -snes_linesearch_type secant -mo phi_0p80_Re_"$Re" -err 0.04 -localrefinement 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$Re".base -fo axi_phi_0p80_Re_"$Re" -mo phi_0p80_Re_"$Re" -err 0.02
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$Re".base -fo axi_phi_0p80_Re_"$Re" -mo phi_0p80_Re_"$Re" -err 0.01 -hmax 0.2
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$Re".base -fo axi_phi_0p80_Re_"$Re" -mo phi_0p80_Re_"$Re" -err 0.01 -anisomax 4 -hmax 0.2 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -pv 1
 done
 ```
 
@@ -130,26 +131,28 @@ done
 ln -sf examples/schulke_etal_2026/eqns_schulke_etal_2026_axi.idp eqns.idp
 ln -sf examples/schulke_etal_2026/settings_schulke_etal_2026_axi.idp settings.idp
 
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_3000.base -fo axi_highfreq_phi_0p80 -eps_target 0.01+1.7i -eps_nev 1 -strict 1 -pv 1 -eps_two_sided 1
-ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_3100.base -fo axi_lowfreq_phi_0p80 -eps_target 0.01+0.8i -eps_nev 1 -strict 1  -pv 1 -eps_two_sided 1
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_3000.base -fo axi_highfreq_phi_0p80_Re_3000 -eps_target 0.01+1.6i -eps_nev 1 -strict 1 -eps_two_sided 1 -pv 1
+ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_3100.base -fo axi_lowfreq_phi_0p80_Re_3100 -eps_target 0.01+0.8i -eps_nev 1 -strict 1 -eps_two_sided 1 -pv 1
 ```
 
 7. Compute Hopf bifurcations associated with critical high- and low-frequency modes.
 ```sh
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.mode -fo axi_highfreq_phi_0p80 -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 0
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_phi_0p80 -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo highfreq_phi_0p80 -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80_Re_3000.mode -fo axi_highfreq_phi_0p80 -param Re -snes_divergence_tolerance 1e100 -nf 0
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_phi_0p80 -param Re -snes_divergence_tolerance 1e100 -mo highfreq_phi_0p80 -err 0.01 -hmax 0.2 -nf 0
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_phi_0p80 -param Re -snes_divergence_tolerance 1e100 -mo highfreq_phi_0p80 -err 0.01 -anisomax 4 -hmax 0.2 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -pv 1
 
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.mode -fo axi_lowfreq_phi_0p80 -param Re -pv 1 -snes_divergence_tolerance 1e100 -nf 0
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_phi_0p80 -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo lowfreq_phi_0p80 -err 0.01 -hmin 1e-5 -hmax 0.25 -anisomax 5 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80_Re_3100.mode -fo axi_lowfreq_phi_0p80 -param Re -snes_divergence_tolerance 1e100 -nf 0
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_phi_0p80 -param Re -snes_divergence_tolerance 1e100 -mo lowfreq_phi_0p80 -err 0.01 -hmax 0.2 -nf 0
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_phi_0p80 -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo lowfreq_phi_0p80 -err 0.01 -anisomax 4 -hmax 0.2 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -pv 1
 ```
 
 8. Continue Hopf bifurcation curves along the $(\phi,Re)$ parameter plane.
 ```sh
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_dec -mo highfreq_dec -param Re -param2 phi -nf 1 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.65 -h0 -10 -mono 0 -kmax 1 -amax 45 -snes_max_it 20
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_inc -mo highfreq_inc -param Re -param2 phi -nf 1 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -scount 4 -maxcount -1 -paramtarget 3200 -param2target 1 -h0 10 -mono 0 -kmax 1 -amax 45 -snes_max_it 20
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_dec -mo highfreq_dec -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.65 -h0 -10
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_inc -mo highfreq_inc -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.99 -h0 10
 
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_lowfreq.hopf -fo axi_lowfreq_dec -mo lowfreq_dec -param Re -param2 phi -nf 1 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.65 -h0 -10 -mono 0 -kmax 1 -amax 45 -snes_max_it 20
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_lowfreq.hopf -fo axi_lowfreq_inc -mo lowfreq_inc -param Re -param2 phi -nf 1 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -scount 4 -maxcount -1 -paramtarget 3200 -param2target 1 -h0 10 -mono 0 -kmax 1 -amax 45 -snes_max_it 20
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_dec -mo lowfreq_dec -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.65 -h0 -10
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_inc -mo lowfreq_inc -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.99 -h0 10
 ```
 
 9. Compute double-Hopf point where high- and low-frequency modes exchange primacy
@@ -158,20 +161,21 @@ export highfreq_guess="axi_highfreq_dec_##.hopf"
 export lowfreq_guess="axi_lowfreq_dec_##.hopf"
 
 ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi $highfreq_guess -fi2 $lowfreq_guess -fo axi_highlowfreq -param Re -param2 phi -nf 0
-ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi axi_highlowfreq.hoho -fo axi_highlowfreq -mo highlowfreq -param Re -param2 phi -nf 1 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5
+ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi axi_highlowfreq.hoho -fo axi_highlowfreq -mo highlowfreq -param Re -param2 phi -err 0.01 -hmax 0.2 -nf 0
+ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi axi_highlowfreq.hoho -fo axi_highlowfreq -mo highlowfreq -param Re -param2 phi -err 0.01 -anisomax 4 -hmax 0.2 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -pv 1
 ```
 
 10. Continue along periodic orbits for high- and low-frequency bifurcations using harmonic balance
 ```sh
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_phi_0p80_N_2 -param Re -Nh 2 -maxcount 5 -h0 0.01 -kmax 2 -amax 90 -mono 2 -scount 5 -stricttangent 0
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80_N_2_5.porb -fo axi_highfreq_phi_0p80_N_2 -param Re -Nh 2 -mo highfreq_phi_0p80_N_2 -hmin 1e-5 -hmax 0.25 -count 5 -anisomax 5 -scount 5 -h0 0.1 -stricttangent 0 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -paramtarget 3200 -amax 45 -kmax 1
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_phi_0p80_N_2 -param Re -Nh 2 -maxcount 10 -h0 0.01 -blocks 2 -kmax 2 -amax 90 -scount 5 -stricttangent 0
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80_N_2_10.porb -count 10 -fo axi_highfreq_phi_0p80_N_2 -param Re -Nh 2 -mo highfreq_phi_0p80_N_2 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -h0 0.25 -stricttangent 0 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -paramtarget 3200 -amax 45 -kmax 1
 
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_phi_0p80_N_2 -param Re -Nh 2 -maxcount 5 -h0 0.01 -kmax 2 -amax 90 -mono 2 -scount 5 -stricttangent 0
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80_N_2_5.porb -fo axi_lowfreq_phi_0p80_N_2 -param Re -Nh 2 -mo lowfreq_phi_0p80_N_2 -hmin 1e-5 -hmax 0.25 -count 5 -anisomax 5 -scount 5 -h0 -0.1 -stricttangent 0 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -paramtarget 2000 -amax 45 -kmax 1
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_phi_0p80_N_2 -param Re -Nh 2 -maxcount 10 -h0 0.05 -blocks 2 -kmax 2 -amax 90 -scount 5 -stricttangent 0
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80_N_2_10.porb -count 10 -fo axi_lowfreq_phi_0p80_N_2 -param Re -Nh 2 -mo lowfreq_phi_0p80_N_2 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -h0 -0.5 -stricttangent 0 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -paramtarget 2000 -amax 45 -kmax 1
 
 cd $workdir && export lastfile=$(printf '%s\n' axi_lowfreq_phi_0p80_N_2_*.porb | sort -t_ -k7,7n | tail -1) && cd -
 ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi $lastfile -fo axi_lowfreq_phi_0p80_Re_2000_N_3 -Re 2000 -Nh 3 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -blocks 3
-ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.porb -fo axi_lowfreq_phi_0p80_Re_2000_N_3 -param Re -Nh 2 -mo lowfreq_phi_0p80_Re_2000_N_3 -hmin 1e-5 -hmax 0.25 -anisomax 5 -h0 0.25 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -blocks 3
+ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80_Re_2000_N_3.porb -fo axi_lowfreq_phi_0p80_Re_2000_N_3 -param Re -Nh 3 -mo lowfreq_phi_0p80_Re_2000_N_3 -err 0.01 -anisomax 4 -hmax 0.2 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -blocks 3
 ```
 
 ### Nonlinear analysis
@@ -179,6 +183,6 @@ ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.
 ```sh
 ff-mpirun -np 1 examples/schulke_etal_2026/moderescale.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80_Re_2000_N_3.porb -amp 1.01 -fo axi_saddleplus_phi_0p80_Re_2000
 ff-mpirun -np 1 examples/schulke_etal_2026/moderescale.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80_Re_2000_N_3.porb -amp 0.99 -fo axi_saddleminus_phi_0p80_Re_2000
-ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir -fi axi_saddleplus_phi_0p80_Re_2000.base -fo axi_saddleplus_phi_0p80_Re_2000 -ts_time_step 0.005 -ts_type dirk -ts_dirk_type s7511sal -ts_adapt_type basic -scount 5 -maxcount 10000 -mo saddleplus_phi_0p80_Re_2000 -snes_atol 2.22e-14 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -pv 1 -ts_adapt_dt_max 0.1 -ts_adapt_dt_min 0.005
-ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir  -fi axi_saddleminus_phi_0p80_Re_2000.base -fo axi_saddleminus_phi_0p80_Re_2000 -ts_time_step 0.005 -ts_type dirk -ts_dirk_type s7511sal -ts_adapt_type basic -scount 5 -maxcount 10000 -mo axi_saddleminus_phi_0p80_Re_2000 -snes_atol 2.22e-14 -err 0.01 -hmax 0.25 -hmin 1e-5 -anisomax 5 -pv 1 -ts_adapt_dt_max 0.1 -ts_adapt_dt_min 0.005
+ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir -fi axi_saddleplus_phi_0p80_Re_2000.base -fo axi_saddleplus_phi_0p80_Re_2000 -ts_time_step 0.005 -ts_type dirk -ts_dirk_type s7511sal -ts_adapt_type basic -scount 5 -maxcount 10000 -mo saddleplus_phi_0p80_Re_2000 -snes_atol 2.22e-14 -err 0.01 -anisomax 4 -hmax 0.2 -pv 1 -ts_adapt_dt_max 0.1 -ts_adapt_dt_min 0.005
+ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir  -fi axi_saddleminus_phi_0p80_Re_2000.base -fo axi_saddleminus_phi_0p80_Re_2000 -ts_time_step 0.005 -ts_type dirk -ts_dirk_type s7511sal -ts_adapt_type basic -scount 5 -maxcount 10000 -mo axi_saddleminus_phi_0p80_Re_2000 -snes_atol 2.22e-14 -err 0.01 -anisomax 4 -hmax 0.2 -pv 1 -ts_adapt_dt_max 0.1 -ts_adapt_dt_min 0.005
 ```

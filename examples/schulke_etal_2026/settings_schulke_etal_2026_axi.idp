@@ -49,21 +49,27 @@
   macro initf(i)[i, i]//EOM
   func Pkf = [P2, P2];
 // Define quantities for mesh adaptation and plotting in Paraview
+  real Dcb = 3./11.;
+  real xcb = 2./11.;
+  macro inletPl(Di)( 2.0*(1.0 - 4.0*y^2. - (1.0 - Di^2.)*log(2.*y)/log(Di))/(1.0 + Di^2. + (1.0 - Di^2.)/log(Di)) ) //EOM
   bool localrefinement = getARGV("-localrefinement", 1);
-  real centerx0 = getARGV("-centerx", 4.0);
-  macro centerx() centerx0*params["Re"]/2000.0 //EOM
-  real centery = getARGV("-centery", 1.2);
-  real scale1 = getARGV("-scale1", 0.1);
-  real scale2 = getARGV("-scale2", 0.05);
-  real spreadx0 = getARGV("-spreadx", 3.0);
-  macro spreadx() spreadx0*params["Re"]/2000.0 //EOM
-  real spreadx2 = getARGV("-spreadx2", 1.0);
-  real spready = getARGV("spready", 0.5);
-  real spready2 = getARGV("spready2", 0.1);
+  real xcenter0 = getARGV("-xcenter", 4.0);
+  macro xcenter() (xcb + xcenter0*params["Re"]/2000.0) //EOM
+  real ycenter = getARGV("-ycenter", 1.25);
+  real xspread0 = getARGV("-xspread", 2.0);
+  real xspread2 = getARGV("-xspread2", 0.1);
+  real xspread3 = getARGV("-xspread3", 0.01);
+  real xscale = getARGV("-xscale", 0.2);
+  macro xspread() (xspread0*params["Re"]/2000.0) //EOM
+  real yspread = getARGV("yspread", 0.4);
+  real yspread2 = getARGV("yspread2", 0.1);
+  real yscale = getARGV("-yscale", 0.2);
   macro adaptu(u)[u, u#y], u#Y, u#T, u#p, 
-  localrefinement*exp(-((x+0.5)/spreadx2)^2)*exp(-((y-0.5)/spready2)^2)*sin(y/scale2), localrefinement*exp(-((x+0.5)/spreadx2)^2)*exp(-((y-0.5)/spready2)^2)*cos(y/scale2), 
-  localrefinement*exp(-((x+0.5)/spreadx2)^2)*exp(-((y-0.136)/spready2)^2)*sin(y/scale2), localrefinement*exp(-((x+0.5)/spreadx2)^2)*exp(-((y-0.136)/spready2)^2)*cos(y/scale2),
-  localrefinement*exp(-((x-centerx)/spreadx)^2)*exp(-((y-centery)/spready)^2)*sin(y/scale1), localrefinement*exp(-((x-centerx)/spreadx)^2)*exp(-((y-centery)/spready)^2)*cos(y/scale1)//EOM
+  localrefinement*exp(-((x-xcenter)/xspread)^2)*exp(-((y-ycenter)/yspread)^2)*sin(x/xscale), localrefinement*exp(-((x-xcenter)/xspread)^2)*exp(-((y-ycenter)/yspread)^2)*cos(x/xscale),
+  localrefinement*exp(-((x-xcenter)/xspread)^2)*exp(-((y-ycenter)/yspread)^2)*sin(y/yscale), localrefinement*exp(-((x-xcenter)/xspread)^2)*exp(-((y-ycenter)/yspread)^2)*cos(y/yscale),
+  localrefinement*exp(-(max(0.0, x)/xspread2)^2)*exp(-((y-0.5)/yspread2)^2)*sin(y/yscale), localrefinement*exp(-(max(0.0, x)/xspread2)^2)*exp(-((y-0.5)/yspread2)^2)*cos(y/yscale), 
+  localrefinement*exp(-(fdim(x, xcb)/xspread2)^2)*exp(-((y-0.5*Dcb)/yspread2)^2)*sin(y/yscale), localrefinement*exp(-(fdim(x, xcb)/xspread2)^2)*exp(-((y-0.5*Dcb)/yspread2)^2)*cos(y/yscale),
+  localrefinement*exp(-(x+3.0)/xspread3)*inletPl(Dcb)*sin(y/yscale), localrefinement*exp(-(x+3.0)/xspread3)*inletPl(Dcb)*cos(y/yscale) //EOM
   macro adaptf(f)[f, f#y] //EOM
   macro paraviewu(u)[u, u#y, 0*u], u#Y, u#T, u#p//EOM
   macro paraviewf(f)[f, f#y, 0*f] //EOM
