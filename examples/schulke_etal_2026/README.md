@@ -11,9 +11,9 @@ The dimensionless governing equations are given as
 
 $$
 \begin{aligned}
-\frac{\partial u_i}{\partial t} + u_i \frac{\partial u_j}{\partial x_j} + T \frac{\partial p}{\partial x_i} - \frac{T}{\mathrm{Re}} \frac{\partial\tau_{ij}}{\partial x_j} &= 0, \\
-\frac{\partial Y}{\partial t} + u_i \frac{\partial Y}{\partial x_i} + T \mathcal{Q} - \frac{T}{\mathrm{Re}\, \mathrm{Pr}\, \mathrm{Le}} \frac{\partial}{\partial x_i} \left( \mu \frac{\partial Y}{\partial x_i} \right) &= 0, \\
-\frac{\partial T}{\partial t} + u_i \frac{\partial T}{\partial x_i} - \frac{\Delta h_c \min\left(1, \phi\right)}{\mathrm{AFR}_{m,st} + \phi} T \mathcal{Q} - \frac{T}{\mathrm{Re}\, \mathrm{Pr}} \frac{\partial}{\partial x_i} \left( \mu \frac{\partial T}{\partial x_i} \right) &= 0, \\
+\frac{\partial u_i}{\partial t} + u_i \frac{\partial u_j}{\partial x_j} + T \frac{\partial p}{\partial x_i} - \frac{T}{Re} \frac{\partial\tau_{ij}}{\partial x_j} &= 0, \\
+\frac{\partial Y}{\partial t} + u_i \frac{\partial Y}{\partial x_i} + T \mathcal{Q} - \frac{T}{Re Pr Le} \frac{\partial}{\partial x_i} \left( \mu \frac{\partial Y}{\partial x_i} \right) &= 0, \\
+\frac{\partial T}{\partial t} + u_i \frac{\partial T}{\partial x_i} - \frac{\Delta h_c \min\left(1, \phi\right)}{\mathrm{AFR}_{m,\text{st}} + \phi} T \mathcal{Q} - \frac{T}{Re Pr} \frac{\partial}{\partial x_i} \left( \mu \frac{\partial T}{\partial x_i} \right) &= 0, \\
 \frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i} - T \frac{\partial u_i}{\partial x_i} &= 0,
 \end{aligned}
 $$
@@ -40,27 +40,16 @@ The boundary conditions are
 
 where $u_{\text{Pl}}(r)=2\left(\frac{\left(1-4r^2\right)\log D_{\text{cb}}-\left(1-D^2_{\text{cb}}\right)\log(2r)}{1-D_{\text{cb}}^2+\left(1+D_{cb}^2\right)\log D_{\text{cb}}}\right)$.
 
-The present implementaton is based on a weak formulation of these equations. Test functions are introduced and the equations are integreated over the domain $\Omega$ with boundry $\partial\Omega = \Gamma_i + \Gamma_p + \Gamma_w + \Gamma_a + \Gamma_o$. Solutions $\vec{q} = ( u_i, Y, T, p)^T $ are sought, in the appropriate spacces, such that for all test functions $\vec{\check{q}} = (\check{u}_i, \check{Y}, \check{T}, \check{p} )^T$,
+The present implementaton is based on a weak formulation of these equations. Test functions are introduced and the equations are integrated over the domain $\Omega$ with boundary $\partial\Omega = \Gamma_{\text{in}} + \Gamma_{\text{nozz}} + \Gamma_{\text{wall}} + \Gamma_{\text{cb}} + \Gamma_{\text{axis}} + \Gamma_{\text{lat}} + \Gamma_{\text{out}}$. Solutions $\vec{q} = (u_i, Y, T, p)^T $ are sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}} = (\check{u}_i, \check{Y}, \check{T}, \check{p})^T$,
 
 $$
-\begin{align*}
-&\left(\check{u}_i,\,\left[\frac{\partial u_i}{\partial t}+u_j\frac{\partial u_i}{\partial x_j}\right]\right)_{\Omega} + \left(\check{u}_i\,T\,\hat{n}_i,\,p\right)_{\partial\Omega} - \left(\frac{\partial (\check{u}_i\,T)}{\partial x_i},\,p\right)_{\Omega} + 
-\frac{1}{Re} [\left(-\check{u}_iT \hat{n}_j,\tau_{ij} \right)_{\partial\Omega}  + \left(\frac{\partial \check{u}_i T}{\partial x_j},\,\,\tau_{ij}\right)_{\Omega} ]\\
-
-&+ \left(\check{Y},\,\left[\frac{\partial Y}{\partial t}+u_i\frac{\partial Y}{\partial x_i}\right]\right)_{\Omega}  + \left(\check{Y},\, TQ\right)_{\Omega} 
-- \left(\check{Y}T\hat{n}_i,\,\frac{1}{Pr\,Re\,Le}\,\mu\frac{\partial Y}{\partial x_i}\right)_{\partial\Omega} + \left(\frac{\partial \check{Y}T}{\partial x_i},\,\frac{1}{Pr\,Re\,Le}\,\mu\frac{\partial Y}{\partial x_i}\right)_{\Omega}  \\
-
-&+ \left(\check{T},\,\left[\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i}\right]\right)_{\Omega}
- - \left(\check{T},\,\frac{h_c\min(1,\phi)}{AFR_{st}+\phi}\,TQ\right)_{\Omega}  - \left(\check{T}\hat{n}_i,\,\frac{T}{Re\,Pr}\,\mu\frac{\partial T}{\partial x_i}\right)_{\partial\Omega} 
- + \left(\frac{\partial \check{T}T}{\partial x_i},\,\frac{1}{Re\,Pr}\,\mu\frac{\partial T}{\partial x_i}\right)_{\Omega}\\
-
-&+ \left(\check{p},\,\left[\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i}\right]\right)_{\Omega}
-- \left(\check{p},\,T\frac{\partial u_i}{\partial x_i}\right)_{\Omega}  = 0 \\[8pt]
-
-\end{align*}
+\begin{aligned}
+&\left(\check{u}_i,\frac{\partial u_i}{\partial t}+u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial \left(\check{u}_i T\right)}{\partial x_j},\delta_{ij}p - \frac{1}{Re}\tau_{ij}\right)_{\Omega} - \left(\check{u}_i,\hat{n}_jT\frac{\mu}{Re}\left(\frac{\partial u_j}{\partial x_i} - \frac{2}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}\right)+\frac{1}{2}u_i\min\left(0,u_j\hat{n}_j\right)\right)_{\Gamma_{\text{lat}}\cup\Gamma_{\text{out}}} \\
+&+ \left(\check{Y},\frac{\partial Y}{\partial t}+u_i\frac{\partial Y}{\partial x_i} + T\mathcal{Q}\right)_{\Omega} + \left(\frac{\partial \left(\check{Y}T\right)}{\partial x_i},\frac{\mu}{Pr Re Le}\frac{\partial Y}{\partial x_i}\right)_{\Omega} \\
+&+ \left(\check{T},\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i} - \frac{h_c\min(1,\phi)}{\mathrm{AFR}_{m,\text{st}}+\phi} T\mathcal{Q}\right)_{\Omega} + \left(\frac{\partial \left(\check{T}T\right)}{\partial x_i},\frac{\mu}{Re Pr}\frac{\partial T}{\partial x_i}\right)_{\Omega} \\
+&+ \left(\check{p},\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i} - T\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0
+\end{aligned}
 $$
-
-
 
 More details on the formulation can be found in the original paper.
 
