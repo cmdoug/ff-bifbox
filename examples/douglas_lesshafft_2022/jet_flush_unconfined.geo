@@ -1,9 +1,9 @@
 //
-// jet_inject_unconfined.geo
+// jet_flush_unconfined.geo
 // Chris Douglas
 // christopher.douglas@duke.edu
 //
-// This file can be used with FreeFEM to create a mesh for the axially-injected, 
+// This file can be used with FreeFEM to create a mesh for the flush-mounted, 
 // radially-unconfined jet as in [Douglas & Lesshafft. JFM, (2022)].
 //
 
