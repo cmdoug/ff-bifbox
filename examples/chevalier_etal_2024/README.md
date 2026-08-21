@@ -73,12 +73,17 @@ ln -sf examples/chevalier_etal_2024/settings_chevalier_etal_2024.idp settings.id
 
 ## Build initial meshes
 `ff-bifbox` uses FreeFEM for adaptive meshing during the solution process, but it needs an initial mesh to adaptively refine.
-#### Build initial mesh directly from `.geo` files using Gmsh
+#### CASE 1: Gmsh is installed - build initial mesh directly from `.geo` files
 ```sh
 FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/chevalier_etal_2024 -dir $workdir -mi nozzle_lg.geo
 FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/chevalier_etal_2024 -dir $workdir -mi nozzle_sm.geo
 ```
 Note: since no `-mo` argument is specified, the output files (`.msh`) inherit the names of their parents (`.geo`).
+#### CASE 2: Gmsh is not installed - build initial mesh using BAMG in FreeFEM
+```sh
+FreeFem++-mpi -v 0 examples/chevalier_etal_2024/nozzle.md -mo $workdir/nozzle_lg -L 60 -H 20
+FreeFem++-mpi -v 0 examples/chevalier_etal_2024/nozzle.md -mo $workdir/nozzle_sm -L 50 -H 15
+```
 
 ## Perform parallel computations using `ff-bifbox`
 ### Steady axisymmetric dynamics of the mean flow with modeled turbulence

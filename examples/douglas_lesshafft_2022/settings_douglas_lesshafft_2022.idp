@@ -34,6 +34,7 @@
   int BCinflow = 3;
   int BCwall = 4;
   int BCpipe = 5;
+  int BCinternal = 6;
 // coordinate mapping macros ---------------------------------------------------
   macro X() (
         ((x < 0.0) && (y > 0.5))*params["L"]*x
