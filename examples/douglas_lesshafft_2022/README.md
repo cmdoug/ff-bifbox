@@ -74,10 +74,10 @@ FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/douglas_lesshafft_2022 -dir $
 Note: since no `-mo` argument is specified, the output files (`.msh`) inherit the names of their parents (`.geo`).
 #### CASE 2: Gmsh is not installed - build initial mesh using BAMG in FreeFEM
 ```sh
-FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet_flush_unconfined.md -mo $workdir/jet_flush_unconfined
-FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet_flush_confined.md -mo $workdir/jet_flush_confined
-FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet_inject_unconfined.md -mo $workdir/jet_inject_unconfined
-FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet_inject_confined.md -mo $workdir/jet_inject_confined
+FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet.md -mo $workdir/jet_flush_unconfined -flush 1 -confined 0
+FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet.md -mo $workdir/jet_flush_confined -flush 1 -confined 1
+FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet.md -mo $workdir/jet_inject_unconfined -flush 0 -confined 0
+FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet.md -mo $workdir/jet_inject_confined -flush 0 -confined 1
 ```
 
 ## Compute initial states
