@@ -62,11 +62,9 @@ ln -sf examples/douglas_lesshafft_2022/eqns_douglas_lesshafft_2022.idp eqns.idp
 ln -sf examples/douglas_lesshafft_2022/settings_douglas_lesshafft_2022.idp settings.idp
 ```
 
-
-
 ## Build initial meshes
 `ff-bifbox` uses FreeFEM for adaptive meshing during the solution process, but it needs an initial mesh to adaptively refine.
-#### Build initial mesh directly from `.geo` files using Gmsh
+#### CASE 1: Gmsh is installed - build initial mesh directly from `.geo` files
 ```sh
 FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/douglas_lesshafft_2022 -dir $workdir -mi jet_flush_unconfined.geo
 FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/douglas_lesshafft_2022 -dir $workdir -mi jet_flush_confined.geo
@@ -74,6 +72,13 @@ FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/douglas_lesshafft_2022 -dir $
 FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/douglas_lesshafft_2022 -dir $workdir -mi jet_inject_confined.geo
 ```
 Note: since no `-mo` argument is specified, the output files (`.msh`) inherit the names of their parents (`.geo`).
+#### CASE 2: Gmsh is not installed - build initial mesh using BAMG in FreeFEM
+```sh
+FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet.md -mo $workdir/jet_flush_unconfined -flush 1 -confined 0
+FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet.md -mo $workdir/jet_flush_confined -flush 1 -confined 1
+FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet.md -mo $workdir/jet_inject_unconfined -flush 0 -confined 0
+FreeFem++-mpi -v 0 examples/douglas_lesshafft_2022/jet.md -mo $workdir/jet_inject_confined -flush 0 -confined 1
+```
 
 ## Compute initial states
 1. Compute base states on the created mesh at $Re=40$ from default guess
@@ -90,10 +95,10 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re40_S0_L0_unconfined
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_unconfined.base -fo Re100_S0_L0_unconfined -mo Re100_S0_L0_unconfined -pv 1 -thetamax 1 -hmin 1e-5
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re40_S0_L1_unconfined.base -fo Re100_S0_L1_unconfined -mo Re100_S0_L1_unconfined -1/Re 0.01 -thetamax 1 -hmin 1e-5
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_S0_L1_unconfined -mo Re100_S0_L1_unconfined -pv 1 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_S0_L0p2_unconfined -L 0.2 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0p2_unconfined.base -fo Re100_S0_L0p2_unconfined -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_S0_L2_unconfined -L 2 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_unconfined.base -fo Re100_S0_L2_unconfined -thetamax 1 -hmin 1e-5
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_S0_L0p2_unconfined -mo Re100_S0_L0p2_unconfined -L 0.2 -thetamax 1 -hmin 1e-5
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0p2_unconfined.base -fo Re100_S0_L0p2_unconfined -mo Re100_S0_L0p2_unconfined -pv 1 -thetamax 1 -hmin 1e-5
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_S0_L2_unconfined -mo Re100_S0_L2_unconfined -L 2 -thetamax 1 -hmin 1e-5
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_unconfined.base -fo Re100_S0_L2_unconfined -mo Re100_S0_L2_unconfined -pv 1 -thetamax 1 -hmin 1e-5
 
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re40_S0_L2_C8.base -fo Re100_S0_L2_C8 -mo Re100_S0_L2_C8 -1/Re 0.01 -hmin 1e-5
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C8.base -fo Re100_S0_L2_C8 -mo Re100_S0_L2_C8 -pv 1 -hmin 1e-5
