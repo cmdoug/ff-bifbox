@@ -84,7 +84,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi annularjet.msh -fo an
 
 2. Continue base state along the parameter $1/Re$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi annularjet.base -fo annularjet -param 1/Re -h0 -100 -scount 2 -maxcount -1 -paramtarget 0.002095 -mo annularjet -thetamax 1
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi annularjet.base -fo annularjet -param 1/Re -h0 -100 -scount 2 -maxcount -1 -paramtarget 0.002095 -mo annularjet -thetamax 1e-6
 ```
 
 3. Compute base state at $Re=100$ with guess from $1/Re$ continuation
@@ -94,26 +94,26 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi annularjet_6.base -fo
 
 4. Continue base state at $Re=100$ along the parameter $S$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi annularjet100.base -fo annularjet100 -param S -h0 20 -scount 5 -maxcount -1 -mo annularjet100 -thetamax 1 -paramtarget 3
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi annularjet100.base -fo annularjet100 -param S -h0 20 -scount 5 -maxcount -1 -mo annularjet100 -thetamax 1e-6 -paramtarget 3
 ```
 
 5. Compute backward and forward fold bifurcations from steady solution branch on base-adapted mesh
 ```sh
 cd "$workdir" && set -- annularjet100_*specialpt.base && export B="$1" && export F="$2" && cd -
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo annularjet100_B -param S -mo annularjet100_B -adaptto b -thetamax 1 -nf 0
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo annularjet100_F -param S -mo annularjet100_F -adaptto b -thetamax 1 -nf 0
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo annularjet100_B -param S -mo annularjet100_B -adaptto b -thetamax 1e-6 -nf 0
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo annularjet100_F -param S -mo annularjet100_F -adaptto b -thetamax 1e-6 -nf 0
 ```
 
 6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for ParaView
 ```sh
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi annularjet100_B.fold -fo annularjet100_B -mo annularet100_B -adaptto bda -param S -pv 1 -thetamax 1
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi annularjet100_F.fold -fo annularjet100_F -mo annularjet100_F -adaptto bda -param S -pv 1 -thetamax 1
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi annularjet100_B.fold -fo annularjet100_B -mo annularet100_B -adaptto bda -param S -pv 1 -thetamax 1e-6
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi annularjet100_F.fold -fo annularjet100_F -mo annularjet100_F -adaptto bda -param S -pv 1 -thetamax 1e-6
 ```
 
 7. Continue the neutral fold curve in the $(1/Re,S)$-plane and $(d,S)$-plane with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi annularjet100_B.fold -fo annularjet_ReS -mo annularjet_ReSfold -adaptto bda -thetamax 1 -param 1/Re -param2 S -h0 4 -scount 4 -maxcount 32
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi annularjet100_B.fold -fo annularjet_dS -mo annularjet_dSfold -adaptto bda -thetamax 1 -param d -param2 S -h0 4 -scount 4 -maxcount 32
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi annularjet100_B.fold -fo annularjet_ReS -mo annularjet_ReSfold -adaptto bda -thetamax 1e-6 -param 1/Re -param2 S -h0 4 -scount 4 -maxcount 32
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi annularjet100_B.fold -fo annularjet_dS -mo annularjet_dSfold -adaptto bda -thetamax 1e-6 -param d -param2 S -h0 4 -scount 4 -maxcount 32
 ```
 
 ### Steady 3D dynamics
@@ -135,10 +135,10 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi annularjet480m1.mode 
 
 11. Adapt to zero-Hopf point and compute normal form
 ```sh
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi annularjetm1.hopf -fo annularjetm1 -param 1/Re -mo annularjetm1 -adaptto bda -pv 1 -thetamax 1 -zero 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi annularjetm1.hopf -fo annularjetm1 -param 1/Re -mo annularjetm1 -adaptto bda -pv 1 -thetamax 1e-6 -zero 1
 ```
 
 12. Continue the neutral zero-Hopf curve in the $(1/Re,d)$-plane with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi annularjetm1.hopf -fo annularjetm1 -mo annularjetm1hopf -adaptto bda -thetamax 1 -param 1/Re -param2 d -h0 20 -scount 4 -maxcount 32 -zero 1
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi annularjetm1.hopf -fo annularjetm1 -mo annularjetm1hopf -adaptto bda -thetamax 1e-6 -param 1/Re -param2 d -h0 20 -scount 4 -maxcount 32 -zero 1
 ```
