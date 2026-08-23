@@ -75,7 +75,7 @@ FreeFem++-mpi -v 0 examples/chakravarthy_etal_2018/chakravarthy.md -mo $workdir/
 1. Compute jet state at $Pr=0.7$, $S=7$, $Re=200$, and $Ri=10^{-4}$.
 ```sh
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi jet_0.msh -fo jet_0 -Re 1 -Pr 0.7 -Ri 1.0e-4 -S 7
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi jet_0.base -fo jet -paramtarget 190 -param Re -scount 2 -mo jet -maxcount -1 -anisomax 1e6
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi jet_0.base -fo jet -paramtarget 190 -param Re -scount 2 -mo jet -anisomax 1e6
 cd $workdir && export lastfile=$(printf '%s\n' jet_*.base | sort -t_ -k2,2n | tail -1) && cd -
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo jet -Re 200 -mo jet -pv 1
 ```
@@ -93,5 +93,5 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi jet.base -fo jethopf 
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi jethopf.base -fo jethopf -eps_target 0.1+0.6i -eps_nev 1 -strict 1
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi jethopf.mode -fo jet -param S -snes_divergence_tolerance 1e30 -snes_linesearch_type l2 -nf 0
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi jet.hopf -fo jet -adaptto bda -mo jethopf -param S -pv 1 -anisomax 4
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi jet.hopf -fo jetplume -paramtarget 1.05 -param S -param2 Ri -scount 4 -mo jetplumehopf -adaptto bda -maxcount -1 -dmax 10 -anisomax 4
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi jet.hopf -fo jetplume -paramtarget 1.05 -param S -param2 Ri -scount 4 -mo jetplumehopf -adaptto bda -dmax 10 -anisomax 4
 ```
