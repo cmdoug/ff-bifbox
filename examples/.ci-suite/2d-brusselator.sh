@@ -18,7 +18,7 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi oe_2.mode -fo brussel
 ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi brusselator10.hopf -fo brusselator10 -param B -param2 A -snes_rtol 0 -maxcount 3
 # CONTINUE PERIODIC SOLUTION BRANCHES FROM HOPF POINTS
 ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi brusselator30.hopf -fo brusselator30 -param 1/L^2 -maxcount 2 -h0 -1 -Nh 6
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi brusselator30_2.porb -fo brusselator30 -param 1/L^2 -paramtarget 0.25 -maxcount -1 -h0 -0.03 -dmax 1e10 -mono 0 -contorder 0 -count 2
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi brusselator30_2.porb -fo brusselator30 -param 1/L^2 -paramtarget 0.25 -h0 -0.03 -dmax 1e10 -mono 0 -contorder 0 -count 2
 # DEFLATION OF PERIODIC SOLUTION BRANCH
 ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi brusselator30_7.porb -fo brusselator_branch-0 -1/L^2 0.25
 ff-mpirun -np $nproc porbdeflate.md -v 0 -dir $workdir -fi brusselator_branch-0.porb -fi2 brusselator_branch-0.porb -fo brusselator_branch -ndeflate 2 -snes_rtol 0 -noise 0.03 -snes_linesearch_type l2 -snes_linesearch_damping 0.8
