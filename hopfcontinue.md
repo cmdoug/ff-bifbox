@@ -53,9 +53,9 @@ real[int] sym1(sym.n);
 real omega;
 complex[string] alpha;
 complex beta;
-real paramtarget = getARGV("-paramtarget",1.0);
-real param2target = getARGV("-param2target",1.0);
-bool stopflag = false;
+real paramtarget = getARGV("-paramtarget",-1.0e30);
+real param2target = getARGV("-param2target",-1.0e30);
+bool stopflag = (maxcount == 0);
 bool forcesave = false;
 
 // Load mesh, make FE basis
@@ -284,9 +284,8 @@ while (!stopflag){
   SNESSolve(Jaa, funcJa, funcRa, qa, convergence = funcConvergence, reason = ret,
             sparams = "-snes_linesearch_type " + sneslinesearchtype + " -options_left no -snes_converged_reason -snes_max_it " + snesmaxit); // solve nonlinear problem with SNES
   if (ret > 0) {
-    ++count;
-    if (maxcount > 0) stopflag = (count >= maxcount);
-    else if ((paramvals(0) - paramtarget)*paramdiff1 <= 0 || (paramvals(2-zerofreq) - param2target)*paramdiff2 <= 0) stopflag = true;
+    stopflag = (maxcount > 0)*(++count >= maxcount) || ((paramvals(0) - paramtarget)*paramdiff1 <= 0)
+              || ((paramvals(2-zerofreq) - param2target)*paramdiff2 <= 0);
     h0 /= f;
     if (cosalpha < 0 && contorder > 0) {
       h0 *= -1.0;

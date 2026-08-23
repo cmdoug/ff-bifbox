@@ -82,7 +82,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi swirljet.msh -fo swir
 
 2. Continue base state along the parameter $1/Re$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi swirljet.base -fo swirljet -param 1/Re -h0 -50 -scount 2 -maxcount -1 -paramtarget 0.01 -mo swirljet -thetamax 1e-6
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi swirljet.base -fo swirljet -param 1/Re -h0 -50 -scount 2 -maxcount 10 -paramtarget 0.01 -mo swirljet -thetamax 1e-6
 ```
 
 3. Compute base state at $Re=100$ with guess from $1/Re$ continuation
@@ -93,7 +93,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo swirlje
 
 4. Continue base state at $Re=100$ along the parameter $S$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi swirljet100.base -fo swirljet100 -param S -h0 5 -scount 5 -maxcount -1 -mo swirljet100 -thetamax 1e-6 -paramtarget 3
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi swirljet100.base -fo swirljet100 -param S -h0 5 -scount 5 -mo swirljet100 -thetamax 1e-6 -paramtarget 3
 ```
 
 5. Compute backward and forward fold bifurcations from steady solution branch on base-adapted mesh
@@ -165,8 +165,8 @@ ff-mpirun -np $nproc fohocompute.md -v 0 -dir $workdir -fi $fohoguess -fo swirlj
 ### Periodic 3D dynamics
 16. Continue periodic solutions along $S$ from their initial Hopf points using the harmonic balance method with $N_h=2$.
 ```sh
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm1.hopf -fo swirljetm1 -Nh 2 -mo swirljetm1porb -param S -thetamax 1e-6 -h0 0.5 -scount 4 -maxcount -1 -paramtarget 1.9
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm2.hopf -fo swirljetm2 -Nh 2 -mo swirljetm2porb -param S -thetamax 1e-6 -h0 -0.5 -scount 4 -maxcount -1 -paramtarget 1.8
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm1.hopf -fo swirljetm1 -Nh 2 -mo swirljetm1porb -param S -thetamax 1e-6 -h0 0.5 -scount 4 -paramtarget 1.9
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm2.hopf -fo swirljetm2 -Nh 2 -mo swirljetm2porb -param S -thetamax 1e-6 -h0 -0.5 -scount 4 -paramtarget 1.8
 ```
 NOTE: in the actual paper, $N_h=4$ to $6$ was used to accurately resolve the periodic orbits. $N_h=2$ is used here to reduce computational cost.
 

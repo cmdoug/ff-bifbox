@@ -94,7 +94,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi annularjet_6.base -fo
 
 4. Continue base state at $Re=100$ along the parameter $S$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi annularjet100.base -fo annularjet100 -param S -h0 20 -scount 5 -maxcount -1 -mo annularjet100 -thetamax 1e-6 -paramtarget 3
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi annularjet100.base -fo annularjet100 -param S -h0 20 -scount 5 -maxcount 120 -mo annularjet100 -thetamax 1e-6 -paramtarget 3
 ```
 
 5. Compute backward and forward fold bifurcations from steady solution branch on base-adapted mesh

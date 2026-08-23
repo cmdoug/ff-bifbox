@@ -85,7 +85,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_6.base -fo c
 
 4. Continue $Re=100$ base state along the parameter $\alpha$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder100.base -fo cylinder100 -param alpha -h0 4 -scount 5 -maxcount 120 -mo cylinder100 -thetamax 1e-6 -hmin 5e-3 -dmax 1 -err 0.005
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder100.base -fo cylinder100 -param alpha -h0 4 -scount 5 -paramtarget 7 -maxcount 120 -mo cylinder100 -thetamax 1e-6 -hmin 5e-3 -dmax 1 -err 0.005
 ```
 NOTE: care should be taken to ensure that the continuation does not jump from one branch to another when the mesh is adapted within the multistable parameter region.
 
