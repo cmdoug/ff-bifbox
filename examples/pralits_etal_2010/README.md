@@ -74,11 +74,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi cylinder.msh -fo cyli
 
 2. Continue base state along the parameter $1/Re$ with adaptive remeshing
 ```sh
-<<<<<<< HEAD
 ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder.base -fo cylinder -param 1/Re -h0 -10 -scount 2 -maxcount 6 -mo cylinder -thetamax 1e-6 -hmin 5e-3
-=======
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder.base -fo cylinder -param 1/Re -h0 -10 -scount 2 -maxcount 6 -mo cylinder -thetamax 1e-6
->>>>>>> 5191e4f (Sharpen mesh corner refinement)
 ```
 
 3. Compute base states at $Re=50$ and $Re=100$ with guesses from continuation
@@ -102,13 +98,8 @@ ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo cylinder100_F 
 
 6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for ParaView
 ```sh
-<<<<<<< HEAD
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder100_B -mo cylinder100_B -adaptto bda -param alpha -pv 1 -thetamax 1e-6 -hmin 5e-3 -err 0.005
 ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_F.fold -fo cylinder100_F -mo cylinder100_F -adaptto bda -param alpha -pv 1 -thetamax 1e-6 -hmin 5e-3 -err 0.005
-=======
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder100_B -mo cylinder100_B -adaptto bda -param alpha -pv 1 -thetamax 1e-6 -hmin 5e-3 -dmax 1 -err 0.005
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_F.fold -fo cylinder100_F -mo cylinder100_F -adaptto bda -param alpha -pv 1 -thetamax 1e-6 -hmin 5e-3 -dmax 1 -err 0.005
->>>>>>> 5191e4f (Sharpen mesh corner refinement)
 ```
 
 7. Continue the neutral fold curve in the $(1/Re,\alpha)$-plane with adaptive remeshing
@@ -144,13 +135,8 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode2.mode -f
 
 12. Adapt the mesh to the critical solutions, save `.vtu` files for ParaView
 ```sh
-<<<<<<< HEAD
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode1.hopf -fo cylindermode1 -mo cylindermode1hopf -adaptto bda -param 1/Re -thetamax 1e-6 -hmin 5e-3 -err 0.005 -pv 1
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode2.hopf -fo cylindermode2 -mo cylindermode2hopf -adaptto bda -param alpha -thetamax 1e-6 -hmin 5e-3 -err 0.005 -pv 1
-=======
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode1.hopf -fo cylindermode1 -mo cylindermode1hopf -adaptto bda -param 1/Re -thetamax 1e-6 -hmin 5e-3 -dmax 1 -err 0.005 -pv 1
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode2.hopf -fo cylindermode2 -mo cylindermode2hopf -adaptto bda -param alpha -thetamax 1e-6 -hmin 5e-3 -dmax 1 -err 0.005 -pv 1
->>>>>>> 5191e4f (Sharpen mesh corner refinement)
 ```
 
 13. Continue the neutral Hopf curves in the $(1/Re,\alpha)$-plane with adaptive remeshing
