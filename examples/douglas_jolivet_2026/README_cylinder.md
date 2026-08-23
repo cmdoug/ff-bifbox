@@ -86,7 +86,7 @@ for Re in 40 50 70 90; do
   ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_Ma0p4_Re"$Re".base -fo cylinder_Ma0p6_Re"$Re" -Ma^2 0.36
   ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_Ma0p6_Re"$Re".base -fo cylinder_Ma0p8_Re"$Re" -Ma^2 0.64
   for Ma in 0 4 6 8; do
-    ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_Ma0p"$Ma"_Re"$Re".base -fo cylinder_Ma0p"$Ma"_Re"$Re" -mo cylinder_Ma0p"$Ma"_Re"$Re" -thetamax 1e-6 -hmin 1.e-5 -hmax 2
+    ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_Ma0p"$Ma"_Re"$Re".base -fo cylinder_Ma0p"$Ma"_Re"$Re" -mo cylinder_Ma0p"$Ma"_Re"$Re" -thetamax 1e-6 -hmax 2
   done
 done
 ```
@@ -95,10 +95,10 @@ done
 ```sh
 for Ma in 0 4 6 8; do
   ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_Ma0p"$Ma"_Re40.base -fo cylinder_Ma0p"$Ma"_Re20 -1/Re 0.05
-  ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder_Ma0p"$Ma"_Re20.base -fo cylinder_Ma0p"$Ma" -param 1/Re -h0 -1 -scount 2 -maxcount -1 -paramtarget 0.01 -mo cylinder_Ma0p"$Ma" -thetamax 1e-6 -hmin 1.e-5 -hmax 2
+  ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder_Ma0p"$Ma"_Re20.base -fo cylinder_Ma0p"$Ma" -param 1/Re -h0 -1 -scount 2 -paramtarget 0.01 -mo cylinder_Ma0p"$Ma" -thetamax 1e-6 -hmax 2
 done
 for Re in 40 50 70 90; do
-  ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder_Ma0p0_Re"$Re".base -fo cylinder_Re"$Re" -param Ma^2 -h0 0.25 -scount 2 -maxcount -1 -paramtarget 0.81 -mo cylinder_Re"$Re" -thetamax 1e-6 -hmin 1.e-5 -hmax 2
+  ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder_Ma0p0_Re"$Re".base -fo cylinder_Re"$Re" -param Ma^2 -h0 0.25 -scount 2 -paramtarget 0.81 -mo cylinder_Re"$Re" -thetamax 1e-6 -hmax 2
 done
 ```
 
@@ -107,8 +107,8 @@ done
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_Ma0p0_Re50.base -fo cylinder_Ma0p0_Re47p6 -1/Re 0.021
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi cylinder_Ma0p0_Re47p6.base -fo cylinder_Ma0p0_Re47p6 -eps_target 0.1+0.7i -sym 1
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder_Ma0p0_Re47p6.mode -fo cylinder_Ma0p0 -param 1/Re -nf 0
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder_Ma0p0.hopf -fo cylinder_Ma0p0 -mo cylinder_Ma0p0 -param 1/Re -thetamax 1e-6 -hmin 1e-5 -hmax 2
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylinder_Ma0p0.hopf -fo cylinder -mo cylinder -thetamax 1e-6 -hmin 1e-5 -hmax 2 -param 1/Re -param2 Ma^2 -h0 0.1 -scount 3 -paramtarget 0.01 -maxcount -1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder_Ma0p0.hopf -fo cylinder_Ma0p0 -mo cylinder_Ma0p0 -param 1/Re -thetamax 1e-6 -hmax 2
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylinder_Ma0p0.hopf -fo cylinder -mo cylinder -thetamax 1e-6 -hmax 2 -param 1/Re -param2 Ma^2 -h0 0.1 -scount 3 -paramtarget 0.01
 ```
 
 6. Compute Hopf bifurcations at $Ma=0.4,0.6,0.8$ and $Re=50,70,90$
@@ -124,9 +124,9 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder_21.hopf -fo 
 7. Continue the branches of periodic solutions emanating from the Hopf points along $Re$ and $Ma$.
 ```sh
 for Ma in 0 4 6 8; do
-  ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder_Ma0p"$Ma".hopf -fo cylinder_Ma0p"$Ma" -mo cyl_Ma0p"$Ma" -thetamax 1e-6 -hmin 1e-5 -hmax 2 -param 1/Re -h0 1 -scount 4 -maxcount -1 -paramtarget 0.01 -Nh 3 -fieldsplit_0_fieldsplit_0_mat_mumps_icntl_35 1 -fieldsplit_0_fieldsplit_0_mat_mumps_cntl_7 1.0e-8
+  ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder_Ma0p"$Ma".hopf -fo cylinder_Ma0p"$Ma" -mo cyl_Ma0p"$Ma" -thetamax 1e-6 -hmax 2 -param 1/Re -h0 1 -scount 4 -paramtarget 0.01 -Nh 3 -fieldsplit_0_fieldsplit_0_mat_mumps_icntl_35 1 -fieldsplit_0_fieldsplit_0_mat_mumps_cntl_7 1.0e-8
 done
 for Re in 50 70 90; do
-  ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder_Re"$Re".hopf -fo cylinder_Re"$Re" -mo cyl_Re"$Re" -thetamax 1e-6 -hmin 1e-5 -hmax 2 -param Ma^2 -h0 1 -scount 4 -maxcount -1 -paramtarget 0.01 -Nh 3 -fieldsplit_0_fieldsplit_0_mat_mumps_icntl_35 1 -fieldsplit_0_fieldsplit_0_mat_mumps_cntl_7 1.0e-8
+  ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder_Re"$Re".hopf -fo cylinder_Re"$Re" -mo cyl_Re"$Re" -thetamax 1e-6 -hmax 2 -param Ma^2 -h0 1 -scount 4 -paramtarget 0.01 -Nh 3 -fieldsplit_0_fieldsplit_0_mat_mumps_icntl_35 1 -fieldsplit_0_fieldsplit_0_mat_mumps_cntl_7 1.0e-8
 done
 ```
