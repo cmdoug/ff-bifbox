@@ -10,7 +10,7 @@ This file shows an example `ff-bifbox` workflow for reproducing the results in t
 	note = {accepted manuscript}
 }
 ```
-The commands below illustrate how to perform a bifurcation analysis of a lean premixed inverted conical flame in an axisymmetric annular jet using `ff-bifbox`. (See also the previous study [wang_etal_2024](../wang_etal_2024).) The resulting system is very stiff and exhibits strong non-normality, which both represent significant numerical challenges. As such, the workflow given here is relatively fragile and may need to be adapted using various
+The commands below illustrate how to perform a bifurcation analysis of a lean premixed inverted conical flame in an axisymmetric annular jet using `ff-bifbox`. (See also the previous study [wang_etal_2024](../wang_etal_2024).) The resulting system is very stiff and exhibits strong non-normality, which both represent significant numerical challenges. As such, the workflow given here is relatively fragile and may need to be adapted using various mesh refinement parameters and solver settings. 
 
 The dimensionless governing equations are given as 
 
