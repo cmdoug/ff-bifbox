@@ -159,6 +159,9 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_phi_0p80 -param Re -pv 1 -snes_divergence_tolerance 1e100 -mo lowfreq_phi_0p80 -err 0.01 -anisomax 4 -hmax 0.2 -nf 1 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -pv 1
 ```
 
+From this step forward this system is very finicky. Convergence may be difficult, and it will take some refining of adaptive meshing parameters to balance mesh size for convergence without exorbitant cost. From this point, therefore, this README should be viewed as general guidance rather than a specific methodology. 
+
+
 8. Continue Hopf bifurcation curves along the $(\phi,Re)$ parameter plane.
 ```sh
 ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_dec -mo highfreq_dec -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.65 -h0 -10 -amax 90
