@@ -14,8 +14,8 @@ real Dref = 1.1;
 real xmin = -3;
 real xmax = 20;
 real rmax = getARGV("-rmax", 7.5);
-real Dcb = 0.3/Dref;
-real xcb = 0.2/Dref;
+Dcb = 0.3/Dref;
+xcb = 0.2/Dref;
 
 string meshout = getARGV("-mo", "Vflame.msh"); // mesh filename
 if(meshout.rfind(".msh") < 0) meshout = meshout + ".msh"; // add extension if not provided

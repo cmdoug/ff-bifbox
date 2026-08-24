@@ -2,7 +2,12 @@
 This file shows an example `ff-bifbox` workflow for reproducing the results in the study:
 ```bibtex
 @article{schulke_etal_2026,
-
+	title = {A harmonic-balance model of subcritical instability in lean premixed inverted conical flames},
+	author = {Schulke, Gretchen and Wang, Chuhan and Douglas, Christopher M.},
+	year = {2026},
+	journal = {Journal of Engineering for Gas Turbines and Power},
+  publisher = {The American Society of Mechanical Engineers},
+	note = {accepted manuscript}
 }
 ```
 The commands below illustrate how to perform a bifurcation analysis of a lean premixed inverted conical flame in an axisymmetric annular jet using `ff-bifbox`. (See also the previous study [wang_etal_2024](../wang_etal_2024).) The resulting system is very stiff and exhibits strong non-normality, which both represent significant numerical challenges. As such, the workflow given here is relatively fragile and may need to be adapted using various
@@ -11,9 +16,9 @@ The dimensionless governing equations are given as
 
 $$
 \begin{aligned}
-\frac{\partial u_i}{\partial t} + u_i \frac{\partial u_j}{\partial x_j} + T \frac{\partial p}{\partial x_i} - \frac{T}{\mathrm{Re}} \frac{\partial\tau_{ij}}{\partial x_j} &= 0, \\
-\frac{\partial Y}{\partial t} + u_i \frac{\partial Y}{\partial x_i} + T \mathcal{Q} - \frac{T}{\mathrm{Re}\, \mathrm{Pr}\, \mathrm{Le}} \frac{\partial}{\partial x_i} \left( \mu \frac{\partial Y}{\partial x_i} \right) &= 0, \\
-\frac{\partial T}{\partial t} + u_i \frac{\partial T}{\partial x_i} - \frac{\Delta h_c \min\left(1, \phi\right)}{\mathrm{AFR}_{m,st} + \phi} T \mathcal{Q} - \frac{T}{\mathrm{Re}\, \mathrm{Pr}} \frac{\partial}{\partial x_i} \left( \mu \frac{\partial T}{\partial x_i} \right) &= 0, \\
+\frac{\partial u_i}{\partial t} + u_i \frac{\partial u_j}{\partial x_j} + T \frac{\partial p}{\partial x_i} - \frac{T}{Re} \frac{\partial\tau_{ij}}{\partial x_j} &= 0, \\
+\frac{\partial Y}{\partial t} + u_i \frac{\partial Y}{\partial x_i} + T \mathcal{Q} - \frac{T}{Re Pr Le} \frac{\partial}{\partial x_i} \left( \mu \frac{\partial Y}{\partial x_i} \right) &= 0, \\
+\frac{\partial T}{\partial t} + u_i \frac{\partial T}{\partial x_i} - \frac{\Delta h_c \min\left(1, \phi\right)}{\mathrm{AFR}_{m,\mathrm{st}} + \phi} T \mathcal{Q} - \frac{T}{Re Pr} \frac{\partial}{\partial x_i} \left( \mu \frac{\partial T}{\partial x_i} \right) &= 0, \\
 \frac{\partial T}{\partial t} + u_i\frac{\partial T}{\partial x_i} - T \frac{\partial u_i}{\partial x_i} &= 0,
 \end{aligned}
 $$
@@ -30,33 +35,26 @@ The boundary conditions are
 
 | Label | Velocity | Temperature | Species |
 |---|---|---|---|
-| $\Gamma_{\text{in}}$ | $u_x = u_{\text{Pl}}(r)$, $u_r=u_\theta=0$ | $T = 1$ | $Y = 1$ |
-| $\Gamma_{\text{nozz}}$ | $u_x = u_r = u_\theta = 0$ | $\hat{n}_i\frac{\partial T}{\partial x_i} = 0$ | $\hat{n}_i\frac{\partial Y}{\partial x_i} = 0$ |
-| $\Gamma_{\text{wall}}$ | $u_x = u_r = u_\theta = 0$ | $T = 1$ | $\hat{n}_i\frac{\partial Y}{\partial x_i} = 0$|
-| $\Gamma_{\text{cb}}$ | $u_x = u_r = u_\theta = 0$ | $T = \frac{7}{3}$ | $\hat{n}_i\frac{\partial Y}{\partial x_i} = 0$ |
-| $\Gamma_{\text{axis}}$ | $`\begin{cases}\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=0, & \text{if } m=0 \\\\ u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=0, & \text{if } \|m\|=1 \\\\ u_x=u_r=u_{\theta}=0, & \text{if } \|m\|>1\end{cases}`$ | $`\begin{cases}\frac{\partial T}{\partial r}=0, & \text{if } m=0 \\\\ T=0, & \text{if } \|m\|\geq1\end{cases}`$ | $`\begin{cases}\frac{\partial Y}{\partial r}=0, & \text{if } m=0 \\\\ Y=0, & \text{if } \|m\|\geq1\end{cases}`$ |
-| $\Gamma_{\text{lat}}$ | $\frac{\mu}{Re}\hat{n}_j\frac{\partial u_i}{\partial x_j}=p\hat{n}_i+\tfrac{1}{2}u_i\min\left(0,\hat{n}_ju_j\right)$| $\hat{n}_i\frac{\partial T}{\partial x_i} = 0$ | $T = 1$ | $Y = 0$ |
-| $\Gamma_{\text{out}}$ | $\frac{\mu}{Re}\hat{n}_j\frac{\partial u_i}{\partial x_j}=p\hat{n}_i+\tfrac{1}{2}u_i\min\left(0,\hat{n}_ju_j\right)$ | $\hat{n}_i\frac{\partial T}{\partial x_i} = 0$ | $\hat{n}_i\frac{\partial Y}{\partial x_i} = 0$ |
+| $`\Gamma_{\mathrm{in}}`$ | $`u_x = u_{\mathrm{Pl}}(r)`$, $`u_r=u_\theta=0`$ | $`T = 1`$ | $`Y = 1`$ |
+| $`\Gamma_{\mathrm{nozz}}`$ | $`u_x = u_r = u_\theta = 0`$ | $`\hat{n}_i\frac{\partial T}{\partial x_i} = 0`$ | $`\hat{n}_i\frac{\partial Y}{\partial x_i} = 0`$ |
+| $`\Gamma_{\mathrm{wall}}`$ | $`u_x = u_r = u_\theta = 0`$ | $`T = 1`$ | $`\hat{n}_i\frac{\partial Y}{\partial x_i} = 0`$|
+| $`\Gamma_{\mathrm{cb}}`$ | $`u_x = u_r = u_\theta = 0`$ | $`T = \frac{7}{3}`$ | $`\hat{n}_i\frac{\partial Y}{\partial x_i} = 0`$ |
+| $`\Gamma_{\mathrm{axis}}`$ | $`\begin{cases}\frac{\partial u_x}{\partial r}=u_r=u_{\theta}=0, & \mathrm{if\ } m=0 \\\\ u_x=\frac{\partial u_r}{\partial r}=\frac{\partial u_{\theta}}{\partial r}=0, & \mathrm{if\ } \|m\|=1 \\\\ u_x=u_r=u_{\theta}=0, & \mathrm{if\ } \|m\|>1\end{cases}`$ | $`\begin{cases}\frac{\partial T}{\partial r}=0, & \mathrm{if\ } m=0 \\\\ T=0, & \mathrm{if\ } \|m\|\geq1\end{cases}`$ | $`\begin{cases}\frac{\partial Y}{\partial r}=0, & \mathrm{if\ } m=0 \\\\ Y=0, & \mathrm{if\ } \|m\|\geq1\end{cases}`$ |
+| $`\Gamma_{\mathrm{lat}}`$ | $`\hat{n}_j\frac{\mu}{Re}\frac{\partial u_i}{\partial x_j}=p\hat{n}_i+\frac{u_i}{2T}\min\left(0,\hat{n}_ju_j\right)`$ | $`T = 1`$ | $`Y = 0`$ |
+| $`\Gamma_{\mathrm{out}}`$ | $`\hat{n}_j\frac{\mu}{Re}\frac{\partial u_i}{\partial x_j}=p\hat{n}_i+\frac{u_i}{2T}\min\left(0,\hat{n}_ju_j\right)`$ | $`\hat{n}_i\frac{\partial T}{\partial x_i} = 0`$ | $`\hat{n}_i\frac{\partial Y}{\partial x_i} = 0`$ |
 
-where $u_{\text{Pl}}(r)=2\left(\frac{\left(1-4r^2\right)\log D_{\text{cb}}-\left(1-D^2_{\text{cb}}\right)\log(2r)}{1-D_{\text{cb}}^2+\left(1+D_{cb}^2\right)\log D_{\text{cb}}}\right)$.
+where $`u_{\mathrm{Pl}}(r)=2\left(\frac{\left(1-4r^2\right)\log D_{\mathrm{cb}}-\left(1-D^2_{\mathrm{cb}}\right)\log(2r)}{1-D_{\mathrm{cb}}^2+\left(1+D_{cb}^2\right)\log D_{\mathrm{cb}}}\right)`$.
 
-The present implementaton is based on a weak formulation of these equations. Test functions are introduced and the equations are integreated over the domain $\Omega$ with boundry $\partial\Omega = \Gamma_in + \Gamma_nozz + \Gamma_wall + \Gamma_cb + \Gamma_axis + \Gamma_lat + \Gamma_out$. Solutions $\vec{q} = ( u_i, Y, T, p)^T $ are sought, in the appropriate spacces, such that for all test functions $\vec{\check{q}} = (\check{u}_i, \check{Y}, \check{T}, \check{p} )^T$,
+The present implementaton is based on a weak formulation of these equations. Test functions are introduced and the equations are integrated over the domain $\Omega$ with boundary $`\partial\Omega = \Gamma_{\mathrm{in}} + \Gamma_{\mathrm{nozz}} + \Gamma_{\mathrm{wall}} + \Gamma_{\mathrm{cb}} + \Gamma_{\mathrm{axis}} + \Gamma_{\mathrm{lat}} + \Gamma_{\mathrm{out}}`$. Solutions $`\vec{q} = \left(u_i, Y, T, p\right)^T`$ are sought, in the appropriate spaces, such that for all test functions $`\vec{\check{q}} = \left(\check{u}_i, \check{Y}, \check{T}, \check{p}\right)^T`$,
 
 $$
-\begin{align*}
-&\left(\check{u}_i,\,\left[\frac{\partial u_i}{\partial t}+u_j\frac{\partial u_i}{\partial x_j}\right]\right)_{\Omega} + \left(\check{u}_i\,T\,\hat{n}_i,\,p\right)_{\partial\Omega} - \left(\frac{\partial (\check{u}_i\,T)}{\partial x_i},\,p\right)_{\Omega} + 
-\frac{1}{Re} [\left(-\check{u}_iT \hat{n}_j,\tau_{ij} \right)_{\partial\Omega}  + \left(\frac{\partial \check{u}_i T}{\partial x_j},\,\,\tau_{ij}\right)_{\Omega} ]\\
-&+ \left(\check{Y},\,\left[\frac{\partial Y}{\partial t}+u_i\frac{\partial Y}{\partial x_i}\right]\right)_{\Omega}  + \left(\check{Y},\, TQ\right)_{\Omega} 
-- \left(\check{Y}T\hat{n}_i,\,\frac{1}{Pr\,Re\,Le}\,\mu\frac{\partial Y}{\partial x_i}\right)_{\partial\Omega} + \left(\frac{\partial \check{Y}T}{\partial x_i},\,\frac{1}{Pr\,Re\,Le}\,\mu\frac{\partial Y}{\partial x_i}\right)_{\Omega}  \\
-&+ \left(\check{T},\,\left[\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i}\right]\right)_{\Omega}
- - \left(\check{T},\,\frac{h_c\min(1,\phi)}{AFR_{st}+\phi}\,TQ\right)_{\Omega}  - \left(\check{T}\hat{n}_i,\,\frac{T}{Re\,Pr}\,\mu\frac{\partial T}{\partial x_i}\right)_{\partial\Omega} 
- + \left(\frac{\partial \check{T}T}{\partial x_i},\,\frac{1}{Re\,Pr}\,\mu\frac{\partial T}{\partial x_i}\right)_{\Omega}\\
-&+ \left(\check{p},\,\left[\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i}\right]\right)_{\Omega}
-- \left(\check{p},\,T\frac{\partial u_i}{\partial x_i}\right)_{\Omega}  = 0 \\[8pt]
-\end{align*}
+\begin{aligned}
+&\left(\check{u}_i,\frac{\partial u_i}{\partial t}+u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial \left(\check{u}_i T\right)}{\partial x_j},\delta_{ij}p - \frac{1}{Re}\tau_{ij}\right)_{\Omega} - \left(\check{u}_i,\hat{n}_jT\frac{\mu}{Re}\left(\frac{\partial u_j}{\partial x_i} - \tfrac{2}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}\right)+\tfrac{1}{2}u_i\min\left(0,u_j\hat{n}_j\right)\right)_{\Gamma_{\mathrm{lat}}\cup\Gamma_{\mathrm{out}}} \\
+&+ \left(\check{Y},\frac{\partial Y}{\partial t}+u_i\frac{\partial Y}{\partial x_i} + T\mathcal{Q}\right)_{\Omega} + \left(\frac{\partial \left(\check{Y}T\right)}{\partial x_i},\frac{\mu}{Pr Re Le}\frac{\partial Y}{\partial x_i}\right)_{\Omega} \\
+&+ \left(\check{T},\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i} - \frac{h_c\min(1,\phi)}{\mathrm{AFR}_{m,\mathrm{st}}+\phi} T\mathcal{Q}\right)_{\Omega} + \left(\frac{\partial \left(\check{T}T\right)}{\partial x_i},\frac{\mu}{Re Pr}\frac{\partial T}{\partial x_i}\right)_{\Omega} \\
+&+ \left(\check{p},\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i} - T\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0
+\end{aligned}
 $$
-
-
 
 More details on the formulation can be found in the original paper.
 
@@ -96,30 +94,27 @@ FreeFem++-mpi -v 0 examples/schulke_etal_2026/Vflame.md -mo $workdir/Vflame
 ### Laminar base flow
 1. Compute a non-reacting base state with reference parameters on the initial mesh.
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi Vflame.msh -fo axi_nonreacting -Re 70 -Tr 2.3333333333333333 -Ar 0 -phi 0.8 -Dhc 128.23469709865222 -snes_linesearch_type secant -snes_rtol 0 -pv 1
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting.base -fo axi_nonreacting -Re 350 -mo nonreacting -snes_linesearch_type secant -snes_rtol 0 -pv 1 -localrefinement 0
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting.base -fo axi_nonreacting -Re 1500 -mo nonreacting -snes_linesearch_type secant -snes_rtol 0 -pv 1 -localrefinement 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi Vflame.msh -fo axi_nonreacting -Re 70 -Tr 2.3333333333333333 -Ar 0 -phi 0.8 -Dhc 128.23469709865222 -snes_linesearch_type secant -snes_rtol 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting.base -fo axi_nonreacting -Re 350 -mo nonreacting -snes_linesearch_type secant -snes_rtol 0 -localrefinement 0
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting.base -fo axi_nonreacting -Re 1500 -mo nonreacting -snes_linesearch_type secant -snes_rtol 0 -localrefinement 0
 ```
 
 2. Turn on chemistry and ignite the $Re = 1500$ flow at an elevated centerbody temperature and lower combustion enthalpy. Then perform continuation back to reference parameters. Coarse meshes are used for computational efficiency and stabilizing artificial dissipation.
 
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting.base -fo axi_ignite_0 -Tr 3.3333333333333333 -Ar 423521926.87072223 -Dhc 12.823469709865222 -mo ignite_0 -snes_rtol 0 -err 0.05 -pv 1
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi axi_ignite_0.base -fo axi_ignite -param Dhc -mo ignite -h0 50 -err 0.1 -scount 5 -paramtarget 128.23469709865222 -maxcount -1 -pv 1 -localrefinement 0
-cd $workdir && export lastfile=$(printf '%s\n' axi_ignite_*.base | sort -t_ -k3,3n | tail -1) && cd -
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo axi_phi_0p80_Re_1500 -Tr 2.3333333333333333 -Dhc 128.23469709865222 -snes_linesearch_type secant -mo phi_0p80_Re_1500 -err 0.04 -localrefinement 0
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_1500.base -fo axi_phi_0p80_Re_1500 -mo phi_0p80_Re_1500 -err 0.02
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_1500.base -fo axi_phi_0p80_Re_1500 -mo phi_0p80_Re_1500 -err 0.01 -hmax 0.2
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_1500.base -fo axi_phi_0p80_Re_1500 -mo phi_0p80_Re_1500 -err 0.01 -anisomax 4 -hmax 0.2 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_nonreacting.base -fo axi_ignite_0 -Tr 3.3333333333333333 -Ar 423521926.87072223 -Dhc 12.823469709865222 -mo ignite_0 -snes_rtol 0 -err 0.05 -localrefinement 0
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi axi_ignite_0.base -fo axi_ignite -param Dhc -mo ignite -h0 50 -err 0.1 -scount 5 -paramtarget 128 -maxcount -1 -localrefinement 0
 ```
 
 3. Save base flows over a range of $Re$. Dissipation from mesh coarsening is used to aid convergence at each step before refining the coarse solutions on the reference mesh.
 ```sh
-for Re in {1600..3200..100}; do
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$(($Re-100))".base -fo axi_phi_0p80_Re_"$Re" -Re "$Re" -snes_linesearch_type secant -mo phi_0p80_Re_"$Re" -err 0.04 -localrefinement 0
+cd $workdir && export lastfile=$(printf '%s\n' axi_ignite_*.base | sort -t_ -k3,3n | tail -1) && cd -
+for Re in {1500..3200..100}; do
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo axi_phi_0p80_Re_"$Re" -Re "$Re" -Tr 2.3333333333333333 -Dhc 128.23469709865222 -snes_linesearch_type secant -mo phi_0p80_Re_"$Re" -err 0.04 -localrefinement 0
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$Re".base -fo axi_phi_0p80_Re_"$Re" -mo phi_0p80_Re_"$Re" -err 0.02
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$Re".base -fo axi_phi_0p80_Re_"$Re" -mo phi_0p80_Re_"$Re" -err 0.01 -hmax 0.2
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi axi_phi_0p80_Re_"$Re".base -fo axi_phi_0p80_Re_"$Re" -mo phi_0p80_Re_"$Re" -err 0.01 -anisomax 4 -hmax 0.2 -snes_rtol 0 -snes_stol 0 -snes_atol 2.22e-14 -pv 1
+export lastfile=axi_phi_0p80_Re_"$Re".base
 done
 ```
 
@@ -166,11 +161,11 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.
 
 8. Continue Hopf bifurcation curves along the $(\phi,Re)$ parameter plane.
 ```sh
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_dec -mo highfreq_dec -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.65 -h0 -10
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_inc -mo highfreq_inc -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.99 -h0 10
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_dec -mo highfreq_dec -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.65 -h0 -10 -amax 90
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_inc -mo highfreq_inc -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.99 -h0 10 -amax 90
 
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_dec -mo lowfreq_dec -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.65 -h0 -10
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_inc -mo lowfreq_inc -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.99 -h0 10
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_dec -mo lowfreq_dec -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.65 -h0 -10 -amax 90
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_inc -mo lowfreq_inc -param Re -param2 phi -nf 1 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -maxcount -1 -paramtarget 3200 -param2target 0.99 -h0 10 -amax 90
 ```
 
 9. Compute double-Hopf point where high- and low-frequency modes exchange primacy
@@ -186,10 +181,10 @@ ff-mpirun -np $nproc hohocompute.md -v 0 -dir $workdir -fi axi_highlowfreq.hoho 
 10. Continue along periodic orbits for high- and low-frequency bifurcations using harmonic balance
 ```sh
 ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80.hopf -fo axi_highfreq_phi_0p80_N_2 -param Re -Nh 2 -maxcount 10 -h0 0.01 -blocks 2 -kmax 2 -amax 90 -scount 5 -stricttangent 0
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80_N_2_10.porb -count 10 -fo axi_highfreq_phi_0p80_N_2 -param Re -Nh 2 -mo highfreq_phi_0p80_N_2 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -h0 0.25 -stricttangent 0 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -paramtarget 3200 -amax 45 -kmax 1
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_highfreq_phi_0p80_N_2_10.porb -count 10 -fo axi_highfreq_phi_0p80_N_2 -param Re -Nh 2 -mo highfreq_phi_0p80_N_2 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -h0 0.25 -blocks 2 -stricttangent 0 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -paramtarget 3200 -amax 45 -kmax 1
 
 ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80.hopf -fo axi_lowfreq_phi_0p80_N_2 -param Re -Nh 2 -maxcount 10 -h0 0.05 -blocks 2 -kmax 2 -amax 90 -scount 5 -stricttangent 0
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80_N_2_10.porb -count 10 -fo axi_lowfreq_phi_0p80_N_2 -param Re -Nh 2 -mo lowfreq_phi_0p80_N_2 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -h0 -0.5 -stricttangent 0 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -paramtarget 2000 -amax 45 -kmax 1
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi axi_lowfreq_phi_0p80_N_2_10.porb -count 10 -fo axi_lowfreq_phi_0p80_N_2 -param Re -Nh 2 -mo lowfreq_phi_0p80_N_2 -err 0.01 -anisomax 4 -hmax 0.2 -scount 5 -h0 -0.5 -blocks 2 -stricttangent 0 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -paramtarget 2000 -amax 45 -kmax 1
 
 cd $workdir && export lastfile=$(printf '%s\n' axi_lowfreq_phi_0p80_N_2_*.porb | sort -t_ -k7,7n | tail -1) && cd -
 ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi $lastfile -fo axi_lowfreq_phi_0p80_Re_2000_N_3 -Re 2000 -Nh 3 -fieldsplit_fieldsplit_mat_mumps_icntl_35 1 -fieldsplit_fieldsplit_mat_mumps_cntl_7 1.0e-8 -blocks 3
