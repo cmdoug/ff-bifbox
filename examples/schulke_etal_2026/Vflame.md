@@ -9,13 +9,9 @@ include "settings.idp"
 real n0 = 125;
 real n1 = 25;
 real n2 = 5;
-real D = 1;
-real Dref = 1.1;
-real xmin = -3;
-real xmax = 20;
-real rmax = getARGV("-rmax", 7.5);
-Dcb = 0.3/Dref;
-xcb = 0.2/Dref;
+real xmin = -3.;
+real xmax = 20.;
+real rmax = 7.5;
 
 string meshout = getARGV("-mo", "Vflame.msh"); // mesh filename
 if(meshout.rfind(".msh") < 0) meshout = meshout + ".msh"; // add extension if not provided
@@ -34,13 +30,13 @@ if(meshout.rfind(".msh") < 0) meshout = meshout + ".msh"; // add extension if no
 border C01(t=0, 1){x=xcb + (xmax - xcb)*t; y=0; label=BCaxis;}
 border C02(t=0, 1){x=xmax; y=rmax*t; label=BCopen;}
 border C03(t=0, 1){x=(1.0 - t)*xmax; y=rmax; label=BClateral;}
-border C04(t=0, 1){x=0; y=rmax - (rmax - D/2.0)*t; label=BCwall;}
-border C05(t=0, 1){x=xmin*t; y=D/2.0; label=BCchannel;}
-border C06(t=0, 1){x=xmin; y=D/2.0 - (D - Dcb)/2.0*t; label=BCinflow;}
+border C04(t=0, 1){x=0; y=rmax - (rmax - 0.5)*t; label=BCwall;}
+border C05(t=0, 1){x=xmin*t; y=0.5; label=BCchannel;}
+border C06(t=0, 1){x=xmin; y=0.5 - (1.0 - Dcb)/2.0*t; label=BCinflow;}
 border C07(t=0, 1){x=xmin + (xcb - xmin)*t; y=Dcb/2.0; label=BCchannel;}
 border C08(t=0, 1){x=xcb; y=(1.0 - t)*Dcb/2.0; label=BCcenterbody;}
 // Assemble mesh
-mesh Thg = buildmesh(C01(n1*(xmax - xcb)) + C02(n2*rmax) + C03(n2*xmax) + C04(n1*(rmax-D/2.0)) + C05(n0*abs(xmin)) + C06(n1*(D - Dcb)/2.0) + C07(n0*(xcb - xmin)) + C08(n0*Dcb/2.0));
+mesh Thg = buildmesh(C01(n1*(xmax - xcb)) + C02(n2*rmax) + C03(n2*xmax) + C04(n1*(rmax-0.5)) + C05(n0*abs(xmin)) + C06(n1*(1.0 - Dcb)/2.0) + C07(n0*(xcb - xmin)) + C08(n0*Dcb/2.0));
 
 plot(Thg, wait=1);
 int[int] meshlabels = labels(Thg);

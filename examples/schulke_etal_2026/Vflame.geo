@@ -4,6 +4,7 @@
 // christopher.douglas@duke.edu
 //
 // This file can be used with Gmsh to create a mesh for the annular V-flame configuration.
+// It is based on a similar file from `ff-bifbox/examples/wang_etal_2024/Vflame.md`.
 //
 
 n0 = 125;
