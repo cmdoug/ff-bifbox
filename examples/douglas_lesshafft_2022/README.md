@@ -91,88 +91,88 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi jet_inject_confined.m
 
 2. Compute base states at $Re=100$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re40_S0_L0_unconfined.base -fo Re100_S0_L0_unconfined -mo Re100_S0_L0_unconfined -1/Re 0.01 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_unconfined.base -fo Re100_S0_L0_unconfined -mo Re100_S0_L0_unconfined -pv 1 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re40_S0_L1_unconfined.base -fo Re100_S0_L1_unconfined -mo Re100_S0_L1_unconfined -1/Re 0.01 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_S0_L1_unconfined -mo Re100_S0_L1_unconfined -pv 1 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_S0_L0p2_unconfined -mo Re100_S0_L0p2_unconfined -L 0.2 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0p2_unconfined.base -fo Re100_S0_L0p2_unconfined -mo Re100_S0_L0p2_unconfined -pv 1 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_S0_L2_unconfined -mo Re100_S0_L2_unconfined -L 2 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_unconfined.base -fo Re100_S0_L2_unconfined -mo Re100_S0_L2_unconfined -pv 1 -thetamax 1 -hmin 1e-5
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re40_S0_L0_unconfined.base -fo Re100_S0_L0_unconfined -mo Re100_S0_L0_unconfined -1/Re 0.01 -thetamax 1e-6
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_unconfined.base -fo Re100_S0_L0_unconfined -mo Re100_S0_L0_unconfined -pv 1 -thetamax 1e-6
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re40_S0_L1_unconfined.base -fo Re100_S0_L1_unconfined -mo Re100_S0_L1_unconfined -1/Re 0.01 -thetamax 1e-6
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_S0_L1_unconfined -mo Re100_S0_L1_unconfined -pv 1 -thetamax 1e-6
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_S0_L0p2_unconfined -mo Re100_S0_L0p2_unconfined -L 0.2 -thetamax 1e-6
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0p2_unconfined.base -fo Re100_S0_L0p2_unconfined -mo Re100_S0_L0p2_unconfined -pv 1 -thetamax 1e-6
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_S0_L2_unconfined -mo Re100_S0_L2_unconfined -L 2 -thetamax 1e-6
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_unconfined.base -fo Re100_S0_L2_unconfined -mo Re100_S0_L2_unconfined -pv 1 -thetamax 1e-6
 
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re40_S0_L2_C8.base -fo Re100_S0_L2_C8 -mo Re100_S0_L2_C8 -1/Re 0.01 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C8.base -fo Re100_S0_L2_C8 -mo Re100_S0_L2_C8 -pv 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C8.base -fo Re100_S0_L2_C4 -mo Re100_S0_L2_C4 -C 4 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C4.base -fo Re100_S0_L2_C4 -mo Re100_S0_L2_C4 -pv 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C8.base -fo Re100_S0_L2_C16 -mo Re100_S0_L2_C16 -C 16 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C16.base -fo Re100_S0_L2_C16 -mo Re100_S0_L2_C16 -pv 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C16.base -fo Re100_S0_L2_C40 -mo Re100_S0_L2_C40 -C 40 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C40.base -fo Re100_S0_L2_C40 -mo Re100_S0_L2_C40 -pv 1 -hmin 1e-5
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re40_S0_L2_C8.base -fo Re100_S0_L2_C8 -mo Re100_S0_L2_C8 -1/Re 0.01
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C8.base -fo Re100_S0_L2_C8 -mo Re100_S0_L2_C8 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C8.base -fo Re100_S0_L2_C4 -mo Re100_S0_L2_C4 -C 4
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C4.base -fo Re100_S0_L2_C4 -mo Re100_S0_L2_C4 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C8.base -fo Re100_S0_L2_C16 -mo Re100_S0_L2_C16 -C 16
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C16.base -fo Re100_S0_L2_C16 -mo Re100_S0_L2_C16 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C16.base -fo Re100_S0_L2_C40 -mo Re100_S0_L2_C40 -C 40 -snes_linesearch_type secant
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L2_C40.base -fo Re100_S0_L2_C40 -mo Re100_S0_L2_C40 -pv 1
 
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re40_S0_L0_C8.base -fo Re100_S0_L0_C8 -mo Re100_S0_L0_C8 -1/Re 0.01 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C8.base -fo Re100_S0_L0_C8 -mo Re100_S0_L0_C8 -pv 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C8.base -fo Re100_S0_L0_C4 -mo Re100_S0_L0_C4 -C 4 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C4.base -fo Re100_S0_L0_C4 -mo Re100_S0_L0_C4 -pv 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C8.base -fo Re100_S0_L0_C16 -mo Re100_S0_L0_C16 -C 16 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C16.base -fo Re100_S0_L0_C16 -mo Re100_S0_L0_C16 -pv 1 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C16.base -fo Re100_S0_L0_C40 -mo Re100_S0_L0_C40 -C 40 -hmin 1e-5
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C40.base -fo Re100_S0_L0_C40 -mo Re100_S0_L0_C40 -pv 1 -hmin 1e-5
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re40_S0_L0_C8.base -fo Re100_S0_L0_C8 -mo Re100_S0_L0_C8 -1/Re 0.01
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C8.base -fo Re100_S0_L0_C8 -mo Re100_S0_L0_C8 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C8.base -fo Re100_S0_L0_C4 -mo Re100_S0_L0_C4 -C 4
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C4.base -fo Re100_S0_L0_C4 -mo Re100_S0_L0_C4 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C8.base -fo Re100_S0_L0_C16 -mo Re100_S0_L0_C16 -C 16
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C16.base -fo Re100_S0_L0_C16 -mo Re100_S0_L0_C16 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C16.base -fo Re100_S0_L0_C40 -mo Re100_S0_L0_C40 -C 40
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S0_L0_C40.base -fo Re100_S0_L0_C40 -mo Re100_S0_L0_C40 -pv 1
 ```
 
 ## Computations for Figure 2 (radially unconfined case)
 1. Continue base states along the parameter $S$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0_unconfined.base -fo Re100_L0_unconfined -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L0_unconfined -paramtarget 3 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0p2_unconfined.base -fo Re100_L0p2_unconfined -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L0p2_unconfined -paramtarget 3 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_L1_unconfined -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L1_unconfined -paramtarget 3 -thetamax 1 -hmin 1e-5
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L2_unconfined.base -fo Re100_L2_unconfined -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L2_unconfined -paramtarget 3 -thetamax 1 -hmin 1e-5
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0_unconfined.base -fo Re100_L0_unconfined -param S -h0 10 -scount 5 -mo Re100_L0_unconfined -paramtarget 3 -thetamax 1e-6
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0p2_unconfined.base -fo Re100_L0p2_unconfined -param S -h0 10 -scount 5 -mo Re100_L0p2_unconfined -paramtarget 3 -thetamax 1e-6
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L1_unconfined.base -fo Re100_L1_unconfined -param S -h0 10 -scount 5 -mo Re100_L1_unconfined -paramtarget 3 -thetamax 1e-6
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L2_unconfined.base -fo Re100_L2_unconfined -param S -h0 10 -scount 5 -mo Re100_L2_unconfined -paramtarget 3 -thetamax 1e-6
 ```
 2. Continue alternate branches of $L=0.2$ and $L=1$ solutions
 ```sh
 cd $workdir && export lastfile=$(printf '%s\n' Re100_L1_unconfined_*.base | sort -t_ -k4,4n | tail -1) && cd -
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo Re100_S3_L0p2_unconfined -L 0.2 -S 3
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S3_L0p2_unconfined.base -fo Re100_S3_L0p2_unconfined -thetamax 1 -hmin 1e-5 -mo Re100_S3_L0p2_unconfined
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S3_L0p2_unconfined.base -fo Re100_L0p2_unconfined_b2 -param S -h0 -10 -scount 5 -maxcount -1 -mo Re100_L0p2_unconfined_b2 -paramtarget 3.01 -thetamax 1 -hmin 1e-5
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S3_L0p2_unconfined.base -fo Re100_S3_L0p2_unconfined -thetamax 1e-6 -mo Re100_S3_L0p2_unconfined
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S3_L0p2_unconfined.base -fo Re100_L0p2_unconfined_b2 -param S -h0 -10 -scount 5 -mo Re100_L0p2_unconfined_b2 -paramtarget 3.01 -thetamax 1e-6
 
 cd $workdir && export lastfile=$(printf '%s\n' Re100_L0p2_unconfined_*.base | sort -t_ -k4,4n | tail -n 3 | head -n 1) && cd -
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo Re100_S2p5_L1_unconfined -L 0.3 -S 2.5 -snes_linesearch_type secant
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S2p5_L1_unconfined.base -fo Re100_S2p5_L1_unconfined -L 0.5 -snes_linesearch_type secant
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S2p5_L1_unconfined.base -fo Re100_S2p5_L1_unconfined -L 1 -snes_linesearch_type secant
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S2p5_L1_unconfined.base -fo Re100_S2p5_L1_unconfined -thetamax 1 -hmin 1e-5 -mo Re100_S2p5_L1_unconfined
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S2p5_L1_unconfined.base -fo Re100_L1_unconfined_b2 -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L1_unconfined_b2 -paramtarget 2.49 -thetamax 1 -hmin 1e-5 -snes_max_it 20
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S2p5_L1_unconfined.base -fo Re100_L1_unconfined_b3 -param S -h0 -10 -scount 5 -maxcount -1 -mo Re100_L1_unconfined_b3 -paramtarget 2.51 -thetamax 1 -hmin 1e-5 -snes_max_it 20
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S2p5_L1_unconfined.base -fo Re100_S2p5_L1_unconfined -thetamax 1e-6 -mo Re100_S2p5_L1_unconfined
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S2p5_L1_unconfined.base -fo Re100_L1_unconfined_b2 -param S -h0 10 -scount 5 -mo Re100_L1_unconfined_b2 -paramtarget 2.49 -thetamax 1e-6 -snes_max_it 20
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S2p5_L1_unconfined.base -fo Re100_L1_unconfined_b3 -param S -h0 -10 -scount 5 -mo Re100_L1_unconfined_b3 -paramtarget 2.51 -thetamax 1e-6 -snes_max_it 20
 ```
 
 3. Compute backward and forward fold bifurcations from $L=0$ and $L=0.2$ solution branches
 ```sh
 cd "$workdir" && set -- Re100_L0_unconfined_*specialpt.base && export B="$1" && export F="$2" && cd -
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo Re100_L0_unconfined_B -param S -mo Re100_L0_unconfined_B -thetamax 1 -hmin 1e-5 -nf 0
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L0_unconfined_B.fold -fo Re100_L0_unconfined_B -param S -mo Re100_L0_unconfined_B -adaptto bda -thetamax 1 -hmin 1e-5 -nf 1
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo Re100_L0_unconfined_F -param S -mo Re100_L0_unconfined_F -thetamax 1 -hmin 1e-5 -nf 0
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L0_unconfined_F.fold -fo Re100_L0_unconfined_F -param S -mo Re100_L0_unconfined_F -adaptto bda -thetamax 1 -hmin 1e-5 -nf 1
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo Re100_L0_unconfined_B -param S -mo Re100_L0_unconfined_B -thetamax 1e-6 -nf 0
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L0_unconfined_B.fold -fo Re100_L0_unconfined_B -param S -mo Re100_L0_unconfined_B -adaptto bda -thetamax 1e-6 -nf 1
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo Re100_L0_unconfined_F -param S -mo Re100_L0_unconfined_F -thetamax 1e-6 -nf 0
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L0_unconfined_F.fold -fo Re100_L0_unconfined_F -param S -mo Re100_L0_unconfined_F -adaptto bda -thetamax 1e-6 -nf 1
 
 cd "$workdir" && set -- Re100_L0p2_unconfined_*specialpt.base && export B="$1" && export F="$2" && cd -
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo Re100_L0p2_unconfined_B -param S -mo Re100_L0p2_unconfined_B -thetamax 1 -hmin 1e-5 -nf 0
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_B.fold -fo Re100_L0p2_unconfined_B -param S -mo Re100_L0p2_unconfined_B -adaptto bda -thetamax 1 -hmin 1e-5 -nf 1 -pv 1
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo Re100_L0p2_unconfined_F -param S -mo Re100_L0p2_unconfined_F -thetamax 1 -hmin 1e-5 -nf 0
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_F.fold -fo Re100_L0p2_unconfined_F -param S -mo Re100_L0p2_unconfined_F -adaptto bda -thetamax 1 -hmin 1e-5 -nf 1 -pv 1
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo Re100_L0p2_unconfined_B -param S -mo Re100_L0p2_unconfined_B -thetamax 1e-6 -nf 0
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_B.fold -fo Re100_L0p2_unconfined_B -param S -mo Re100_L0p2_unconfined_B -adaptto bda -thetamax 1e-6 -nf 1 -pv 1
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo Re100_L0p2_unconfined_F -param S -mo Re100_L0p2_unconfined_F -thetamax 1e-6 -nf 0
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_F.fold -fo Re100_L0p2_unconfined_F -param S -mo Re100_L0p2_unconfined_F -adaptto bda -thetamax 1e-6 -nf 1 -pv 1
 ```
 
 4. Continue the neutral fold curve in the $(S, L)$-plane with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_B.fold -fo Re100_unconfined_B -mo Re100_unconfined_B -adaptto bda -thetamax 1 -hmin 1e-5 -nf 1 -param S -param2 L -h0 4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 1e-3 -amax 90
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_B.fold -fo Re100_unconfined_B_b2 -mo Re100_unconfined_B_b2 -adaptto bda -thetamax 1 -hmin 1e-5 -nf 1 -param S -param2 L -h0 -4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 1e-3 -amax 90
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_F.fold -fo Re100_unconfined_F -mo Re100_unconfined_F -adaptto bda -thetamax 1 -hmin 1e-5 -nf 1 -param S -param2 L -h0 4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 1e-3 -amax 90
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_F.fold -fo Re100_unconfined_F_b2 -mo Re100_unconfined_F_b2 -adaptto bda -thetamax 1 -hmin 1e-5 -nf 1 -param S -param2 L -h0 -4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 1e-3 -amax 90
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_B.fold -fo Re100_unconfined_B -mo Re100_unconfined_B -adaptto bda -thetamax 1e-6 -nf 1 -param S -param2 L -h0 4 -scount 5 -paramtarget 3 -param2target 1e-3 -amax 90
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_B.fold -fo Re100_unconfined_B_b2 -mo Re100_unconfined_B_b2 -adaptto bda -thetamax 1e-6 -nf 1 -param S -param2 L -h0 -4 -scount 5 -paramtarget 3 -param2target 1e-3 -amax 90
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_F.fold -fo Re100_unconfined_F -mo Re100_unconfined_F -adaptto bda -thetamax 1e-6 -nf 1 -param S -param2 L -h0 4 -scount 5 -paramtarget 3 -param2target 1e-3 -amax 90
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L0p2_unconfined_F.fold -fo Re100_unconfined_F_b2 -mo Re100_unconfined_F_b2 -adaptto bda -thetamax 1e-6 -nf 1 -param S -param2 L -h0 -4 -scount 5 -paramtarget 3 -param2target 1e-3 -amax 90
 ```
 
 ## Computations for Figure 3 (weak axial confinement case)
 1. Continue base states along the parameter $S$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L2_C4.base -fo Re100_L2_C4 -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L2_C4 -paramtarget 3 -hmin 1e-5
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L2_C8.base -fo Re100_L2_C8 -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L2_C8 -paramtarget 3 -hmin 1e-5
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L2_C16.base -fo Re100_L2_C16 -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L2_C16 -paramtarget 3 -hmin 1e-5
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L2_C40.base -fo Re100_L2_C40 -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L2_C40 -paramtarget 3 -hmin 1e-5
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L2_C4.base -fo Re100_L2_C4 -param S -h0 10 -scount 5 -mo Re100_L2_C4 -paramtarget 3
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L2_C8.base -fo Re100_L2_C8 -param S -h0 10 -scount 5 -mo Re100_L2_C8 -paramtarget 3
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L2_C16.base -fo Re100_L2_C16 -param S -h0 10 -scount 5 -mo Re100_L2_C16 -paramtarget 3
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L2_C40.base -fo Re100_L2_C40 -param S -h0 10 -scount 5 -mo Re100_L2_C40 -paramtarget 3
 ```
 
 2. Continue alternate branch of $C=16$ solutions
@@ -181,30 +181,30 @@ cd $workdir && export lastfile=$(printf '%s\n' Re100_L2_C8_*.base | sort -t_ -k4
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo Re100_S3_L2_C16 -C 10 -S 3 -snes_linesearch_type secant
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S3_L2_C16.base -fo Re100_S3_L2_C16 -C 12 -snes_linesearch_type secant
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S3_L2_C16.base -fo Re100_S3_L2_C16 -C 16 -snes_linesearch_type secant
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S3_L2_C16.base -fo Re100_S3_L2_C16 -hmin 1e-5 -mo Re100_S3_L2_C16
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S3_L2_C16.base -fo Re100_L2_C16_b2 -param S -h0 -10 -scount 5 -maxcount -1 -mo Re100_L2_C16_b2 -paramtarget 3.01 -hmin 1e-5
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_S3_L2_C16.base -fo Re100_S3_L2_C16 -mo Re100_S3_L2_C16
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S3_L2_C16.base -fo Re100_L2_C16_b2 -param S -h0 -10 -scount 5 -mo Re100_L2_C16_b2 -paramtarget 3.01
 ```
 
 3. Compute backward and forward fold bifurcations from $C=8$ solution branch
 ```sh
 cd "$workdir" && set -- Re100_L2_C8_*specialpt.base && export B="$1" && export F="$2" && cd -
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo Re100_L2_C8_B -param S -mo Re100_L2_C8_B -hmin 1e-5 -nf 0
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L2_C8_B.fold -fo Re100_L2_C8_B -param S -mo Re100_L2_C8_B -adaptto bda -hmin 1e-5 -nf 1
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo Re100_L2_C8_F -param S -mo Re100_L2_C8_F -hmin 1e-5 -nf 0
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L2_C8_F.fold -fo Re100_L2_C8_F -param S -mo Re100_L2_C8_F -adaptto bda -hmin 1e-5 -nf 1
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $B -fo Re100_L2_C8_B -param S -mo Re100_L2_C8_B -nf 0
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L2_C8_B.fold -fo Re100_L2_C8_B -param S -mo Re100_L2_C8_B -adaptto bda -nf 1
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo Re100_L2_C8_F -param S -mo Re100_L2_C8_F -nf 0
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi Re100_L2_C8_F.fold -fo Re100_L2_C8_F -param S -mo Re100_L2_C8_F -adaptto bda -nf 1
 ```
 
 4. Continue the neutral fold curve in the $(S, C)$-plane with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L2_C8_B.fold -fo Re100_L2_B -mo Re100_L2_B -adaptto bda -hmin 1e-5 -nf 1 -param S -param2 C -h0 -4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 1e-3 -amax 90
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L2_C8_B.fold -fo Re100_L2_B_b2 -mo Re100_L2_B_b2 -adaptto bda -hmin 1e-5 -nf 1 -param S -param2 C -h0 4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 1e-3 -amax 90
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L2_C8_B.fold -fo Re100_L2_B -mo Re100_L2_B -adaptto bda -nf 1 -param S -param2 C -h0 -4 -scount 5 -paramtarget 3 -param2target 1e-3 -amax 90
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi Re100_L2_C8_B.fold -fo Re100_L2_B_b2 -mo Re100_L2_B_b2 -adaptto bda -nf 1 -param S -param2 C -h0 4 -scount 5 -paramtarget 3 -param2target 1e-3 -amax 90
 ```
 
 5. Compute the codimension-2 cusp bifurcation
 ```sh
 cd "$workdir" && set -- Re100_L2_B_*specialpt.fold && export guess="$1" && cd -
 ff-mpirun -np $nproc cuspcompute.md -v 0 -dir $workdir -fi $guess -fo Re100_L2 -param S -param2 C -nf 0
-ff-mpirun -np $nproc cuspcompute.md -v 0 -dir $workdir -fi Re100_L2.cusp -fo Re100_L2 -param S -param2 C -mo Re100_L2 -adaptto bda -thetamax 1 -thetamax 1 -hmin 1e-5 -nf 1
+ff-mpirun -np $nproc cuspcompute.md -v 0 -dir $workdir -fi Re100_L2.cusp -fo Re100_L2 -param S -param2 C -mo Re100_L2 -adaptto bda -thetamax 1e-6 -nf 1
 ```
 
 6. Compute the Hopf bifurcations
@@ -212,54 +212,54 @@ ff-mpirun -np $nproc cuspcompute.md -v 0 -dir $workdir -fi Re100_L2.cusp -fo Re1
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_L2_C4_5.base -fo Re100_L2_C4_hopfguess -S 1.2
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi Re100_L2_C4_hopfguess.base -fo Re100_L2_C4_hopfguess -sym -2 -eps_target 0.01+0.2i -eps_nev 1 -eps_pos_gen_non_hermitian
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_C4_hopfguess.mode -param S -fo Re100_L2_C4 -nf 0
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_C4.hopf -param S -fo Re100_L2_C4 -mo Re100_L2_C4 -adaptto bda -hmin 1e-5 -nf 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_C4.hopf -param S -fo Re100_L2_C4 -mo Re100_L2_C4 -adaptto bda -nf 1
 
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_L2_C8_5.base -fo Re100_L2_C8_hopfguess -S 1.3
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi Re100_L2_C8_hopfguess.base -fo Re100_L2_C8_hopfguess -sym -2 -eps_target 0.01+0.02i -eps_nev 1 -eps_pos_gen_non_hermitian
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_C8_hopfguess.mode -param S -fo Re100_L2_C8 -nf 0
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_C8.hopf -param S -fo Re100_L2_C8 -mo Re100_L2_C8 -adaptto bda -hmin 1e-5 -nf 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_C8.hopf -param S -fo Re100_L2_C8 -mo Re100_L2_C8 -adaptto bda -nf 1
 
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_L2_C16_5.base -fo Re100_L2_C16_hopfguess -S 1.5
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi Re100_L2_C16_hopfguess.base -fo Re100_L2_C16_hopfguess -sym -2 -eps_target 0.01+0.002i -eps_nev 1
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_C16_hopfguess.mode -param S -fo Re100_L2_C16 -nf 0
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_C16.hopf -param S -fo Re100_L2_C16 -mo Re100_L2_C16 -adaptto bda -hmin 1e-5 -nf 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_C16.hopf -param S -fo Re100_L2_C16 -mo Re100_L2_C16 -adaptto bda -nf 1
 
 cd $workdir && export lastfile=$(printf '%s\n' Re100_L2_C16_*.base | sort -t_ -k4,4n | tail -1) && cd -
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi $lastfile -fo Re100_L2_S3_hopfguess -S 3
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi Re100_L2_S3_hopfguess.base -fo Re100_L2_S3_hopfguess -sym -2 -eps_target 0.01+0.02i -eps_nev 1
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_S3_hopfguess.mode -param C -fo Re100_L2_S3 -nf 0
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_S3.hopf -param C -fo Re100_L2_S3 -mo Re100_L2_S3 -adaptto bda -hmin 1e-5 -nf 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_S3.hopf -param C -fo Re100_L2_S3 -mo Re100_L2_S3 -adaptto bda -nf 1
 
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi Re100_L2_S3_hopfguess.base -fo Re100_L2_S2p7_hopfguess -S 2.7
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi Re100_L2_S2p7_hopfguess.base -fo Re100_L2_S2p7_hopfguess -sym -2 -eps_target 0.01+0.002i -eps_nev 1
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_S2p7_hopfguess.mode -param C -fo Re100_L2_S2p7 -nf 0 -snes_divergence_tolerance 1e10
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_S2p7.hopf -param C -fo Re100_L2_S2p7 -mo Re100_L2_S2p7 -adaptto bda -hmin 1e-5 -nf 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi Re100_L2_S2p7.hopf -param C -fo Re100_L2_S2p7 -mo Re100_L2_S2p7 -adaptto bda -nf 1
 ```
 
 7. Continue along the Hopf neutral curves
 ```sh
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C4.hopf -fo Re100_L2_C4 -mo Re100_L2_C4 -adaptto bda -hmin 1e-5 -nf 1 -param S -param2 C -h0 4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 3.99 -amax 90
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C4.hopf -fo Re100_L2_C4_b2 -mo Re100_L2_C4_b2 -adaptto bda -hmin 1e-5 -nf 1 -param S -param2 C -h0 -4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 4.01 -amax 90
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C4.hopf -fo Re100_L2_C4 -mo Re100_L2_C4 -adaptto bda -nf 1 -param S -param2 C -h0 4 -scount 5 -paramtarget 3 -param2target 3.99 -amax 90
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C4.hopf -fo Re100_L2_C4_b2 -mo Re100_L2_C4_b2 -adaptto bda -nf 1 -param S -param2 C -h0 -4 -scount 5 -paramtarget 3 -param2target 4.01 -amax 90
 
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C8.hopf -fo Re100_L2_C8 -mo Re100_L2_C8 -adaptto bda -hmin 1e-5 -nf 1 -param S -param2 C -h0 4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 7.99 -amax 90
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C8.hopf -fo Re100_L2_C8_b2 -mo Re100_L2_C8_b2 -adaptto bda -hmin 1e-5 -nf 1 -param S -param2 C -h0 -4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 8.01 -amax 90
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C8.hopf -fo Re100_L2_C8 -mo Re100_L2_C8 -adaptto bda -nf 1 -param S -param2 C -h0 4 -scount 5 -paramtarget 3 -param2target 7.99 -amax 90
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C8.hopf -fo Re100_L2_C8_b2 -mo Re100_L2_C8_b2 -adaptto bda -nf 1 -param S -param2 C -h0 -4 -scount 5 -paramtarget 3 -param2target 8.01 -amax 90
 
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C16.hopf -fo Re100_L2_C16 -mo Re100_L2_C16 -adaptto bda -hmin 1e-5 -nf 1 -param S -param2 C -h0 4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 15.99 -amax 90
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C16.hopf -fo Re100_L2_C16_b2 -mo Re100_L2_C16_b2 -adaptto bda -hmin 1e-5 -nf 1 -param S -param2 C -h0 -4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 16.01 -amax 90
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C16.hopf -fo Re100_L2_C16 -mo Re100_L2_C16 -adaptto bda -nf 1 -param S -param2 C -h0 4 -scount 5 -paramtarget 3 -param2target 15.99 -amax 90
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_C16.hopf -fo Re100_L2_C16_b2 -mo Re100_L2_C16_b2 -adaptto bda -nf 1 -param S -param2 C -h0 -4 -scount 5 -paramtarget 3 -param2target 16.01 -amax 90
 
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_S2p7.hopf -fo Re100_L2_S2p7 -mo Re100_L2_S2p7 -adaptto bda -hmin 1e-5 -nf 1 -param S -param2 C -h0 4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 1e-3 -amax 90
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_S2p7.hopf -fo Re100_L2_S2p7_b2 -mo Re100_L2_S2p7_b2 -adaptto bda -hmin 1e-5 -nf 1 -param S -param2 C -h0 -4 -scount 5 -maxcount -1 -paramtarget 3 -param2target 1e-3 -amax 90
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_S2p7.hopf -fo Re100_L2_S2p7 -mo Re100_L2_S2p7 -adaptto bda -nf 1 -param S -param2 C -h0 4 -scount 5 -paramtarget 3 -param2target 1e-3 -amax 90
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_S2p7.hopf -fo Re100_L2_S2p7_b2 -mo Re100_L2_S2p7_b2 -adaptto bda -nf 1 -param S -param2 C -h0 -4 -scount 5 -paramtarget 3 -param2target 1e-3 -amax 90
 
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_S3.hopf -fo Re100_L2_S3 -mo Re100_L2_S3 -adaptto bda -hmin 1e-5 -nf 1 -param S -param2 C -h0 4 -scount 5 -maxcount -1 -paramtarget 3.01 -param2target 1e-3 -amax 90
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi Re100_L2_S3.hopf -fo Re100_L2_S3 -mo Re100_L2_S3 -adaptto bda -nf 1 -param S -param2 C -h0 4 -scount 5 -paramtarget 3.01 -param2target 1e-3 -amax 90
 ```
 
 ## Computations for Figure 4 (strong axial confinement case)
 1. Continue base states along the parameter $S$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0_C4.base -fo Re100_L0_C4 -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L0_C4 -paramtarget 3 -hmin 1e-5
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0_C8.base -fo Re100_L0_C8 -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L0_C8 -paramtarget 3 -hmin 1e-5
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0_C16.base -fo Re100_L0_C16 -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L0_C16 -paramtarget 3 -hmin 1e-5
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0_C40.base -fo Re100_L0_C40 -param S -h0 10 -scount 5 -maxcount -1 -mo Re100_L0_C40 -paramtarget 3 -hmin 1e-5
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0_C4.base -fo Re100_L0_C4 -param S -h0 10 -scount 5 -mo Re100_L0_C4 -paramtarget 3
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0_C8.base -fo Re100_L0_C8 -param S -h0 10 -scount 5 -mo Re100_L0_C8 -paramtarget 3
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0_C16.base -fo Re100_L0_C16 -param S -h0 10 -scount 5 -mo Re100_L0_C16 -paramtarget 3
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi Re100_S0_L0_C40.base -fo Re100_L0_C40 -param S -h0 10 -scount 5 -mo Re100_L0_C40 -paramtarget 3
 ```
 
 (Continues similarly to the above)

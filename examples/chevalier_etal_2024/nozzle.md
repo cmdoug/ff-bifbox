@@ -13,7 +13,6 @@ real L = getARGV("-L", 60.0);
 real H = getARGV("-H", 20.0);
 real w = 0.05;
 real h = 1.0e-4;
-real hh = 1.0e-5;
 
 string meshout = getARGV("-mo", "nozzle.msh"); // mesh filename
 if(meshout.rfind(".msh") < 0) meshout = meshout + ".msh"; // add extension if not provided
@@ -34,13 +33,12 @@ border C03(t=0, 1){x = L - 1.0; y = H*t; label = BCopen;}
 border C04(t=0, 1){x = -1.0 + L*(1.0 - t); y = H; label = BClat;}
 border C05(t=0, 1){x = -1.0; y = H - (H - h - 1.0)*t; label = BCin2;}
 border C06(t=0, 1){x = -1.0 + (1.0 - w)*t; y = 1.0 + h; label = BCwall;}
-border C07(t=0, 1){x = -w*(1.0 - t); y = 1.0 + h - (h - hh)*t; label = BCwall;}
-border C07a(t=0, 1){x = 0.0; y = 1.0 + hh*(1.0 - t); label = BCwall;}
+border C07(t=0, 1){x = -w*(1.0 - t); y = 1.0 + h*(1.0 - t); label = BCwall;}
 border C08(t=0, 1){x = -t; y = 1.0; label = BCwall;}
 // Assemble mesh
-mesh Thg = buildmesh(C01(n0) + C02(L*n1) + C03(H*n2) 
-                     + C04(L*n2) + C05((H - h - 1.0)*n1) + C06((1.0 - w)*n0) 
-										 + C07(sqrt(w^2 + (h - hh)^2)*n0) + C07a(hh*n0) + C08(n0));
+mesh Thg = buildmesh(C01(n0) + C02(L*n1) + C03(H*n2) + C04(L*n2)
+										 + C05((H - h - 1.0)*n1) + C06((1.0 - w)*n0) 
+										 + C07(sqrt(w^2 + h^2)*n0) + C08(n0));
 
 plot(Thg,wait=1);
 int[int] meshlabels = labels(Thg);
