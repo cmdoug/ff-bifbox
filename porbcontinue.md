@@ -47,10 +47,10 @@ string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 int Nh = getARGV("-Nh", 0); //if 0, will read Nh from file. In practice, Nh must be at least 1, otherwise use basecompute.md
 int blocks = getARGV("-blocks", 1); //if blocks = 1, use monolithic LU; if blocks = N w/ 2 <= N <= Nh+1, use block preconditioner with N blocks
 int refactor = getARGV("-refact", snesmaxit);
-real paramtarget = getARGV("-paramtarget",1.0);
+real paramtarget = getARGV("-paramtarget",-1.0e30);
 real[int] sym0(sym.n);
 real omega;
-bool stopflag = false;
+bool stopflag = (maxcount == 0);
 bool forcesave = false;
 
 // Load mesh, make FE basis
@@ -283,9 +283,7 @@ while (!stopflag){
   SNESSolve(JHBaa, funcJa, funcRa, qa, convergence = funcConvergence, reason = ret,
             sparams = "-snes_linesearch_type " + sneslinesearchtype + " -snes_converged_reason -options_left no -snes_max_it " + snesmaxit); // solve nonlinear problem with SNES
   if (ret > 0) {
-    ++count;
-    if (maxcount > 0) stopflag = (count >= maxcount);
-    else if ((paramvals(1-zerofreq) - paramtarget)*paramdiff <= 0) stopflag = true;
+    stopflag = (maxcount > 0)*(++count >= maxcount) || ((paramvals(1-zerofreq) - paramtarget)*paramdiff <= 0);
     h0 /= f;
     if (cosalpha < 0 && contorder > 0) {
       h0 *= -1.0;

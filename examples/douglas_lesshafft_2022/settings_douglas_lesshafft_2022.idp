@@ -1,0 +1,77 @@
+//
+// settings_douglas_etal_2022.idp
+// Chris Douglas
+// christopher.douglas@duke.edu
+//
+// Set dimension macro for 'macro_ddm.idp' (2)
+  macro dimension()2//EOM
+// Load hpddm macros
+  include "macro_ddm.idp"
+  verbosity = getARGV("-v",0);
+// Define parameter and monitor names
+  string[int] paramnames = ["1/Re", "S", "C", "L"]; // set parameter names
+  string[int] monitornames = ["minux0", "Sn"]; // set monitor names
+// Declare symmetries
+  real[int] sym(1);
+// Define state vector and FE space
+  macro defu(u)[u, u#y, u#z, u#p, u#po]//EOM
+  macro initu(i)[i, i, i, i, i]//EOM
+  func Pk = [P2, P2, P2, P1, P1];
+// Define forcing vector and FE space (for resolvent analysis)
+  macro deff(f)[f, f#y, f#z]//EOM
+  macro initf(i)[i, i, i]//EOM
+  func Pkf = [P2, P2, P2];
+// Define quantities for mesh adaptation and plotting in ParaView
+  macro adaptu(u)[u, u#y, u#z], u#p//EOM
+  macro adaptf(f)[f, f#y, f#z]//EOM
+// Names for ParaView outputs
+  string[int] ParaViewNames = ["velocity", "pressure"];
+  string[int] ParaViewNamesf = ["momentum"];
+// Boundary labels
+  int BCnull = 0;
+  int BCaxis = 1;
+  int BCopen = 2;
+  int BCinflow = 3;
+  int BCwall = 4;
+  int BCpipe = 5;
+  int BCinternal = 6;
+// coordinate mapping macros ---------------------------------------------------
+  macro X() (
+        ((x < 0.0) && (y > 0.5))*params["L"]*x
+      + ((x >= 0.0) || (y <= 0.5))*x
+      ) //EOM
+  macro Y() (
+        ((y <= 0.50001) || (params["C"] >= 1e3))*y
+      + ((y > 0.50001) && (params["C"] < 1e3))*(0.50001 + (0.5*params["C"] - 0.50001)/7.49999*(y - 0.50001))
+      ) //EOM
+
+  macro dXdx() (
+        ((x < 0.0) && (y > 0.5))*params["L"]
+      + ((x >= 0.0) || (y <= 0.5))
+      ) // EOM
+  macro dYdy() (
+        ((y <= 0.50001) || (params["C"] >= 1e3))
+      + ((y > 0.50001) && (params["C"] < 1e3))*(0.5*params["C"] - 0.50001)/7.49999
+      ) // EOM
+
+  macro dX(a) ( dx(a)/dXdx ) //EOM
+  macro dY(a) ( dy(a)/dYdy ) //EOM
+
+  macro Jinv() ( dYdy*dXdx ) //EOM
+
+  macro tmag() (sqrt((N.y*dXdx)^2 + (N.x*dYdy)^2)) //EOM
+
+  macro coordinatetransform(U) X, Y // EOM
+// Define solution monitors to extract:
+  macro getmonitors(){
+    fespace Xh1(Thg, P2);
+    Xh1 UX = ubg;
+    varf Onaxis(UX, VX) = on(BCaxis, UX = 1);
+    real[int] onaxis = Onaxis(0, Xh1, tgv = 1);
+    int[int] indices(onaxis.sum);
+    real[int] uonaxis(indices.n);
+    for(int i=0, j=0; i<Xh1.ndof; ++i) if(onaxis[i]) {indices[j] = i; ++j;}
+    for(int i=0; i<indices.n; ++i) uonaxis[i] = UX[][indices[i]];
+    monitors["minux0"] = min(2.0/params["C"]^2, uonaxis.min);
+    monitors["Sn"] = int1d(Thg, levelset=x)( (y<=0.5)*y^2*ubg*ubgz )/int1d(Thg, levelset=x)( (y<=0.5)*y*ubg*ubg );
+  }// EOM

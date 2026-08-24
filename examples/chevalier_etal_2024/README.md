@@ -73,12 +73,17 @@ ln -sf examples/chevalier_etal_2024/settings_chevalier_etal_2024.idp settings.id
 
 ## Build initial meshes
 `ff-bifbox` uses FreeFEM for adaptive meshing during the solution process, but it needs an initial mesh to adaptively refine.
-#### Build initial mesh directly from `.geo` files using Gmsh
+#### CASE 1: Gmsh is installed - build initial mesh directly from `.geo` files
 ```sh
 FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/chevalier_etal_2024 -dir $workdir -mi nozzle_lg.geo
 FreeFem++-mpi -v 0 importgmsh.md -gmshdir examples/chevalier_etal_2024 -dir $workdir -mi nozzle_sm.geo
 ```
 Note: since no `-mo` argument is specified, the output files (`.msh`) inherit the names of their parents (`.geo`).
+#### CASE 2: Gmsh is not installed - build initial mesh using BAMG in FreeFEM
+```sh
+FreeFem++-mpi -v 0 examples/chevalier_etal_2024/nozzle.md -mo $workdir/nozzle_lg -L 60 -H 20
+FreeFem++-mpi -v 0 examples/chevalier_etal_2024/nozzle.md -mo $workdir/nozzle_sm -L 50 -H 15
+```
 
 ## Perform parallel computations using `ff-bifbox`
 ### Steady axisymmetric dynamics of the mean flow with modeled turbulence
@@ -95,12 +100,12 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi nozzle_lg.msh -fo S0p
 
 2. Adapt base state to a coarser mesh for continuation
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi S0p0Re10lg.base -fo jet_adapt_0 -mo nozzle_adapt_0 -err 0.1 -thetamax 0.01
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi S0p0Re10lg.base -fo jet_adapt_0 -mo nozzle_adapt_0 -err 0.1 -thetamax 1e-6
 ```
 
 3. Continue base state along the parameter $1/Re$. NOTE: This problem becomes very poorly scaled at high $Re$, meaning numerical issues may arise and require workarounds.
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi jet_adapt_0.base -fo jet_adapt -param 1/Re -h0 -1 -scount 4 -maxcount 100 -mo nozzle_adapt -err 0.1 -anisomax 3 -thetamax 0.01 -snes_max_it 50 -hmin 1e-5
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi jet_adapt_0.base -fo jet_adapt -param 1/Re -h0 -1 -scount 4 -maxcount 100 -mo nozzle_adapt -err 0.1 -anisomax 3 -thetamax 1e-6 -snes_max_it 50
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi jet_adapt_100.base -fo jet_adapt_101 -mi nozzle_lg.msh -1/Re 5.0e-5
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi jet_adapt_101.base -fo jet_adapt_102 -1/Re 3.0e-5
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi jet_adapt_102.base -fo jet_adapt_103 -1/Re 1.0e-5

@@ -44,9 +44,9 @@ bool stricttangent = bool(getARGV("-stricttangent", 1));
 int snesmaxit = getARGV("-snes_max_it", 10);
 string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
 int refactor = getARGV("-refact", snesmaxit);
-real paramtarget = getARGV("-paramtarget", 1.0);
+real paramtarget = getARGV("-paramtarget", -1.0e30);
 real TGV = getARGV("-tgv", -1);
-bool stopflag = false;
+bool stopflag = (maxcount == 0);
 bool forcesave = false;
 
 // Load mesh, make FE basis
@@ -299,9 +299,7 @@ while (!stopflag){
   SNESSolve(Ja, funcJa, funcRa, qa, convergence = funcConvergence, reason = ret,
             sparams = "-snes_linesearch_type " + sneslinesearchtype + " -snes_converged_reason -options_left no -snes_max_it " + snesmaxit); // solve nonlinear problem with SNES
   if (ret > 0) {
-    ++count;
-    if (maxcount > 0) stopflag = (count >= maxcount);
-    else if ((paramval - paramtarget)*paramdiff <= 0) stopflag = true;
+    stopflag = (maxcount > 0)*(++count >= maxcount) || ((paramval - paramtarget)*paramdiff <= 0);
     h0 /= f;
     if (cosalpha < 0 && contorder > 0) {
       h0 *= -1.0;
