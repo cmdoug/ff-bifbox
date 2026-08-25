@@ -110,6 +110,7 @@ arxiv = {https://arxiv.org/abs/2509.18429},
 - [x] Add time-domain linear simulation framework
 - [x] Add Floquet analysis for periodic orbits
 - [x] Add deflation framework for steady states and periodic orbits
+- [x] Add support for all codimension-2 bifurcations of equilibria
 - [ ] Add fold/Neimark-Sacker bifurcation computation/continuation for periodic orbits
 - [ ] Add resolvent analysis for periodic orbits
 - [ ] Improve documentation and tutorials/examples

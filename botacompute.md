@@ -340,7 +340,7 @@ ff-mpirun -np 4 botacompute.md -param <PARAM> -param2 <PARAM2> -fi <FILEIN> -fo 
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [foldcompute.md](./foldcompute.md), [foldcontinue.md](./foldcontinue.md), [porbcontinue.md](./porbcontinue.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [foldcompute.md](./foldcompute.md), [foldcontinue.md](./foldcontinue.md), [bautcompute.md](./bautcompute.md), [porbcontinue.md](./porbcontinue.md)
 
 ```freefem
 load "iovtk"
@@ -389,6 +389,16 @@ else if (fileext == "hopf") {
   real[int] sym1(sym.n);
   complex[int] qm(um[].n), qma(um[].n);
   ub[] = loadhopf(fileroot, meshin, qm, qma, sym1, omega, alpha, beta);
+  um[] = qm.re;
+  uma[] = qma.re;
+}
+else if (fileext == "baut") {
+  real omega;
+  complex[string] alpha;
+  complex beta;
+  real[int] sym1(sym.n);
+  complex[int] qm(um[].n), qma(um[].n);
+  ub[] = loadbaut(fileroot, meshin, qm, qma, sym1, omega, alpha, beta);
   um[] = qm.re;
   uma[] = qma.re;
 }
@@ -488,6 +498,13 @@ else if(basefileext == "hopf") {
   complex beta;
   complex[int] qm, qma;
   ub[] = loadhopf(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(basefileext == "baut") {
+  real omega;
+  complex[string] alpha;
+  complex beta;
+  complex[int] qm, qma;
+  ub[] = loadbaut(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
 }
 else if(basefileext == "bota") {
   real[string] alpha1, alpha2;

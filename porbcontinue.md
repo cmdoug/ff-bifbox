@@ -87,6 +87,13 @@ if(count == 0) {
     ub[] = loadhopf(fileroot, meshin, um[], qma, sym0, omega, alpha, beta);
     uh(:, 0) = um[];
   }
+  else if(fileext == "baut") {
+    complex[string] alpha;
+    complex beta;
+    complex[int] qma;
+    ub[] = loadbaut(fileroot, meshin, um[], qma, sym0, omega, alpha, beta);
+    uh(:, 0) = um[];
+  }
   else if(fileext == "bota") {
     real[string] alpha1, alpha2;
     real beta1, beta2, beta3, beta4;

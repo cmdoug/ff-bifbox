@@ -1793,6 +1793,132 @@ macro savehopf(hopffileout, statsfile, meshfile, sym, omega, alpha, beta, savefl
   }
 }//EOM
 
+macro savebaut(bautfileout, statsfile, meshfile, sym, omega, alpha, beta, saveflag, monitorflag){
+  IFMACRO(getmonitors) 
+    XMhg defu(tempu), defu(ubg);
+    tempu[](restu) = ub[].re;
+    mpiAllReduce(tempu[], ubg[], mpiCommWorld, mpiSUM);
+    XMhg<complex> defu(cplxu), defu(umg), defu(umag);
+    cplxu[](restu) = um[];
+    mpiAllReduce(cplxu[], umg[], mpiCommWorld, mpiSUM);
+    cplxu[](restu) = uma[];
+    mpiAllReduce(cplxu[], umag[], mpiCommWorld, mpiSUM);
+    if(monitorflag) getmonitors;
+  ENDIFMACRO
+  if(mpirank == 0 && monitorflag){
+    cout << "\tomega = " + omega;
+    if(sym.n > 0) cout << ", sym = " + listsym(sym);
+    if(paramnames[0] != ""){
+      for (int k = 0; k < paramnames.n; ++k){
+        cout << ", alpha[" + paramnames[k] + "] = " + alpha[paramnames[k]];
+      }
+    }
+    cout << ", beta = " + beta;
+    if(paramnames[0] != "" ) cout << ", " << listparams(paramnames, params);
+    if(monitornames[0] != "") cout << ", " << listparams(monitornames, monitors);
+    cout << "." << endl;
+  }
+  if(mpirank == 0 && statsfile != ""){
+    cout << "  Saving solution stats to '" + statsfile + ".baut.stat' in '" + workdir + "'." << endl;
+    string dummy = bautfileout;
+    {
+      ofstream file(workdir + statsfile + ".baut.stat", append);
+      file.precision(17);
+      file << bautfileout + ((dummy.rfind(".") > 0) ? "" : ".baut") << "\t" << meshfile << "\t" << omega;
+      if(sym.n > 0) file << "\t" << listsym(sym);
+      if(paramnames[0] != ""){
+        for (int k = 0; k < paramnames.n; ++k){
+          file << "\t" << alpha[paramnames[k]];
+        }
+      }
+      file << "\t" << beta;
+      if(paramnames[0] != ""){
+        for (int k = 0; k < paramnames.n; ++k){
+          file << "\t" << params[paramnames[k]];
+        }
+      }
+      if(monitornames[0] != ""){
+        for (int k = 0; k < monitornames.n; ++k){
+          file << "\t" << monitors[monitornames[k]];
+        }
+      }
+      file << endl;
+    }
+  }
+  if(saveflag && bautfileout != ""){
+    IFMACRO(!getmonitors)
+      XMhg defu(tempu), defu(ubg);
+      tempu[](restu) = ub[].re;
+      mpiAllReduce(tempu[], ubg[], mpiCommWorld, mpiSUM);
+      XMhg<complex> defu(cplxu), defu(umg), defu(umag);
+      cplxu[](restu) = um[];
+      mpiAllReduce(cplxu[], umg[], mpiCommWorld, mpiSUM);
+      cplxu[](restu) = uma[];
+      mpiAllReduce(cplxu[], umag[], mpiCommWorld, mpiSUM);
+    ENDIFMACRO
+    if(mpirank == 0){
+      cout << "  Saving '" + bautfileout + ".baut' on '" + meshfile + "' in '" + workdir + "'." << endl;
+      {
+        ofstream file(workdir + bautfileout + ".baut", binary);
+        file.precision(17);
+        file << "mesh\t" << meshfile << endl;
+        file << "omega\t" << omega << endl;
+        if(sym.n > 0) file << "sym\t" << listsym(sym) << endl;
+        if(paramnames[0] != ""){
+          for (int k = 0; k < paramnames.n; ++k){
+            file << "alpha[" + paramnames[k] + "]\t" << alpha[paramnames[k]] << endl;
+          }
+        }
+        file << "beta\t" << beta << endl;
+        if(paramnames[0] != ""){
+          for (int k = 0; k < paramnames.n; ++k){
+            file << paramnames[k] << "\t" << params[paramnames[k]] << endl;
+          }
+        }
+        if(monitornames[0] != ""){
+          for (int k = 0; k < monitornames.n; ++k){
+            file << monitornames[k] << "\t" << monitors[monitornames[k]] << endl;
+          }
+        }
+        file << ubg[] << endl;
+        file << umg[] << endl;
+        file << umag[] << endl;
+      }
+      if (paraviewflag > 0){
+        cout << "  Saving '" + bautfileout + "_baut_[base,dirmode,adjmode].vtu' in '" + workdir + "'." << endl;
+        meshN Thgpv;
+        real[int] qpv = ubg[];
+        complex[int] qmpv = umg[], qmapv = umag[];
+        if (paraviewflag > 1){
+          meshN Thgs = trunc(Thg, 1, split = paraviewflag);
+          fespace XMhs(Thgs, Pk);
+          XMhs defu(us) = defu(ubg);
+          XMhs<complex> defu(ums) = defu(umg);
+          qpv.resize(us[].n);
+          qmpv.resize(ums[].n);
+          qmapv.resize(ums[].n);
+          qpv = us[];
+          qmpv = ums[];
+          defu(ums) = defu(umag);
+          qmapv = ums[];
+          Thgpv = movemesh(Thgs, [coordinatetransform(us)]);
+        }
+        else Thgpv = movemesh(Thg, [coordinatetransform(ubg)]);
+        fespace XMhgpv(Thgpv, Pk);
+        XMhgpv defu(ugr), defu(ugi);
+        ugr[] = qpv;
+        savevtk(workdir + bautfileout + "_baut_base.vtu", Thgpv, paraviewu(ugr), dataname = ParaViewDataName, order = ParaViewOrder);
+        ugr[] = qmpv.re;
+        ugi[] = qmpv.im;
+        savevtk(workdir + bautfileout + "_baut_dirmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
+        ugr[] = qmapv.re;
+        ugi[] = qmapv.im;
+        savevtk(workdir + bautfileout + "_baut_adjmode.vtu", Thgpv, paraviewu(ugr), paraviewu(ugi), dataname = ParaViewDataNamec, order = ParaViewOrderc);
+      }
+    }
+  }
+}//EOM
+
 macro savebota(botafileout, statsfile, meshfile, alpha1, alpha2, beta1, beta2, beta3, beta4, saveflag, monitorflag){
   IFMACRO(getmonitors) 
     XMhg defu(tempu), defu(ubg), defu(umg), defu(umag);
@@ -2827,6 +2953,72 @@ func real[int] loadhopf(string inputfilename, string meshfilename, complex[int] 
       if (mpirank == 0) cout << "  Loading '" + inputfilename + ".hopf' on '" + meshfilename + "' from '" + workdir + "'." << endl;
       string dummy, filemesh, symstr;
       ifstream file(workdir + inputfilename + ".hopf");
+      file >> dummy >> filemesh >> dummy >> omega;
+      if (sym.n > 0) {
+        file >> dummy >> symstr;
+        sym = parsesymstr(symstr);
+      }
+      if(paramnames[0] != ""){
+        for (int k = 0; k < paramnames.n; ++k){
+          file >> dummy >> alpha[paramnames[k]];
+        }
+      }
+      file >> dummy >> beta;
+      if(paramnames[0] != ""){
+        for (int k = 0; k < paramnames.n; ++k){
+          file >> paramnames[k] >> params[paramnames[k]];
+        }
+      }
+      if(monitornames[0] != ""){
+        for (int k = 0; k < monitornames.n; ++k){
+          file >> monitornames[k] >> monitors[monitornames[k]];
+        }
+      }
+      if (mpirank == 0) {
+        cout << "\tomega = " + omega;
+        if(sym.n > 0) cout << ", sym = " + listsym(sym);
+        if(paramnames[0] != ""){
+          for (int k = 0; k < paramnames.n; ++k){
+            cout << ", alpha[" + paramnames[k] + "] = " + alpha[paramnames[k]];
+          }
+        }
+        cout << ", beta = " + beta;
+        if(paramnames[0] != "") cout << ", " + listparams(paramnames, params);
+        if(monitornames[0] != "") cout << ", " + listparams(monitornames, monitors);
+        cout << "." << endl;
+      }
+      if (filemesh == meshfilename){ // no interpolation needed
+        file >> ubg[];
+        file >> umg[];
+        file >> umag[];
+      }
+      else { // must interpolate
+        if (mpirank == 0) cout << "\tMesh mismatch. Interpolating from '" << filemesh << "'." << endl;
+        meshN Thg1 = readmeshN(workdir + filemesh);
+        fespace XMhg1(Thg1, Pk);
+        XMhg1 defu(ubg1);
+        XMhg1<complex> defu(umg1), defu(umag1);
+        file >> ubg1[];
+        file >> umg1[];
+        file >> umag1[];
+        defu(ubg) = defu(ubg1);
+        defu(umg) = defu(umg1);
+        defu(umag) = defu(umag1);
+      }
+      setparams(paramnames, params);
+      real[int] qlocal = ubg[](restu);
+      qmlocal = umg[](restu);
+      qmalocal = umag[](restu);
+      return qlocal;
+    }
+
+
+func real[int] loadbaut(string inputfilename, string meshfilename, complex[int] & qmlocal, complex[int] & qmalocal, real[int] & sym, real & omega, complex[string] & alpha, complex & beta) {
+      XMhg defu(ubg);
+      XMhg<complex> defu(umg), defu(umag);
+      if (mpirank == 0) cout << "  Loading '" + inputfilename + ".baut' on '" + meshfilename + "' from '" + workdir + "'." << endl;
+      string dummy, filemesh, symstr;
+      ifstream file(workdir + inputfilename + ".baut");
       file >> dummy >> filemesh >> dummy >> omega;
       if (sym.n > 0) {
         file >> dummy >> symstr;

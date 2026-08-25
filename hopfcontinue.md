@@ -14,7 +14,7 @@ ff-mpirun -np 4 hopfcontinue.md -param <PARAM1> -param2 <PARAM2> -fi <FILEIN> -f
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [fohocompute.md](./fohocompute.md), [./botacompute.md](./botacompute.md), [hohocompute.md](./hohocompute.md), [porbcontinue.md](./porbcontinue.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [fohocompute.md](./fohocompute.md), [./botacompute.md](./botacompute.md), [bautcompute.md](./bautcompute.md), [hohocompute.md](./hohocompute.md), [porbcontinue.md](./porbcontinue.md)
 
 ```freefem
 load "iovtk"
@@ -77,6 +77,9 @@ XMh<complex> defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
 if (count == 0){
   if( fileext == "hopf"){
     ub[].re = loadhopf(fileroot, meshin, um[], uma[], sym1, omega, alpha, beta);
+  }
+  else if( fileext == "baut"){
+    ub[].re = loadbaut(fileroot, meshin, um[], uma[], sym1, omega, alpha, beta);
   }
   else if(fileext == "bota") {
     real[string] alpha1, alpha2;

@@ -66,6 +66,13 @@ else if (fileext == "hopf") {
   ub[] = loadhopf(fileroot, meshin, um[], qma, sym0, omega, alpha, beta);
   uh(:, 0) = um[];
 }
+else if (fileext == "baut") {
+  complex[string] alpha;
+  complex beta;
+  complex[int] qma;
+  ub[] = loadbaut(fileroot, meshin, um[], qma, sym0, omega, alpha, beta);
+  uh(:, 0) = um[];
+}
 else if (fileext == "bota") {
   real[string] alpha1, alpha2;
   real beta1, beta2, beta3, beta4;
@@ -141,6 +148,13 @@ else if(basefileext == "hopf") {
   complex beta;
   complex[int] qm, qma;
   ub[] = loadhopf(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(basefileext == "baut") {
+  real omega;
+  complex[string] alpha;
+  complex beta;
+  complex[int] qm, qma;
+  ub[] = loadbaut(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
 }
 else if(basefileext == "bota") {
   real[string] alpha1, alpha2;

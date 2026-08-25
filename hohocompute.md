@@ -31,7 +31,7 @@ ff-mpirun -np 4 hohocompute.md -param <PARAM1> -param2 <PARAM2> -fi <FILEIN> -fo
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [porbcontinue.md](./porbcontinue.md)
+SEE ALSO: [modecompute.md](./modecompute.md), [hopfcompute.md](./hopfcompute.md), [hopfcontinue.md](./hopfcontinue.md), [fohocompute.md](./fohocompute.md), [bautcompute.md](./bautcompute.md), [botacompute.md](./botacompute.md), [porbcontinue.md](./porbcontinue.md)
 
 ```freefem
 load "iovtk"
@@ -79,6 +79,9 @@ restu = restrict(XMh, XMhg, n2o);
 XMh<complex> defu(ub), defu(um), defu(uma), defu(um2), defu(um3);
 if (fileext2 == "hopf") {
   ub[].re = loadhopf(fileroot2, meshin, um2[], um3[], sym2, omega2, alpha2, beta2);
+}
+else if (fileext2 == "baut") {
+  ub[].re = loadbaut(fileroot2, meshin, um2[], um3[], sym2, omega2, alpha2, beta2);
 }
 else if(fileext2 == "bota") {
   real[string] alpha1, alpha2;
@@ -158,6 +161,9 @@ else if (fileext1 == "foho") {
 else if (fileext1 == "hopf") {
   ub[].re = loadhopf(fileroot1, meshin, um[], uma[], sym1, omega1, alpha1, beta1);
 }
+else if (fileext1 == "baut") {
+  ub[].re = loadbaut(fileroot1, meshin, um[], uma[], sym1, omega1, alpha1, beta1);
+}
 else if(fileext1 == "bota") {
   real[string] alpha1, alpha2;
   real beta1, beta2, beta3, beta4;
@@ -213,6 +219,13 @@ else if(basefileext == "hopf") {
   complex beta;
   complex[int] qm, qma;
   ub[].re = loadhopf(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
+}
+else if(basefileext == "baut") {
+  real omega;
+  complex[string] alpha;
+  complex beta;
+  complex[int] qm, qma;
+  ub[].re = loadbaut(basefileroot, meshin, qm, qma, sym, omega, alpha, beta);
 }
 else if(basefileext == "bota") {
   real[string] alpha1, alpha2;

@@ -14,7 +14,7 @@ ff-mpirun -np 1 meshcompute.md -fi <FILEIN> -fi2 <FILEIN2> -mo <FILEOUT>
 
 NOTE: This file should not be changed unless you know what you're doing.
 
-SEE ALSO: [basecompute.md](./basecompute.md), [modecompute.md](./modecompute.md), [foldcompute.md](./foldcompute.md), [hopfcompute.md](./hopfcompute.md), [porbcompute.md](./porbcompute.md)
+SEE ALSO: [basecompute.md](./basecompute.md), [modecompute.md](./modecompute.md), [foldcompute.md](./foldcompute.md), [hopfcompute.md](./hopfcompute.md), [fohocompute.md](./fohocompute.md), [hohocompute.md](./hohocompute.md), [cuspcompute.md](./cuspcompute.md), [botacompute.md](./botacompute.md), [bautcompute.md](./bautcompute.md), [porbcompute.md](./porbcompute.md)
 
 ```freefem
 include "settings.idp"
@@ -128,6 +128,21 @@ if (mpirank==0){ // Perform mesh adaptation (serially) on processor 0
       complex beta;
       complex[int] qm(XMhg.ndof), qma(XMhg.ndof);
       uvecs(jj++, :) = loadhopf(fileroots[ii], meshin, qm, qma, sym, omega, alpha, beta);
+      if(adaptto == "bd" || adaptto == "bda") { 
+        uvecs(jj++, :) = qm.re; 
+        uvecs(jj++, :) = qm.im;
+      }
+      if(adaptto == "ba" || adaptto == "bda") {
+        uvecs(jj++, :) = qma.re;
+        uvecs(jj++, :) = qma.im;
+      }
+    }
+    else if(fileexts[ii] == "baut") {
+      real omega;
+      complex[string] alpha;
+      complex beta;
+      complex[int] qm(XMhg.ndof), qma(XMhg.ndof);
+      uvecs(jj++, :) = loadbaut(fileroots[ii], meshin, qm, qma, sym, omega, alpha, beta);
       if(adaptto == "bd" || adaptto == "bda") { 
         uvecs(jj++, :) = qm.re; 
         uvecs(jj++, :) = qm.im;

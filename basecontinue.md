@@ -92,6 +92,13 @@ if(count == 0) {
     complex[int] qm, qma;
     ub[] = loadhopf(fileroot, meshin, qm, qma, sym, omega, alpha, beta);
   }
+  else if(fileext == "baut") {
+    real omega;
+    complex[string] alpha;
+    complex beta;
+    complex[int] qm, qma;
+    ub[] = loadbaut(fileroot, meshin, qm, qma, sym, omega, alpha, beta);
+  }
   else if(fileext == "bota") {
     real[string] alpha1, alpha2;
     real beta1, beta2, beta3, beta4;
