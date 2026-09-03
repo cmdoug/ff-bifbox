@@ -224,7 +224,7 @@ However, it is not desirable or necessary to ever construct $`\frac{\partial w}{
 For the first term in Eq. (7), we have:
 
 $$
-\left(\frac{\partial v}{\partial z}\right)^T\mathcal{H}\left(w,w\right)=\left(-v^T\frac{\partial\mathcal{J}}{\partial z}+\frac{\partial g}{\partial z}\left(\mathcal{M}q_0\right)^T\right)\mathcal{J}^{-1}\mathcal{H}\left(w,w\right)=-v^T\frac{\partial\mathcal{J}}{\partial z}\hat{w}+\frac{\partial g}{\partial z}\left(\mathcal{M}q_0\right)^T\hat{w}
+\left(\frac{\partial v}{\partial z}\right)^T\mathcal{H}\left(w,w\right)=\left(-v^T\frac{\partial\mathcal{J}}{\partial z}+\frac{\partial g}{\partial z}\left(\mathcal{M}q_0\right)^T\right)\mathcal{J}^{-1}\mathcal{H}\left(w,w\right)=-v^T\frac{\partial\mathcal{J}}{\partial z}\hat{w}
 $$
 
 where $`\hat{w}`$ solves the non-singular system:
@@ -258,7 +258,7 @@ $$
 Then, similarly, for the last term in Eq. (7), we have:
 
 $$
-2v^T\mathcal{H}\left(w,\frac{\partial w}{\partial z}\right)=2v^T\mathcal{H}\left(w, \cdot\right)\mathcal{J}^{-1}\left(-\frac{\partial\mathcal{J}}{\partial z}w+\mathcal{M}p_0\frac{\partial g}{\partial z}\right)=-2\hat{v}^T\frac{\partial\mathcal{J}}{\partial z}w+2\hat{v}^T\mathcal{M}p_0\frac{\partial g}{\partial z}
+2v^T\mathcal{H}\left(w,\frac{\partial w}{\partial z}\right)=2v^T\mathcal{H}\left(w, \cdot\right)\mathcal{J}^{-1}\left(-\frac{\partial\mathcal{J}}{\partial z}w+\mathcal{M}p_0\frac{\partial g}{\partial z}\right)=-2\hat{v}^T\frac{\partial\mathcal{J}}{\partial z}w
 $$
 
 where $`\hat{v}`$ solves the non-singular system:
@@ -311,7 +311,7 @@ $$
 where
 
 $$
-\frac{\partial h}{\partial z} = -v^T\frac{\partial\mathcal{J}}{\partial z}\hat{w} + v^T\frac{\partial \mathcal{H}}{\partial z}\left(w,w\right) - 2\hat{v}^T\frac{\partial\mathcal{J}}{\partial z}w + \left(\left(\mathcal{M}q_0\right)^T\hat{w}+2\hat{v}^T\mathcal{M}p_0\right)\frac{\partial g}{\partial z}
+\frac{\partial h}{\partial z} = -v^T\frac{\partial\mathcal{J}}{\partial z}\hat{w} + v^T\frac{\partial \mathcal{H}}{\partial z}\left(w,w\right) - 2\hat{v}^T\frac{\partial\mathcal{J}}{\partial z}w
 $$
 
 ## EXAMPLE USAGE:
