@@ -65,7 +65,7 @@ Similarly, we can find the adjoint eigenmode using the related system:
 
 $$
 \begin{bmatrix}
-v^H & h^{\ast}
+v^H & g
 \end{bmatrix}\begin{bmatrix}
 -\mathcal{L} & \mathcal{M}p_0 \\
 (\mathcal{M}q_0)^H & 0
@@ -77,7 +77,7 @@ $$
 This implies:
 
 $$
-v^H\mathcal{L} = h^{\ast}(\mathcal{M}q_0)^H\qquad{}\text{and}\qquad{}v^H\mathcal{M}p_0 = 1
+v^H\mathcal{L} = g(\mathcal{M}q_0)^H\qquad{}\text{and}\qquad{}v^H\mathcal{M}p_0 = 1
 $$
 
 or, taking the complex conjugate transpose:
@@ -90,7 +90,7 @@ $$
 \end{bmatrix}
 \begin{bmatrix}
 v \\
-h
+g^\ast
 \end{bmatrix} = \begin{bmatrix}
 0 \\
 1
@@ -101,18 +101,18 @@ $$
 giving, equivalently,
 
 $$
-\mathcal{L}^Hv = \mathcal{M}q_0h\qquad{}\text{and}\qquad{}(\mathcal{M}p_0)^Hv = 1
+\mathcal{L}^Hv = \mathcal{M}q_0g^\ast\qquad{}\text{and}\qquad{}(\mathcal{M}p_0)^Hv = 1
 $$
 
 so
 
 $$
-v = \mathcal{L}^{-H}\mathcal{M}q_0h\qquad{}\text{and}\qquad{}h = \frac{1}{(\mathcal{M}p_0)^H\mathcal{L}^{-H}\mathcal{M}q_0}
+v = \mathcal{L}^{-H}\mathcal{M}q_0g^\ast\qquad{}\text{and}\qquad{}g^\ast = \frac{1}{(\mathcal{M}p_0)^H\mathcal{L}^{-H}\mathcal{M}q_0}
 $$
 
-At $h = 0$, we have $\mathcal{L}^Hv = 0$ and $(\mathcal{M}p_0)^Hv = 1$, so $v^H\mathcal{L} = 0$ and $v^H\mathcal{M}p_0 = 1$.
+At $g^\ast = 0$, we have $\mathcal{L}^Hv = 0$ and $(\mathcal{M}p_0)^Hv = 1$, so $v^H\mathcal{L} = 0$ and $v^H\mathcal{M}p_0 = 1$.
 
-It can then be confirmed that $g = v^H\mathcal{L}w$, $h = w^H\mathcal{L}^Hv$ and therefore that $g = h^{\ast}$.
+It can then be confirmed that $g = v^H\mathcal{L}w$ and $g^\ast = w^H\mathcal{L}^Hv$.
 
 #### JACOBIAN CONSTRUCTION IN MINIMALLY AUGMENTED FORMULATION
 Having computed the RHS of the augmented system in `funcRa`, we now have to build the complex augmented Jacobian matrix for the Newton scheme:
@@ -120,29 +120,23 @@ Having computed the RHS of the augmented system in `funcRa`, we now have to buil
 $$
 \begin{equation}
 \begin{bmatrix}
-\mathcal{J} & \frac{\partial\mathcal{J}}{\partial \lambda} & 0 \\
-(\frac{\partial{}g}{\partial q})^H& \frac{\partial{}g}{\partial\lambda} & \frac{\partial{}g}{\partial \omega}
+\mathcal{J} & \frac{\partial\mathcal{R}}{\partial \lambda} & 0 \\
+\Re\left(v^H\frac{\partial \mathcal{L}}{\partial q}w\right)^T & \Re\left(v^H\frac{\partial \mathcal{L}}{\partial \lambda}w\right) & \Re\left(v^H\frac{\partial \mathcal{L}}{\partial \omega}w\right) \\
+\Im\left(v^H\frac{\partial \mathcal{L}}{\partial q}w\right)^T & \Im\left(v^H\frac{\partial \mathcal{L}}{\partial \lambda}w\right) & \Im\left(v^H\frac{\partial \mathcal{L}}{\partial \omega}w\right)
 \end{bmatrix}
 \begin{bmatrix}
 \delta{}q \\
-\delta{}\lambda \\
-\delta{}\omega
+\delta\lambda \\
+\delta\omega
 \end{bmatrix} = \begin{bmatrix}
 \mathcal{R} \\
-g
+\Re(g) \\
+\Im(g)
 \end{bmatrix},
 \end{equation}
 $$
 
-where $g = v^H\mathcal{L}w$. In real arithmetic, this gives:
-
-$$
-\begin{align*}
-    \mathcal{J}\delta{}q + \frac{\partial \mathcal{J}}{\partial\lambda}\delta\lambda &= \mathcal{R} \\
-    \Re\left(\frac{\partial{}g}{\partial q}\right)\delta{}q + \Re\left(\frac{\partial g}{\partial \lambda}\right)\delta\lambda + \Re\left(\frac{\partial g}{\partial \omega}\right)\delta{}\omega &= \Re(g) \\
-    -\Im\left(\frac{\partial{}g}{\partial q}\right)\delta{}q + \Im\left(\frac{\partial g}{\partial \lambda}\right)\delta\lambda + \Im\left(\frac{\partial g}{\partial \omega}\right)\delta{}\omega &= \Im(g)
-\end{align*}
-$$
+where $g = v^H\mathcal{L}w$.
 
 To determine the matrix entries, we differentiate Eq. (1) along each $z$ in $q, \lambda, \omega$ to find:
 
@@ -162,29 +156,10 @@ $$
 \end{equation}
 $$
 
-We now left-multiply Eq. (4) by $\begin{bmatrix}v^H & h^{\ast}\end{bmatrix}$, finding due to Eq. (2) that:
+We now left-multiply Eq. (4) by $\begin{bmatrix}v^H & g \end{bmatrix}$, finding due to Eq. (2) that:
 
 $$
-\frac{\partial g}{\partial z} = v^H\frac{\partial \mathcal{L}}{\partial z}w
-$$
-
-So we can write Eq. (3) explicitly as
-
-$$
-\begin{bmatrix}
-\mathcal{J} & \frac{\partial\mathcal{J}}{\partial \lambda} & 0 \\
-\Re\left(v^H\frac{\partial \mathcal{L}}{\partial q}w\right) & \Re\left(v^H\frac{\partial \mathcal{L}}{\partial \lambda}w\right) & \Re\left(v^H\frac{\partial \mathcal{L}}{\partial \omega}w\right) \\
--\Im\left(v^H\frac{\partial \mathcal{L}}{\partial q}w\right) & \Im\left(v^H\frac{\partial \mathcal{L}}{\partial \lambda}w\right) & \Im\left(v^H\frac{\partial \mathcal{L}}{\partial \omega}w\right)
-\end{bmatrix}
-\begin{bmatrix}
-\delta{}q \\
-\delta\lambda \\
-\delta\omega
-\end{bmatrix} = \begin{bmatrix}
-\mathcal{R} \\
-\Re(g) \\
-\Im(g)
-\end{bmatrix}
+\frac{\partial g}{\partial z} = v^H\frac{\partial \mathcal{L}}{\partial z}w.
 $$
 
 ## EXAMPLE USAGE:

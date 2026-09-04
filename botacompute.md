@@ -136,7 +136,7 @@ Having computed the RHS of the augmented system in `funcRa`, we now have to buil
 $$
 \begin{equation}
 \begin{bmatrix}
-\mathcal{J} & \frac{\partial\mathcal{J}}{\partial \lambda_1} & \frac{\partial\mathcal{J}}{\partial \lambda_2} \\
+\mathcal{J} & \frac{\partial\mathcal{R}}{\partial \lambda_1} & \frac{\partial\mathcal{R}}{\partial \lambda_2} \\
 (\frac{\partial{}g}{\partial q})^T& \frac{\partial{}g}{\partial\lambda_1} & \frac{\partial{}g}{\partial \lambda_2} \\
 (\frac{\partial{}h}{\partial q})^T& \frac{\partial{}h}{\partial\lambda_1} & \frac{\partial{}h}{\partial \lambda_2}
 \end{bmatrix}
@@ -296,9 +296,9 @@ So we can write Eq. (3) explicitly as
 
 $$
 \begin{bmatrix}
-\mathcal{J} & \frac{\partial\mathcal{J}}{\partial \lambda_1} & \frac{\partial\mathcal{J}}{\partial \lambda_2} \\
-\Re\left(v^T\frac{\partial \mathcal{J}}{\partial q}w\right) & \Re\left(v^T\frac{\partial \mathcal{J}}{\partial \lambda_1}w\right) & \Re\left(v^T\frac{\partial \mathcal{J}}{\partial \lambda_2}w\right) \\
-\Re\left(\frac{\partial h}{\partial q}\right) & \Re\left(\frac{\partial h}{\partial \lambda_1}\right) & \Re\left(\frac{\partial h}{\partial \lambda_1}\right)
+\mathcal{J} & \frac{\partial\mathcal{R}}{\partial \lambda_1} & \frac{\partial\mathcal{R}}{\partial \lambda_2} \\
+\left(v^T\frac{\partial \mathcal{J}}{\partial q}w\right)^T & v^T\frac{\partial \mathcal{J}}{\partial \lambda_1}w & v^T\frac{\partial \mathcal{J}}{\partial \lambda_2}w \\
+\left(\frac{\partial h}{\partial q}\right)^T & \frac{\partial h}{\partial \lambda_1} & \frac{\partial h}{\partial \lambda_1}
 \end{bmatrix}
 \begin{bmatrix}
 \delta{}q \\
@@ -306,15 +306,15 @@ $$
 \delta\lambda_2
 \end{bmatrix} = \begin{bmatrix}
 \mathcal{R} \\
-\Re(g) \\
-\Re(h)
+g \\
+h
 \end{bmatrix}
 $$
 
 where
 
 $$
-\frac{\partial h}{\partial z} = -v^T\frac{\partial\mathcal{J}}{\partial z}\hat{w} + v^T\frac{\partial \mathcal{M}}{\partial z}w - \hat{v}T\frac{\partial\mathcal{J}}{\partial z}w
+\frac{\partial h}{\partial z} = -v^T\frac{\partial\mathcal{J}}{\partial z}\hat{w} + v^T\frac{\partial \mathcal{M}}{\partial z}w - \hat{v}^T\frac{\partial\mathcal{J}}{\partial z}w
 $$
 
 ## EXAMPLE USAGE:

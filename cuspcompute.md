@@ -29,7 +29,7 @@ $$
 h = \langle{}v,\mathcal{H}\left(w,w\right)\rangle = v^T\mathcal{H}\left(w,w\right)
 $$
 
-where $`g`$ is the fold residual and $`v`$ and $`w`$ are the adjoint and direct eigenvectors, respectively.
+where $`g`$ is the fold residual, $`h`$ is the cusp residual, and $`v`$ and $`w`$ are the adjoint and direct eigenvectors, respectively.
 
 $`g`$, $`v`$, and $`w`$ can be found using minimially augmented systems:
 
@@ -132,7 +132,7 @@ Having computed the RHS of the augmented system in `funcRa`, we now have to buil
 $$
 \begin{equation}
 \begin{bmatrix}
-\mathcal{J} & \frac{\partial\mathcal{J}}{\partial \lambda_1} & \frac{\partial\mathcal{J}}{\partial \lambda_2} \\
+\mathcal{J} & \frac{\partial\mathcal{R}}{\partial \lambda_1} & \frac{\partial\mathcal{R}}{\partial \lambda_2} \\
 (\frac{\partial{}g}{\partial q})^T& \frac{\partial{}g}{\partial\lambda_1} & \frac{\partial{}g}{\partial\lambda_2} \\
 (\frac{\partial{}h}{\partial q})^T& \frac{\partial{}h}{\partial\lambda_1} & \frac{\partial{}h}{\partial\lambda_2} \\
 \end{bmatrix}
@@ -293,9 +293,9 @@ So we can write Eq. (4) explicitly as
 
 $$
 \begin{bmatrix}
-\mathcal{J} & \frac{\partial\mathcal{J}}{\partial \lambda_1} & \frac{\partial\mathcal{J}}{\partial \lambda_2} \\
-v^T\frac{\partial \mathcal{J}}{\partial q}w & v^T\frac{\partial \mathcal{J}}{\partial \lambda_1}w & v^T\frac{\partial \mathcal{J}}{\partial \lambda_2}w \\
-\frac{\partial h}{\partial q} & \frac{\partial h}{\partial \lambda_1} & \frac{\partial h}{\partial \lambda_2}
+\mathcal{J} & \frac{\partial\mathcal{R}}{\partial \lambda_1} & \frac{\partial\mathcal{R}}{\partial \lambda_2} \\
+\left(v^T\frac{\partial \mathcal{J}}{\partial q}w\right)^T & v^T\frac{\partial \mathcal{J}}{\partial \lambda_1}w & v^T\frac{\partial \mathcal{J}}{\partial \lambda_2}w \\
+\left(\frac{\partial h}{\partial q}\right)^T & \frac{\partial h}{\partial \lambda_1} & \frac{\partial h}{\partial \lambda_2}
 \end{bmatrix}
 \begin{bmatrix}
 \delta{}q \\
