@@ -130,7 +130,7 @@ Mat<complex> JlPM(J.n, mpirank == 0 ? (2-zerofreq) : 0), gqPM(J.n, mpirank == 0 
 Mat<complex> JlPMa(J.n + (mpirank == 0 ? (2-zerofreq) : 0), mpirank == 0 ? 1 : 0), yqPMa(J.n + (mpirank == 0 ? (2-zerofreq) : 0), mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
 Mat<complex> Ja = [[J, JlPM], [gqPM', glPM]], Jaa = [[Ja, JlPMa], [yqPMa', -1.0]]; // make dummy Jacobian
 
-complex[int] R(um[].n), qm(J.n), qma(J.n), pP(J.n), qP(J.n), yqP(Ja.n), yqP0(Ja.n);
+complex[int] R(um[].n), qm(J.n), qma(J.n), qP(J.n), yqP(Ja.n), yqP0(Ja.n);
 int ret, it = 0;
 real f, kappa, cosalpha, res, delta, maxdelta, omega0;
 complex alpha0, beta0;
@@ -150,7 +150,7 @@ complex alpha0, beta0;
       iomega = 1i*omega;
       ik.im = sym1;
       J = vJ(XMh, XMh, tgv = -2);
-      KSPSolve(J, pP, qm);
+      KSPSolve(J, qP, qm);
       KSPSolveHermitianTranspose(J, qP, qma);
       PetscScalar ginv, ginvl = (qP'*qm);
       mpiAllReduce(ginvl, ginv, mpiCommWorld, mpiSUM);
@@ -255,9 +255,8 @@ qa0.resize(Jaa.n);
 if(mpirank == 0) qa0(J.n:Jaa.n-1).re = paramvals;
 sym = sym1;
 ik.im = sym1;
-J = vM(XMh, XMh, tgv = 0);
-MatMult(J, qm, qP);
-MatMultHermitianTranspose(J, qma, pP);
+um2[] = vM(0, XMh, tgv = 0);
+ChangeNumbering(J, um2[], qP);
 if (contorder > 0) {
   sym = 0;
   R = vR(0, XMh, tgv = TGV);
@@ -406,9 +405,11 @@ while (!stopflag){
       ChangeNumbering(J, um[], qm);
       ChangeNumbering(J, uma[], qma);
       ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true);
-      J = vM(XMh, XMh, tgv = 0);
-      MatMult(J, qm, qP);
-      MatMultHermitianTranspose(J, qma, pP);
+      sym = sym1;
+      ik.im = sym1;
+      ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+      um3[] = vM(0, XMh, tgv = 0);
+      ChangeNumbering(J, um3[], qP);
       R.resize(ub[].n);
       ChangeNumbering(J, um2[], yqP);
       yqP.resize(Ja.n);
@@ -436,31 +437,31 @@ while (!stopflag){
     updateparam(param, paramvals(0));
     omega = zerofreq ? 0.0 : paramvals(1);
     updateparam(param2, paramvals(2-zerofreq));
-    J = vM(XMh, XMh, tgv = 0);
-    ChangeNumbering(J, um[], qm);
-    MatMult(J, qm, qP);
-    complex phaseref, phaserefl = qP.sum;
-    mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+    sym = sym1;
+    ik.im = sym1;
+    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+    um2[] = vM(0, XMh, tgv = 0);
+    ChangeNumbering(J, um2[], qP);
+    complex Mnorm, phaseref, local = qP.sum;
+    mpiAllReduce(local, phaseref, mpiCommWorld, mpiSUM);
     qm /= phaseref;
     qP /= phaseref;
-    real Mnorm, local = real(qm'*qP);
+    local = (qm'*qP);
     mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-    local = sqrt(Mnorm);
+    local = sqrt(abs(Mnorm));
     qP /= local;
     qm /= local;
-    phaserefl = (qP'*qma);
-    mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+    local = (qP'*qma);
+    mpiAllReduce(local, phaseref, mpiCommWorld, mpiSUM);
     qma /= phaseref;
     ChangeNumbering(J, uma[], qma, inverse = true);
     if (normalform){
-      complex[int] temp(um[].n);
+      complex[int] temp(um[].n), pP(J.n);
       complex[int,int] qDa(paramnames.n, J.n);
       // 2nd-order
       //  A: base modification due to parameter changes
       ik = 0.0;
-      ik2 = 0.0;
       iomega = 0.0;
-      iomega2 = 0.0;
       sym = 0;
       J = vJ(XMh, XMh, tgv = TGV);
       if(paramnames[0] != ""){
@@ -602,9 +603,6 @@ while (!stopflag){
     ik.im = sym1;
     um2[] = vM(0, XMh, tgv = 0);
     ChangeNumbering(J, um2[], qP);
-    ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = 0);
-    ChangeNumbering(J, um2[], pP);
     it = 0;
     if (stricttangent && contorder > 0) funcJa(qa);
     yqP0 = yqP;

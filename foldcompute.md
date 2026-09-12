@@ -212,7 +212,7 @@ real iomega = 0.0, iomega2 = 0.0, iomega3 = 0.0;
 include "eqns.idp"
 Mat JlPM(J.n, mpirank == 0 ? 1 : 0), gqPM(J.n, mpirank == 0 ? 1 : 0), glPM(mpirank == 0 ? 1 : 0, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
 Mat Ja = [[J, JlPM], [gqPM', glPM]]; // make dummy Jacobian
-real[int] R(ub[].n), qm(J.n), qma(J.n), pP(J.n), qP(J.n);
+real[int] R(ub[].n), qm(J.n), qma(J.n), qP(J.n);
 // FUNCTIONS
   func real[int] funcRa(real[int]& qa) {
       ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
@@ -223,7 +223,7 @@ real[int] R(ub[].n), qm(J.n), qma(J.n), pP(J.n), qP(J.n);
       real[int] Ra;
       ChangeNumbering(J, R, Ra); // FreeFEM to PETSc
       J = vJ(XMh, XMh, tgv = -2);
-      KSPSolve(J, pP, qm);
+      KSPSolve(J, qP, qm);
       KSPSolveTranspose(J, qP, qma);
       real ginv, ginvl = (qP'*qm);
       mpiAllReduce(ginvl, ginv, mpiCommWorld, mpiSUM);
@@ -273,26 +273,20 @@ qa.resize(Ja.n);
 if(mpirank == 0) qa(Ja.n - 1) = paramval;
 if (fileext != "fold" && fileext != "foho" && fileext != "cusp" && fileext != "bota"){
   updateparam(param, paramval + eps);
-  um2[] = vR(0, XMh);
+  um2[] = vR(0, XMh, tgv = TGV);
   updateparam(param, paramval);
-  R = vR(0, XMh);
+  R = vR(0, XMh, tgv = TGV);
   um2[] -= R;
   um2[] /= eps;
-  J = vJ(XMh, XMh);
+  J = vJ(XMh, XMh, tgv = TGV);
   um[] = J^-1*um2[];
-  uma[] = J'^-1*um2[];
 }
+um2[] = vM(0, XMh, tgv = -10);
 ChangeNumbering(J, um[], qm);
-J = vM(XMh, XMh, tgv = 0);
-MatMult(J, qm, qP);
+ChangeNumbering(J, um2[], qP);
 real Mnorm, local = (qm'*qP);
 mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-qP /= sqrt(Mnorm);
-ChangeNumbering(J, uma[], qma);
-MatMultTranspose(J, qma, pP);
-local = (qP'*qma);
-mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-pP /= Mnorm;
+qP /= sqrt(abs(Mnorm));
 // solve nonlinear problem with SNES
 int ret;
 SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
@@ -302,14 +296,14 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   if(mpirank == 0) paramval = qa(Ja.n-1);
   broadcast(processor(0), paramval);
   updateparam(param, paramval);
-  J = vM(XMh, XMh, tgv = 0);
-  MatMult(J, qm, qP);
+  ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+  um2[] = vM(0, XMh, tgv = 0);
+  ChangeNumbering(J, um2[], qP);
   local = (qm'*qP);
   mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-  local = sqrt(Mnorm);
+  local = sqrt(abs(Mnorm));
   qP /= local;
   qm /= local;
-  MatMultTranspose(J, qma, pP);
   local = (qP'*qma);
   mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
   qma /= Mnorm;

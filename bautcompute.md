@@ -50,7 +50,7 @@ g
 \end{equation}
 $$
 
-where $q_0$, $p_0$ are initial approximations of the direct & adjoint eigenvectors.
+where $q_0$ is an initial approximation of the direct eigenvector.
 
 This implies:
 

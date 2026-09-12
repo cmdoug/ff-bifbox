@@ -32,7 +32,7 @@ $g$, $v$, and $w$ can be found using minimially augmented systems (For more deta
 $$
 \begin{equation}
 \begin{bmatrix}
--\mathcal{L} & \mathcal{M}p_0 \\
+-\mathcal{L} & \mathcal{M}q_0 \\
 (\mathcal{M}q_0)^H & 0
 \end{bmatrix}
 \begin{bmatrix}
@@ -45,18 +45,18 @@ g
 \end{equation}
 $$
 
-where $q_0$, $p_0$ are initial approximations of the direct & adjoint eigenvectors.
+where $q_0$$ is an initial approximation of the direct eigenvector.
 
 This implies:
 
 $$
-\mathcal{L}w = \mathcal{M}p_0g\qquad{}\text{and}\qquad{}(\mathcal{M}q_0)^Hw = 1
+\mathcal{L}w = \mathcal{M}q_0g\qquad{}\text{and}\qquad{}(\mathcal{M}q_0)^Hw = 1
 $$
 
 so
 
 $$
-w = \mathcal{L}^{-1}\mathcal{M}p_0g\qquad{}\text{and}\qquad{}g = \frac{1}{(\mathcal{M}q_0)^H\mathcal{L}^{-1}\mathcal{M}p_0}.
+w = \mathcal{L}^{-1}\mathcal{M}q_0g\qquad{}\text{and}\qquad{}g = \frac{1}{(\mathcal{M}q_0)^H\mathcal{L}^{-1}\mathcal{M}q_0}.
 $$
 
 Note that, at $g = 0$, we have $\mathcal{L}w = 0$ and $(\mathcal{M}q_0)^Hw = 1$.
@@ -67,7 +67,7 @@ $$
 \begin{bmatrix}
 v^H & g
 \end{bmatrix}\begin{bmatrix}
--\mathcal{L} & \mathcal{M}p_0 \\
+-\mathcal{L} & \mathcal{M}q_0 \\
 (\mathcal{M}q_0)^H & 0
 \end{bmatrix} = \begin{bmatrix}
 0 & 1
@@ -77,7 +77,7 @@ $$
 This implies:
 
 $$
-v^H\mathcal{L} = g(\mathcal{M}q_0)^H\qquad{}\text{and}\qquad{}v^H\mathcal{M}p_0 = 1
+v^H\mathcal{L} = g(\mathcal{M}q_0)^H\qquad{}\text{and}\qquad{}v^H\mathcal{M}q_0 = 1
 $$
 
 or, taking the complex conjugate transpose:
@@ -86,7 +86,7 @@ $$
 \begin{equation}
 \begin{bmatrix}
 -\mathcal{L}^H & \mathcal{M}q_0 \\
-(\mathcal{M}p_0)^H & 0
+(\mathcal{M}q_0)^H & 0
 \end{bmatrix}
 \begin{bmatrix}
 v \\
@@ -101,16 +101,16 @@ $$
 giving, equivalently,
 
 $$
-\mathcal{L}^Hv = \mathcal{M}q_0g^\ast\qquad{}\text{and}\qquad{}(\mathcal{M}p_0)^Hv = 1
+\mathcal{L}^Hv = \mathcal{M}q_0g^\ast\qquad{}\text{and}\qquad{}(\mathcal{M}q_0)^Hv = 1
 $$
 
 so
 
 $$
-v = \mathcal{L}^{-H}\mathcal{M}q_0g^\ast\qquad{}\text{and}\qquad{}g^\ast = \frac{1}{(\mathcal{M}p_0)^H\mathcal{L}^{-H}\mathcal{M}q_0}
+v = \mathcal{L}^{-H}\mathcal{M}q_0g^\ast\qquad{}\text{and}\qquad{}g^\ast = \frac{1}{(\mathcal{M}q_0)^H\mathcal{L}^{-H}\mathcal{M}q_0}
 $$
 
-At $g^\ast = 0$, we have $\mathcal{L}^Hv = 0$ and $(\mathcal{M}p_0)^Hv = 1$, so $v^H\mathcal{L} = 0$ and $v^H\mathcal{M}p_0 = 1$.
+At $g^\ast = 0$, we have $\mathcal{L}^Hv = 0$ and $(\mathcal{M}q_0)^Hv = 1$, so $v^H\mathcal{L} = 0$ and $v^H\mathcal{M}q_0 = 1$.
 
 It can then be confirmed that $g = v^H\mathcal{L}w$ and $g^\ast = w^H\mathcal{L}^Hv$.
 
@@ -143,7 +143,7 @@ To determine the matrix entries, we differentiate Eq. (1) along each $z$ in $q, 
 $$
 \begin{equation}
 \begin{bmatrix}
--\mathcal{L} & \mathcal{M}p_0 \\
+-\mathcal{L} & \mathcal{M}q_0 \\
 (\mathcal{M}q_0)^H & 0
 \end{bmatrix}
 \begin{bmatrix}
@@ -433,7 +433,7 @@ complex iomega, iomega2 = 0.0, iomega3 = 0.0;
 include "eqns.idp"
 Mat<complex> JlPM(J.n, mpirank == 0 ? (2-zerofreq) : 0), gqPM(J.n, mpirank == 0 ? (2-zerofreq) : 0), glPM(mpirank == 0 ? (2-zerofreq) : 0, mpirank == 0 ? (2-zerofreq) : 0); // Initialize Mat objects for bordered matrix
 Mat<complex> Ja = [[J, JlPM], [gqPM', glPM]]; // make dummy Jacobian
-complex[int] R(ub[].n), qm(J.n), qma(J.n), pP(J.n), qP(J.n);
+complex[int] R(ub[].n), qm(J.n), qma(J.n), qP(J.n);
 // FUNCTIONS
   func PetscScalar[int] funcRa(PetscScalar[int]& qa) {
       ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
@@ -449,7 +449,7 @@ complex[int] R(ub[].n), qm(J.n), qma(J.n), pP(J.n), qP(J.n);
       iomega = 1i*omega;
       ik.im = sym1;
       J = vJ(XMh, XMh, tgv = -2);
-      KSPSolve(J, pP, qm);
+      KSPSolve(J, qP, qm);
       KSPSolveHermitianTranspose(J, qP, qma);
       PetscScalar ginv, ginvl = (qP'*qm);
       mpiAllReduce(ginvl, ginv, mpiCommWorld, mpiSUM);
@@ -522,27 +522,16 @@ qa.resize(Ja.n);
 if(mpirank == 0) qa(J.n:Ja.n-1).re = paramvals;
 sym = sym1;
 ik.im = sym1;
-J = vM(XMh, XMh, tgv = 0);
+um2[] = vM(0, XMh, tgv = 0);
 ChangeNumbering(J, um[], qm);
-MatMult(J, qm, qP);
-complex phaseref, phaserefl = qP.sum;
-mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+ChangeNumbering(J, um2[], qP);
+complex Mnorm, phaseref, local = qP.sum;
+mpiAllReduce(local, phaseref, mpiCommWorld, mpiSUM);
 qm /= phaseref;
 qP /= phaseref;
-real Mnorm, local = real(qm'*qP);
+local = (qm'*qP);
 mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-qP /= sqrt(Mnorm);
-if (fileext == "hopf" || fileext == "hoho" || fileext == "foho" || fileext == "bota" || fileext == "baut") ChangeNumbering(J, uma[], qma);
-else {
-  iomega = zerofreq ? 0.0 : 1i*omega;
-  J = vJ(XMh, XMh, tgv = -2);
-  KSPSolveHermitianTranspose(J, qP, qma);
-  J = vM(XMh, XMh, tgv = 0);
-}
-MatMultHermitianTranspose(J, qma, pP);
-phaserefl = (qP'*qma);
-mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-pP /= phaseref;
+qP /= sqrt(abs(Mnorm));
 // solve nonlinear problem with SNES
 int ret;
 SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
@@ -555,29 +544,29 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   omega = zerofreq ? 0.0 : paramvals(1-zerofreq);
   sym = sym1;
   ik.im = sym1;
-  J = vM(XMh, XMh, tgv = 0);
-  MatMult(J, qm, qP);
-  phaserefl = qP.sum;
-  mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+  ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+  um2[] = vM(0, XMh, tgv = 0);
+  ChangeNumbering(J, um2[], qP);
+  local = qP.sum;
+  mpiAllReduce(local, phaseref, mpiCommWorld, mpiSUM);
   qm /= phaseref;
   qP /= phaseref;
-  local = real(qm'*qP);
+  local = (qm'*qP);
   mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-  local = sqrt(Mnorm);
+  local = sqrt(abs(Mnorm));
   qP /= local;
   qm /= local;
-  phaserefl = (qP'*qma);
-  mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+  local = (qP'*qma);
+  mpiAllReduce(local, phaseref, mpiCommWorld, mpiSUM);
   qma /= phaseref;
   ChangeNumbering(J, uma[], qma, inverse = true);
   if (normalform){
+    complex[int] pP(J.n);
     complex[int,int] qDa(paramnames.n, J.n);
     // 2nd-order
     //  A: base modification due to parameter changes
     ik = 0.0;
-    ik2 = 0.0;
     iomega = 0.0;
-    iomega2 = 0.0;
     sym = 0;
     J = vJ(XMh, XMh, tgv = TGV);
     if(paramnames[0] != ""){

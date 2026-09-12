@@ -332,7 +332,7 @@ include "eqns.idp"
 // Build bordered block matrix from only Mat components
 Mat<complex> JlPM(J.n, mpirank == 0 ? (3-zerofreq) : 0), gqPM(J.n, mpirank == 0 ? (3-zerofreq) : 0), glPM(mpirank == 0 ? (3-zerofreq) : 0, mpirank == 0 ? (3-zerofreq) : 0); // Initialize Mat objects for bordered matrix
 Mat<complex> Ja = [[J, JlPM], [gqPM', glPM]]; // make dummy Jacobian
-complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), p1P(J.n), q1P(J.n), q2m(J.n), q2ma(J.n), p2P(J.n), q2P(J.n);
+complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), q1P(J.n), q2m(J.n), q2ma(J.n), q2P(J.n);
 // FUNCTIONS
   func complex[int] funcRa(complex[int]& qa) {
       ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true); // PETSc to FreeFEM
@@ -349,7 +349,7 @@ complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), p1P(J.n), q1P(J.n), q2m(J.n), q2ma(
       ik.im = sym1;
       sym = sym1;
       J = vJ(XMh, XMh, tgv = -2);
-      KSPSolve(J, p1P, q1m);
+      KSPSolve(J, q1P, q1m);
       KSPSolveHermitianTranspose(J, q1P, q1ma);
       complex hinv, ginv, invl = (q1P'*q1m);
       mpiAllReduce(invl, ginv, mpiCommWorld, mpiSUM);
@@ -359,7 +359,7 @@ complex[int] R(ub[].n), q1m(J.n), q1ma(J.n), p1P(J.n), q1P(J.n), q2m(J.n), q2ma(
       ik = 0.0;
       sym = 0;
       J = vJ(XMh, XMh, tgv = -2);
-      KSPSolve(J, p2P, q2m);
+      KSPSolve(J, q2P, q2m);
       q2m.im = 0.0;
       KSPSolveTranspose(J, q2P, q2ma);
       q2ma.im = 0.0;
@@ -469,50 +469,35 @@ qa.resize(Ja.n);
 if(mpirank == 0) qa(J.n:Ja.n-1).re = paramvals;
 sym = sym1;
 ik.im = sym1;
-J = vM(XMh, XMh, tgv = 0);
+R = vM(0, XMh, tgv = 0);
 ChangeNumbering(J, um[], q1m);
-MatMult(J, q1m, q1P);
-complex phaseref, phaserefl = q1P.sum;
-mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+ChangeNumbering(J, R, q1P);
+complex Mnorm, phaseref, local = q1P.sum;
+mpiAllReduce(local, phaseref, mpiCommWorld, mpiSUM);
 q1m /= phaseref;
 q1P /= phaseref;
-real Mnorm, local = real(q1m'*q1P);
+local = (q1m'*q1P);
 mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-q1P /= sqrt(Mnorm);
-if (fileext1 == "hopf" || fileext1 == "hoho" || fileext1 == "foho" || fileext1 == "bota" || fileext1 == "baut") ChangeNumbering(J, uma[], q1ma);
-else {
-  J = vJ(XMh, XMh, tgv = -2);
-  KSPSolveHermitianTranspose(J, q1P, q1ma);
-  J = vM(XMh, XMh, tgv = 0);
-}
-MatMultHermitianTranspose(J, q1ma, p1P);
-phaserefl = (q1P'*q1ma);
-mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
-p1P /= phaseref;
+q1P /= sqrt(abs(Mnorm));
 sym = 0;
 ik = 0.0;
 if (fileext2 != "fold" && fileext2 != "foho" && fileext2 != "cusp" && fileext2 != "bota"){
   updateparam(param, paramvals(0) + eps);
-  uma[] = vR(0, XMh);
+  uma[] = vR(0, XMh, tgv = TGV);
   updateparam(param, paramvals(0));
-  R = vR(0, XMh);
+  R = vR(0, XMh, tgv = TGV);
   uma[] -= R;
   uma[] /= eps;
-  J = vJ(XMh, XMh);
-  um2[] = J^-1*uma[];
-  um3[] = J'^-1*uma[];
+  J = vJ(XMh, XMh, tgv = TGV);
+  um[] = J^-1*uma[];
 }
-ChangeNumbering(J, um2[], q2m);
-J = vM(XMh, XMh, tgv = 0);
-MatMult(J, q2m, q2P);
-local = real(q2m'*q2P);
+else um[] = um2[];
+um2[] = vM(0, XMh, tgv = -10);
+ChangeNumbering(J, um[], q2m);
+ChangeNumbering(J, um2[], q2P);
+local = (q2m'*q2P);
 mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-q2P /= sqrt(Mnorm);
-ChangeNumbering(J, um3[], q2ma);
-MatMultTranspose(J, q2ma, p2P);
-local = real(q2P'*q2ma);
-mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-p2P /= Mnorm;
+q2P /= sqrt(abs(Mnorm));
 // solve nonlinear problem with SNES
 int ret;
 SNESSolve(Ja, funcJa, funcRa, qa, reason = ret,
@@ -526,33 +511,35 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   updateparam(param2, paramvals(2-zerofreq));
   sym = sym1;
   ik.im = sym1;
-  J = vM(XMh, XMh, tgv = 0);
-  MatMult(J, q1m, q1P);
-  phaserefl = q1P.sum;
-  mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+  ChangeNumbering(J, um[], q1m, inverse = true, exchange = true);
+  R = vM(0, XMh, tgv = 0);
+  ChangeNumbering(J, R, q1P);
+  complex Mnorm, phaseref, local = q1P.sum;
+  mpiAllReduce(local, phaseref, mpiCommWorld, mpiSUM);
   q1m /= phaseref;
   q1P /= phaseref;
-  local = real(q1m'*q1P);
+  local = (q1m'*q1P);
   mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-  local = sqrt(Mnorm);
+  local = sqrt(abs(Mnorm));
   q1P /= local;
   q1m /= local;
-  phaserefl = (q1P'*q1ma);
-  mpiAllReduce(phaserefl, phaseref, mpiCommWorld, mpiSUM);
+  local = (q1P'*q1ma);
+  mpiAllReduce(local, phaseref, mpiCommWorld, mpiSUM);
   q1ma /= phaseref;
   sym = 0;
   ik = 0.0;
   J = vM(XMh, XMh, tgv = 0);
   MatMult(J, q2m, q2P);
-  local = real(q2m'*q2P);
+  local = (q2m'*q2P);
   mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-  local = sqrt(Mnorm);
+  local = sqrt(abs(Mnorm));
   q2P /= local;
   q2m /= local;
-  local = real(q2P'*q2ma);
+  local = (q2P'*q2ma);
   mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-  q2ma /= Mnorm;
+  q2ma /= abs(Mnorm);
   if (normalform){
+    complex[int] p1P(J.n), p2P(J.n);
     complex[int,int] qDa(paramnames.n, J.n);
     Mat<complex> qPM(J.n, mpirank == 0 ? 1 : 0), pPM(J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
     Ja = [[J, qPM], [pPM', 0]]; // make dummy Jacobian

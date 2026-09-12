@@ -114,7 +114,7 @@ Mat JlPM(J.n, mpirank == 0 ? 1 : 0), gqPM(J.n, mpirank == 0 ? 1 : 0), glPM(mpira
 Mat JlPMa(J.n + (mpirank == 0 ? 1 : 0), mpirank == 0 ? 1 : 0), yqPMa(J.n + (mpirank == 0 ? 1 : 0), mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
 Mat Ja = [[J, JlPM], [gqPM', glPM]], Jaa = [[Ja, JlPMa], [yqPMa', -1.0]]; // make dummy Jacobian
 
-real[int] R(ub[].n), qm(J.n), qma(J.n), pP(J.n), qP(J.n), yqP(Ja.n), yqP0(Ja.n);
+real[int] R(ub[].n), qm(J.n), qma(J.n), qP(J.n), yqP(Ja.n), yqP0(Ja.n);
 int ret, it = 0;
 real f, kappa, cosalpha, res, delta, maxdelta, alpha0, beta0;
 
@@ -129,7 +129,7 @@ real f, kappa, cosalpha, res, delta, maxdelta, alpha0, beta0;
       PetscScalar[int] Ra;
       ChangeNumbering(J, R, Ra); // FreeFEM to PETSc
       J = vJ(XMh, XMh, tgv = -2);
-      KSPSolve(J, pP, qm);
+      KSPSolve(J, qP, qm);
       KSPSolveTranspose(J, qP, qma);
       PetscScalar ginv, ginvl = (qP'*qm);
       mpiAllReduce(ginvl, ginv, mpiCommWorld, mpiSUM);
@@ -202,9 +202,8 @@ ChangeNumbering(J, um[], qm);
 ChangeNumbering(J, uma[], qma);
 qa0.resize(Jaa.n);
 if(mpirank == 0) qa0(J.n:Jaa.n-1) = paramvals;
-J = vM(XMh, XMh, tgv = 0);
-MatMult(J, qm, qP);
-MatMultTranspose(J, qma, pP);
+um2[] = vM(0, XMh, tgv = 0);
+ChangeNumbering(J, um2[], qP);
 if (contorder > 0) {
   R = vR(0, XMh, tgv = TGV);
   funcJa(qa0);
@@ -339,9 +338,8 @@ while (!stopflag){
       ChangeNumbering(J, um[], qm);
       ChangeNumbering(J, uma[], qma);
       ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true);
-      J = vM(XMh, XMh, tgv = 0);
-      MatMult(J, qm, qP);
-      MatMultTranspose(J, qma, pP);
+      um3[] = vM(0, XMh, tgv = 0);
+      ChangeNumbering(J, um3[], qP);
       R.resize(ub[].n);
       ChangeNumbering(J, um2[], yqP);
       yqP.resize(Ja.n);
@@ -368,14 +366,14 @@ while (!stopflag){
     broadcast(processor(0), paramvals);
     updateparam(param, paramvals(0));
     updateparam(param2, paramvals(1));
-    J = vM(XMh, XMh, tgv = 0);
-    MatMult(J, qm, qP);
+    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+    um2[] = vM(0, XMh, tgv = 0);
+    ChangeNumbering(J, um2[], qP);
     real Mnorm, local = (qm'*qP);
     mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-    local = sqrt(Mnorm);
+    local = sqrt(abs(Mnorm));
     qP /= local;
     qm /= local;
-    MatMultTranspose(J, qma, pP);
     local = (qP'*qm);
     mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
     qma /= Mnorm;
@@ -421,9 +419,6 @@ while (!stopflag){
     ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
     um2[] = vM(0, XMh, tgv = 0);
     ChangeNumbering(J, um2[], qP);
-    ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
-    um2[] = vM(0, XMh, tgv = 0);
-    ChangeNumbering(J, um2[], pP);
     it = 0;
     if (stricttangent && contorder > 0) funcJa(qa);
     yqP0 = yqP;
