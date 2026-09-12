@@ -442,18 +442,18 @@ while (!stopflag){
     ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
     um2[] = vM(0, XMh, tgv = 0);
     ChangeNumbering(J, um2[], qP);
-    complex Mnorm, phaseref, local = qP.sum;
-    mpiAllReduce(local, phaseref, mpiCommWorld, mpiSUM);
-    qm /= phaseref;
-    qP /= phaseref;
+    complex Mnorm, local = qP.sum;
+    mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+    qm /= Mnorm;
+    qP /= Mnorm;
     local = (qm'*qP);
     mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
-    local = sqrt(abs(Mnorm));
-    qP /= local;
-    qm /= local;
+    Mnorm = sqrt(abs(Mnorm));
+    qP /= Mnorm;
+    qm /= Mnorm;
     local = (qP'*qma);
-    mpiAllReduce(local, phaseref, mpiCommWorld, mpiSUM);
-    qma /= phaseref;
+    mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
+    qma /= Mnorm;
     ChangeNumbering(J, uma[], qma, inverse = true);
     if (normalform){
       complex[int] temp(um[].n), pP(J.n);
