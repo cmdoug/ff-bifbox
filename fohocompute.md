@@ -543,6 +543,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   sym = 0;
   ik = 0.0;
   J = vM(XMh, XMh, tgv = 0);
+  MatMult(J, q2m, q2P);
   local = real(q2m'*q2P);
   mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
   local = sqrt(Mnorm);
@@ -560,12 +561,7 @@ if (ret > 0) { // Save solution if solver converged and output file is given
                     + " -prefix_push fieldsplit_0_ " + KSPparams + " -prefix_pop", setup = 1);
     // 2nd-order
     //  A: base modifications due to parameter changes
-    ik = 0.0;
-    ik2 = 0.0;
     iomega = 0.0;
-    iomega2 = 0.0;
-    sym = 0;
-    J = vM(XMh, XMh, tgv = 0);
     MatMultTranspose(J, q2ma, p2P);
     matrix<complex> tempPms = [[p2P]]; // dense array to sparse matrix
     ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
@@ -593,6 +589,8 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     //  B: base modifications due to quadratic nonlinear interactions
     ChangeNumbering(J, um[], q2m, inverse = true, exchange = true);
     um2[] = -0.5*um[];
+    ik2 = 0.0;
+    iomega2 = 0.0;
     um3[] = vH(0, XMh, tgv = -10);
     ChangeNumbering(J, um3[], p2P); // FreeFEM to PETSc
     p2P.resize(Ja.n);

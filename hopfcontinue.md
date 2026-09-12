@@ -406,12 +406,9 @@ while (!stopflag){
       ChangeNumbering(J, um[], qm);
       ChangeNumbering(J, uma[], qma);
       ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true);
-      ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-      um3[] = vM(0, XMh, tgv = 0);
-      ChangeNumbering(J, um3[], qP);
-      ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
-      um3[] = vM(0, XMh, tgv = 0);
-      ChangeNumbering(J, um3[], pP);
+      J = vM(XMh, XMh, tgv = 0);
+      MatMult(J, qm, qP);
+      MatMultHermitianTranspose(J, qma, pP);
       R.resize(ub[].n);
       ChangeNumbering(J, um2[], yqP);
       yqP.resize(Ja.n);

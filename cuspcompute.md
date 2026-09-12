@@ -677,7 +677,6 @@ if (ret > 0) { // Save solution if solver converged and output file is given
     set(Ja, sparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full"
                     + " -prefix_push fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
                     + " -prefix_push fieldsplit_0_ " + KSPparams + " -prefix_pop", setup = 1);
-    J = vM(XMh, XMh, tgv = 0);
     MatMultTranspose(J, qma, pP);
     matrix tempPms = [[pP]]; // dense array to sparse matrix
     ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat

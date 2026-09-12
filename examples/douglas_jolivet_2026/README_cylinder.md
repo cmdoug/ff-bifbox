@@ -121,7 +121,14 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder_18.hopf -fo 
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder_21.hopf -fo cylinder_Re90 -param Ma^2 -1/Re 0.0111111111111111111
 ```
 
-7. Continue the branches of periodic solutions emanating from the Hopf points along $Re$ and $Ma$.
+7. Compute Bautin bifurcations along the Hopf curve
+```sh
+cd "$workdir" && set -- cylinder_*specialpt.hopf && export B1="$1" && export B2="$2" && cd -
+ff-mpirun -np $nproc bautcompute.md -v 0 -dir $workdir -fi $B1 -fo cylinder_B1 -param 1/Re -param2 Ma^2 
+ff-mpirun -np $nproc bautcompute.md -v 0 -dir $workdir -fi $B2 -fo cylinder_B2 -param 1/Re -param2 Ma^2 
+```
+
+8. Continue the branches of periodic solutions emanating from the Hopf points along $Re$ and $Ma$.
 ```sh
 for Ma in 0 4 6 8; do
   ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder_Ma0p"$Ma".hopf -fo cylinder_Ma0p"$Ma" -mo cyl_Ma0p"$Ma" -thetamax 0.1 -hmin 1e-5 -hmax 2 -param 1/Re -h0 1 -scount 4 -maxcount -1 -paramtarget 0.01 -Nh 3 -fieldsplit_0_fieldsplit_0_mat_mumps_icntl_35 1 -fieldsplit_0_fieldsplit_0_mat_mumps_cntl_7 1.0e-8

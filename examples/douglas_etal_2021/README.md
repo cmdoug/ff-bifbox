@@ -162,15 +162,21 @@ cd "$workdir" && set -- swirljetm1_*specialpt.hopf && export fohoguess="$2" && c
 ff-mpirun -np $nproc fohocompute.md -v 0 -dir $workdir -fi $fohoguess -fo swirljetm1 -param S -param2 1/Re -snes_divergence_tolerance 1e10
 ```
 
+16. Compute a Bautin point where the $|m|=2$ curve changes between a supercritical and subcritical Hopf bifurcation 
+```sh
+cd "$workdir" && set -- swirljetm2_*specialpt.hopf && export bautguess="$1" && cd -
+ff-mpirun -np $nproc bautcompute.md -v 0 -dir $workdir -fi $bautguess -fo swirljetm2 -param S -param2 1/Re -snes_divergence_tolerance 1e10
+```
+
 ### Periodic 3D dynamics
-16. Continue periodic solutions along $S$ from their initial Hopf points using the harmonic balance method with $N_h=2$.
+17. Continue periodic solutions along $S$ from their initial Hopf points using the harmonic balance method with $N_h=2$.
 ```sh
 ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm1.hopf -fo swirljetm1 -Nh 2 -mo swirljetm1porb -param S -thetamax 1 -h0 0.5 -scount 4 -paramtarget 1.9
 ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi swirljetm2.hopf -fo swirljetm2 -Nh 2 -mo swirljetm2porb -param S -thetamax 1 -h0 -0.5 -scount 4 -paramtarget 1.8
 ```
 NOTE: in the actual paper, $N_h=4$ to $6$ was used to accurately resolve the periodic orbits. $N_h=2$ is used here to reduce computational cost.
 
-17. Compute periodic solutions at $S=1.9$ ($|m|=1$) and $S=1.8$ ($|m|=2$) with $N_h=3$ using a block preconditioner.
+18. Compute periodic solutions at $S=1.9$ ($|m|=1$) and $S=1.8$ ($|m|=2$) with $N_h=3$ using a block preconditioner.
 ```sh
 cd $workdir && export m1file=$(printf '%s\n' swirljetm1_*.porb | sort -t_ -k2,2n | tail -1) && cd -
 ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi $m1file -fo swirljetm1 -Nh 3 -S 1.9 -blocks 3
@@ -179,7 +185,7 @@ ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi $m2file -fo swirljetm
 ```
 
 ### Bifurcations to aperiodic 3D dynamics
-18. Compute Floquet stability of periodic solutions against each other 
+19. Compute Floquet stability of periodic solutions against each other 
 ```sh
 ff-mpirun -np $nproc floqcompute.md -v 0 -dir $workdir -fi swirljetm1.porb -fo swirljetm1 -Nh 3 -eps_target 0.1+0.3i -sym -2 -S 1.9 -blocks 3 -eps_pos_gen_non_hermitian
 ff-mpirun -np $nproc floqcompute.md -v 0 -dir $workdir -fi swirljetm2.porb -fo swirljetm2 -Nh 3 -eps_target 0.02-0.75i -sym -1 -S 1.8 -blocks 3 -eps_pos_gen_non_hermitian
