@@ -83,7 +83,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi cavity.msh -fo cavity
 
 2. Continue base state along the parameter $1/Re$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder.base -fo cylinder -param 1/Re -h0 -1 -scount 2 -maxcount 8 -mo cylinder -thetamax 5
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder.base -fo cylinder -param 1/Re -h0 -1 -scount 2 -maxcount 8 -mo cylinder -thetamax 1e-6
 ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cavity.base -fo cavity -param 1/Re -h0 -1 -scount 4 -maxcount 16 -mo cavity
 ```
 
@@ -109,7 +109,7 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cavity4000.mode -fo c
 
 3. Adapt the mesh to the critical solution, save `.vtu` files for ParaView
 ```sh
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinderadapt -mo cylinderhopf -adaptto bda -param 1/Re -thetamax 5 -pv 1 -wnl 1 
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinderadapt -mo cylinderhopf -adaptto bda -param 1/Re -thetamax 1e-6 -pv 1 -wnl 1 
 ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cavity.hopf -fo cavityadapt -mo cavityhopf -adaptto bda -param 1/Re -pv 1 -wnl 1
 ```
 NOTE: the normalizations for the direct and adjoint eigenmodes (and therefore also the weakly-nonlinear corrections) used by `ff-bifbox` are different than the normalizations used by Sipp and Lebedev. This causes the results to differ by a complex scaling factor.
@@ -118,7 +118,7 @@ NOTE: the normalizations for the direct and adjoint eigenmodes (and therefore al
 ### Harmonic Balance
 1. Continue periodic orbit from initial Hopf bifurcations using 2nd-order Harmonic Balance (Caution: memory intensive!)
 ```sh
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinderNh2 -Nh 2 -mo cylinderporb -param 1/Re -thetamax 5 -h0 -1 -scount 5 -maxcount 10
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinderNh2 -Nh 2 -mo cylinderporb -param 1/Re -thetamax 1e-6 -h0 -1 -scount 5 -maxcount 10
 ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cavity.hopf -fo cavityNh2 -Nh 2 -mo cavityporb -param 1/Re -h0 -1 -scount 4 -maxcount 8
 ```
 

@@ -91,7 +91,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi cylinder.msh -fo cyli
 
 2. Continue base state along the parameter $1/Re$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder.base -fo cylinder -param 1/Re -h0 -1 -scount 2 -maxcount 14 -mo cylinder -thetamax 5
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder.base -fo cylinder -param 1/Re -h0 -1 -scount 2 -maxcount 14 -mo cylinder -thetamax 1e-6
 ```
 
 3. Compute base states at $Re\sim50$ and $Re=150$ with guesses from continuation
@@ -102,7 +102,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_14.base -fo 
 
 4. Adapt mesh to the $Re=150$ solution with a maximum triangle size restriction
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder150.base -fo cylinder150 -mo cylinder150 -thetamax 5 -hmax 5 -pv 1
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder150.base -fo cylinder150 -mo cylinder150 -thetamax 1e-6 -hmax 5 -pv 1
 ```
 
 ### First order
@@ -120,17 +120,17 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder50.mode -fo c
 
 3. Adapt the mesh to the critical solution, save `.vtu` files for ParaView
 ```sh
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinder -mo cylinderhopf -adaptto bda -param 1/Re -thetamax 5 -pv 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinder -mo cylinderhopf -adaptto bda -param 1/Re -thetamax 1e-6 -pv 1
 ```
 
 4. Continue the neutral Hopf curve in the $(1/Re,Ma^2)$-plane with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinder -mo cylinderhopf -adaptto bda -thetamax 5 -param Ma^2 -param2 1/Re -h0 -1 -scount 3 -maxcount 12
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinder -mo cylinderhopf -adaptto bda -thetamax 1e-6 -param Ma^2 -param2 1/Re -h0 -1 -scount 3 -maxcount 12
 ```
 NOTE: the signs and normalizations of the normal form coefficients used in `hopfcompute.md` are different than those of the Stuart-Landau coefficients in [Sipp and Lebedev JFM (2007)](../sipp_lebedev_2007/).
 
 5. Continue the branch of periodic solutions emanating from the Hopf point along $1/Re$ using harmonic balance.
 ```sh
-ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinder -mo cylinderporb -adaptto 01 -thetamax 5 -param 1/Re -h0 -1 -scount 5 -maxcount -1 -paramtarget 0.00666667
+ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinder -mo cylinderporb -adaptto 01 -thetamax 1e-6 -param 1/Re -h0 -1 -scount 5 -maxcount -1 -paramtarget 0.00666667
 ```
 NOTE: the formulation in `ff-bifbox` is more fully self-consistent, and does not neglect the unsteady nonlinear interactions as in the original paper. 
