@@ -39,7 +39,7 @@ The present implementation is based on a weak formulation of these equations. Th
 $$
 \begin{align*} 
 &\left(\check{u}_i,\frac{\partial u_i}{\partial t}+ u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial}{\partial x_i}\left(\check{u}_i\left[1+\left(S-1\right)T\right]\right),\frac{p}{S}\right)_{\Omega} - \left(\check{u}_x,Ri T\right)_{\Omega} \\
-&+ \left(\frac{\partial}{\partial x_j}\left(\check{u}_i\left[1+\left(S-1\right)T\right]\right),\frac{1}{Re S}\left[\frac{\partial u_i}{\partial x_j} + \frac{1}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}\right]\right)_{\Omega} - \left(\check{u}_i\hat{n}_i,\frac{1+\left(S-1\right)T}{3 Re S}\frac{\partial u_k}{\partial x_k}\right)_{\Gamma_0\cup\Gamma_l}\\
+&+ \left(\frac{\partial}{\partial x_j}\left(\check{u}_i\left[1+\left(S-1\right)T\right]\right),\frac{1}{Re S}\left[\frac{\partial u_i}{\partial x_j} + \frac{1}{3}\delta_{ij}\frac{\partial u_k}{\partial x_k}\right]\right)_{\Omega} - \left(\check{u}_i\hat{n}_i,\frac{1+\left(S-1\right)T}{3 Re S}\frac{\partial u_k}{\partial x_k}\right)_{\Gamma_o\cup\Gamma_l}\\
 &+ \left(\check{T},\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i}\right)_{\Omega} + \left(\frac{\partial}{\partial x_i}\left(\check{T}\left[1+\left(S-1\right)T\right]\right),\frac{1}{Pr Re S}\frac{\partial T}{\partial x_i}\right)_{\Omega} \\
 &+ \left(\check{p}\left(S-1\right),\frac{\partial T}{\partial t}+u_i\frac{\partial T}{\partial x_i}\right)_{\Omega} - \left(\check{p},\left[1+\left(S-1\right)T\right]\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0.
 \end{align*}
