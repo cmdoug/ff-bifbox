@@ -36,10 +36,10 @@
   macro InitialConditions()[Uinlet, 0, 1, 0]//EOM
 // Boundary labels
   int BCnull = 0;
-  int BCinflow = 1;
+  int BCinlet = 1;
   int BCaxis = 2;
   int BCoutlet = 3;
-  int BCwall = 4;
+  int BClateral = 4;
 // Define solution monitors to extract: here maximum velocity in the domain
   macro getmonitors() {
     fespace Xh1(Thg, P2);
