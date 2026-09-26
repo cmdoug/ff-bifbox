@@ -21,7 +21,10 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylinder.hopf -fo cyl
 ff-mpirun -np $nproc porbcontinue.md -v 0 -dir $workdir -fi cylinder.hopf -fo cylinderNh1 -Nh 1 -param 1/Re -h0 -1 -scount 1 -maxcount 20 -paramtarget 0.02
 cd $workdir && export lastfile=$(printf '%s\n' cylinderNh1_*.porb | sort -t_ -k2,2n | tail -1) && cd -
 ff-mpirun -np $nproc porbcompute.md -v 0 -dir $workdir -fi $lastfile -mo cylinder50porb -fo cylinder50Nh2 -Nh 2 -1/Re 0.02 -blocks 2 -thetamax 1e-6
-# test meshcompute.md and rslvcompute.md for failures
+# test meshcompute.md, rslvcompute.md, tdnscompute.md for failures
 ff-mpirun -np $nproc meshcompute.md -v 0 -dir $workdir -fi cylinder50.base -fi0 cylinder.hopf -mo meshtest -adaptto bda -fi2 cylinderadapt_wnl_AA.mode -fi6 cylinderadapt_wnl_AAs.mode -thetamax 1e-6
 ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi meshtest.msh -fi cylinder50.base -1/Re 0.023 -fo cylinder_test
 ff-mpirun -np $nproc rslvcompute.md -v 0 -dir $workdir -mi cylinderhopf.msh -fi cylinder_test.base -fo rslvtest -sym 1 -omega 0.6 -omegaf 0.9 -nomega 3 -so rslvtest
+ff-mpirun -np $nproc tdnscompute.md -v 0 -dir $workdir -fi cylinder50.base -fo cylinder -1/Re 0.025 -mo tdns_test -scount 5 -maxcount 10
+ff-mpirun -np $nproc tdlscompute.md -v 0 -dir $workdir -fi cylinder50.mode -fo cylinder -mo tdls_test -scount 5 -maxcount 20 -ts_time_step 0.025
+ff-mpirun -np 1 printparaview.md -v 0 -dir $workdir -fi cylinder50.base
