@@ -85,7 +85,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_6.base -fo c
 
 4. Continue $Re=100$ base state along the parameter $\alpha$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder100.base -fo cylinder100 -param alpha -h0 10 -scount 5 -paramtarget 7 -maxcount 120 -mo cylinder100 -thetamax 1e-6
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder100.base -fo cylinder100 -param alpha -h0 10 -scount 5 -paramtarget 7 -mo cylinder100 -thetamax 1e-6
 ```
 NOTE: care should be taken to ensure that the continuation does not jump from one branch to another when the mesh is adapted within the multistable parameter region.
 
@@ -104,7 +104,7 @@ ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_F.fold -f
 
 7. Continue the neutral fold curve in the $(1/Re,\alpha)$-plane with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder -mo cylinderfold -adaptto bda -thetamax 1e-6 -param 1/Re -param2 alpha -h0 4 -scount 4 -maxcount 20
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder -mo cylinderfold -adaptto bda -thetamax 1e-6 -param 1/Re -param2 alpha -h0 4 -scount 4 -maxcount 12
 ```
 NOTE: This will return a guess for the location of the cusp bifurcation as `cylinder_*specialpoint.fold`.
 
