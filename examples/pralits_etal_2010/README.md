@@ -74,7 +74,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -mi cylinder.msh -fo cyli
 
 2. Continue base state along the parameter $1/Re$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder.base -fo cylinder -param 1/Re -h0 -10 -scount 2 -maxcount 6 -mo cylinder -thetamax 1e-6 -hmin 5e-3
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder.base -fo cylinder -param 1/Re -h0 -10 -scount 2 -maxcount 6 -mo cylinder -thetamax 1e-6
 ```
 
 3. Compute base states at $Re=50$ and $Re=100$ with guesses from continuation
@@ -85,7 +85,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_6.base -fo c
 
 4. Continue $Re=100$ base state along the parameter $\alpha$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder100.base -fo cylinder100 -param alpha -h0 4 -scount 5 -paramtarget 7 -maxcount 120 -mo cylinder100 -thetamax 1e-6 -hmin 5e-3 -dmax 1 -err 0.005
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder100.base -fo cylinder100 -param alpha -h0 10 -scount 5 -paramtarget 7 -maxcount 120 -mo cylinder100 -thetamax 1e-6
 ```
 NOTE: care should be taken to ensure that the continuation does not jump from one branch to another when the mesh is adapted within the multistable parameter region.
 
@@ -98,13 +98,13 @@ ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo cylinder100_F 
 
 6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for ParaView
 ```sh
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder100_B -mo cylinder100_B -adaptto bda -param alpha -pv 1 -thetamax 1e-6 -hmin 5e-3 -err 0.005
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_F.fold -fo cylinder100_F -mo cylinder100_F -adaptto bda -param alpha -pv 1 -thetamax 1e-6 -hmin 5e-3 -err 0.005
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder100_B -mo cylinder100_B -adaptto bda -param alpha -pv 1 -thetamax 1e-6
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_F.fold -fo cylinder100_F -mo cylinder100_F -adaptto bda -param alpha -pv 1 -thetamax 1e-6
 ```
 
 7. Continue the neutral fold curve in the $(1/Re,\alpha)$-plane with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder -mo cylinderfold -adaptto bda -thetamax 1e-6 -hmin 5e-3 -dmax 1 -err 0.005 -param 1/Re -param2 alpha -h0 4 -scount 4 -maxcount 12
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder -mo cylinderfold -adaptto bda -thetamax 1e-6 -param 1/Re -param2 alpha -h0 4 -scount 4 -maxcount 20
 ```
 NOTE: This will return a guess for the location of the cusp bifurcation as `cylinder_*specialpoint.fold`.
 
@@ -112,7 +112,7 @@ NOTE: This will return a guess for the location of the cusp bifurcation as `cyli
 ```sh
 cd "$workdir" && set -- cylinder_*specialpt.fold && export cuspguess="$1" && cd -
 ff-mpirun -np $nproc cuspcompute.md -v 0 -dir $workdir -fi $cuspguess -fo cylinder -param 1/Re -param2 alpha -nf 0
-ff-mpirun -np $nproc cuspcompute.md -v 0 -dir $workdir -fi cylinder.cusp -fo cylinder -mo cylindercusp -adaptto bda -thetamax 1e-6 -hmin 5e-3 -err 0.005 -param 1/Re -param2 alpha
+ff-mpirun -np $nproc cuspcompute.md -v 0 -dir $workdir -fi cylinder.cusp -fo cylinder -mo cylindercusp -adaptto bda -thetamax 1e-6 -param 1/Re -param2 alpha
 ```
 
 ### Hopf Bifurcations
@@ -123,7 +123,7 @@ ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi cylinder50.base -fo c
 
 10. Compute direct eigenmode at $Re=100$, $\alpha=4.8$
 ```sh
-ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder100_70.base -fo cylinder4p8 -1/Re 0.01 -alpha 4.8
+ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder100_30.base -fo cylinder4p8 -1/Re 0.01 -alpha 4.8
 ff-mpirun -np $nproc modecompute.md -v 0 -dir $workdir -fi cylinder4p8.base -fo cylindermode2 -eps_target 0.1+0.2i -eps_pos_gen_non_hermitian
 ```
 
@@ -135,12 +135,12 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode2.mode -f
 
 12. Adapt the mesh to the critical solutions, save `.vtu` files for ParaView
 ```sh
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode1.hopf -fo cylindermode1 -mo cylindermode1hopf -adaptto bda -param 1/Re -thetamax 1e-6 -hmin 5e-3 -err 0.005 -pv 1
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode2.hopf -fo cylindermode2 -mo cylindermode2hopf -adaptto bda -param alpha -thetamax 1e-6 -hmin 5e-3 -err 0.005 -pv 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode1.hopf -fo cylindermode1 -mo cylindermode1hopf -adaptto bda -param 1/Re -thetamax 1e-6 -pv 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode2.hopf -fo cylindermode2 -mo cylindermode2hopf -adaptto bda -param alpha -thetamax 1e-6 -pv 1
 ```
 
 13. Continue the neutral Hopf curves in the $(1/Re,\alpha)$-plane with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylindermode1.hopf -fo cylindermode1 -mo cylindermode1hopf -adaptto bda -thetamax 1e-6 -hmin 5e-3 -dmax 1 -err 0.005 -param alpha -param2 1/Re -h0 4 -scount 4 -maxcount 12
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylindermode2.hopf -fo cylindermode2 -mo cylindermode2hopf -adaptto bda -thetamax 1e-6 -hmin 5e-3 -dmax 1 -err 0.005 -param 1/Re -param2 alpha -h0 4 -scount 4 -maxcount 12
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylindermode1.hopf -fo cylindermode1 -mo cylindermode1hopf -adaptto bda -thetamax 1e-6 -param alpha -param2 1/Re -h0 4 -scount 4 -maxcount 12
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylindermode2.hopf -fo cylindermode2 -mo cylindermode2hopf -adaptto bda -thetamax 1e-6 -param 1/Re -param2 alpha -h0 4 -scount 4 -maxcount 12
 ```
