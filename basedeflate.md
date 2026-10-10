@@ -231,7 +231,7 @@ IFMACRO(Jprecon) Jprecon(0); ENDIFMACRO
 set(J, IFMACRO(Jsetargs) Jsetargs, ENDIFMACRO sparams = KSPparams);
 
 Mat deflatedJ = [[J]];
-set(deflatedJ, precon = funcshell, sparams = "-pc_type shell");
+set(deflatedJ, precon = funcshell);
 int ret;
 ndeflate += (deflatefilein != "");
 for (int deflatei = (deflatefilein != ""); deflatei < ndeflate; deflatei++) {

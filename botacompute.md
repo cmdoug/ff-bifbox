@@ -172,7 +172,7 @@ $$
 \end{equation}
 $$
 
-We now left-multiply Eq. (4) by $\begin{bmatrix}v^T & g\end{bmatrix}$, finding due to Eq. (2) that:
+We now left-multiply Eq. (4) by $`\left[v^T\quad{}g\right]``$, finding due to Eq. (2) that:
 
 $$
 \frac{\partial g}{\partial z} = v^T\frac{\partial \mathcal{J}}{\partial z}w
@@ -202,7 +202,7 @@ $$
 \end{equation}
 $$
 
-which similarly yields after left-multiplying by $\left[w^T\quad{}g\right]$ and application of Eq. (1):
+which similarly yields after left-multiplying by $`\left[w^T\quad{}g\right]`$ and application of Eq. (1):
 
 $$
 \left(\frac{\partial g}{\partial z}\right)^T = w^T\left(\frac{\partial \mathcal{J}}{\partial z}\right)^Tv
