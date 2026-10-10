@@ -19,6 +19,7 @@
         - vB * (params["a1"] + (params["a2"] + ub)*ubB + ub^2) + params["D"] * grad(vB)' * grad(ubB)
     )
     + BoundaryConditions(dum, ub);
+    
 // JACOBIAN OPERATOR
   varf vJ(defu(dum), defu(v))
     = int2d(Th)(
@@ -32,17 +33,16 @@
         - vB * ((params["a2"] + ub)*umB + (2.0*ub + ubB)*um) + params["D"] * grad(vB)' * grad(umB)
     )
     + HomBoundaryConditions(dum);
+
 // MASS OPERATOR
     varf vM(defu(dum), defu(v))
         = int2d(Th)( vdotu(v, dum) )
         + int2d(Th)( vdotu(v, um) )
         + HomBoundaryConditions(dum);
+
 // MASS DERIVATIVE OPERATOR
     varf vdM(defu(dum), defu(v))
         = HomBoundaryConditions(dum);
-// MASS 2ND DERIVATIVE OPERATOR
-  varf vddM(defu(dum), defu(v))
-    = HomBoundaryConditions(dum);
 
 // FORCING/RESPONSE OPERATORS
   varf vMq(defu(dum), defu(v))
@@ -55,6 +55,7 @@
 
   varf vP(deff(fm), defu(v))
     = int2d(Th)( vdotu(v, fm) );
+    
 // HESSIAN OPERATOR
   varf vH(defu(dum), defu(v))
     = int2d(Th)(
