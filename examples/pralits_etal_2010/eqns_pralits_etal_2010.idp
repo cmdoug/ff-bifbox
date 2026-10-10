@@ -16,12 +16,10 @@
 // Boundary conditions
   macro BoundaryConditions(u, U)
     on(BCwall, u = U + 2.*params["alpha"]*y, u#y = U#y - 2.*params["alpha"]*x)
-    + on(BCslip, u#y = U#y)
     + on(BCinflow, u = U - 1., u#y = U#y)
   // EOM
   macro HomBoundaryConditions(u)
     on(BCinflow, BCwall, u = 0, u#y = 0)
-    + on(BCslip, u#y = 0)
   // EOM
 // RESIDUAL OPERATOR
   varf vR(defu(dum), defu(v))
@@ -53,10 +51,6 @@
 
 // MASS DERIVATIVE OPERATOR
   varf vdM(defu(dum), defu(v))
-    = HomBoundaryConditions(dum);
-
-// MASS 2ND DERIVATIVE OPERATOR
-  varf vddM(defu(dum), defu(v))
     = HomBoundaryConditions(dum);
 
 // FORCING/RESPONSE OPERATORS

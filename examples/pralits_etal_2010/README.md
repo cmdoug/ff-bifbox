@@ -29,10 +29,10 @@ together with the boundary conditions:
 | :--- | :--- |
 | Inlet, $\Gamma_i$ | $u_x=1$, $u_y=0$ |
 | Wall, $\Gamma_w$ | $u_x=\alpha\hat{n}_y$, $u_y=-\alpha\hat{n}_x$ |
-| Slip, $\Gamma_s$ | $\frac{\partial u_x}{\partial y}=u_y=0$ |
+| Lateral, $\Gamma_l$ | $\frac{1}{Re}\frac{\partial u_i}{\partial y}-p\hat{e}_y=0$ |
 | Outlet, $\Gamma_o$ | $\frac{1}{Re}\frac{\partial u_i}{\partial x}-p\hat{e}_x=0$ |
 
-The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the planar domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_s+\Gamma_o$. Solutions $\vec{q}=\left(u_i,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{p}\right)^T$,
+The present implementation is based on a weak formulation of these equations. Test functions are introduced, and the equations are integrated over the planar domain $\Omega$ with boundary $\partial\Omega=\Gamma_i+\Gamma_w+\Gamma_l+\Gamma_o$. Solutions $\vec{q}=\left(u_i,p\right)^T$ are then sought, in the appropriate spaces, such that for all test functions $\vec{\check{q}}=\left(\check{u}_i,\check{p}\right)^T$,
 
 $$
 \left(\check{u}_i,\frac{\partial u_i}{\partial t} + u_j\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\frac{\partial\check{u}_i}{\partial x_i},p\right)_{\Omega} + \left(\frac{\partial \check{u}_i}{\partial x_j},\frac{1}{Re}\frac{\partial u_i}{\partial x_j}\right)_{\Omega} - \left(\check{p},\frac{\partial u_i}{\partial x_i}\right)_{\Omega} = 0.
@@ -85,7 +85,7 @@ ff-mpirun -np $nproc basecompute.md -v 0 -dir $workdir -fi cylinder_6.base -fo c
 
 4. Continue $Re=100$ base state along the parameter $\alpha$ with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder100.base -fo cylinder100 -param alpha -h0 10 -scount 5 -paramtarget 7 -mo cylinder100 -thetamax 1e-6
+ff-mpirun -np $nproc basecontinue.md -v 0 -dir $workdir -fi cylinder100.base -fo cylinder100 -param alpha -h0 10 -scount 5 -paramtarget 7 -mo cylinder100 -thetamax 1e-6 -hmax 2 -rescaling 0
 ```
 NOTE: care should be taken to ensure that the continuation does not jump from one branch to another when the mesh is adapted within the multistable parameter region.
 
@@ -98,13 +98,13 @@ ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi $F -fo cylinder100_F 
 
 6. Adapt the mesh to the critical base/direct/adjoint solutions, save `.vtu` files for ParaView
 ```sh
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder100_B -mo cylinder100_B -adaptto bda -param alpha -pv 1 -thetamax 1e-6
-ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_F.fold -fo cylinder100_F -mo cylinder100_F -adaptto bda -param alpha -pv 1 -thetamax 1e-6
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder100_B -mo cylinder100_B -adaptto bda -param alpha -pv 1 -thetamax 1e-6 -hmax 2
+ff-mpirun -np $nproc foldcompute.md -v 0 -dir $workdir -fi cylinder100_F.fold -fo cylinder100_F -mo cylinder100_F -adaptto bda -param alpha -pv 1 -thetamax 1e-6 -hmax 2
 ```
 
 7. Continue the neutral fold curve in the $(1/Re,\alpha)$-plane with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder -mo cylinderfold -adaptto bda -thetamax 1e-6 -param 1/Re -param2 alpha -h0 4 -scount 4 -maxcount 12
+ff-mpirun -np $nproc foldcontinue.md -v 0 -dir $workdir -fi cylinder100_B.fold -fo cylinder -mo cylinderfold -adaptto bda -thetamax 1e-6 -hmax 2 -param 1/Re -param2 alpha -h0 4 -scount 4 -maxcount 12
 ```
 NOTE: This will return a guess for the location of the cusp bifurcation as `cylinder_*specialpoint.fold`.
 
@@ -112,7 +112,7 @@ NOTE: This will return a guess for the location of the cusp bifurcation as `cyli
 ```sh
 cd "$workdir" && set -- cylinder_*specialpt.fold && export cuspguess="$1" && cd -
 ff-mpirun -np $nproc cuspcompute.md -v 0 -dir $workdir -fi $cuspguess -fo cylinder -param 1/Re -param2 alpha -nf 0
-ff-mpirun -np $nproc cuspcompute.md -v 0 -dir $workdir -fi cylinder.cusp -fo cylinder -mo cylindercusp -adaptto bda -thetamax 1e-6 -param 1/Re -param2 alpha
+ff-mpirun -np $nproc cuspcompute.md -v 0 -dir $workdir -fi cylinder.cusp -fo cylinder -mo cylindercusp -adaptto bda -thetamax 1e-6 -hmax 2 -param 1/Re -param2 alpha
 ```
 
 ### Hopf Bifurcations
@@ -135,12 +135,12 @@ ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode2.mode -f
 
 12. Adapt the mesh to the critical solutions, save `.vtu` files for ParaView
 ```sh
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode1.hopf -fo cylindermode1 -mo cylindermode1hopf -adaptto bda -param 1/Re -thetamax 1e-6 -pv 1
-ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode2.hopf -fo cylindermode2 -mo cylindermode2hopf -adaptto bda -param alpha -thetamax 1e-6 -pv 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode1.hopf -fo cylindermode1 -mo cylindermode1hopf -adaptto bda -param 1/Re -thetamax 1e-6 -hmax 2 -pv 1
+ff-mpirun -np $nproc hopfcompute.md -v 0 -dir $workdir -fi cylindermode2.hopf -fo cylindermode2 -mo cylindermode2hopf -adaptto bda -param alpha -thetamax 1e-6 -hmax 2 -pv 1
 ```
 
 13. Continue the neutral Hopf curves in the $(1/Re,\alpha)$-plane with adaptive remeshing
 ```sh
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylindermode1.hopf -fo cylindermode1 -mo cylindermode1hopf -adaptto bda -thetamax 1e-6 -param alpha -param2 1/Re -h0 4 -scount 4 -maxcount 12
-ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylindermode2.hopf -fo cylindermode2 -mo cylindermode2hopf -adaptto bda -thetamax 1e-6 -param 1/Re -param2 alpha -h0 4 -scount 4 -maxcount 12
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylindermode1.hopf -fo cylindermode1 -mo cylindermode1hopf -adaptto bda -thetamax 1e-6 -hmax 2 -param alpha -param2 1/Re -h0 4 -scount 4 -maxcount 12
+ff-mpirun -np $nproc hopfcontinue.md -v 0 -dir $workdir -fi cylindermode2.hopf -fo cylindermode2 -mo cylindermode2hopf -adaptto bda -thetamax 1e-6 -hmax 2 -param 1/Re -param2 alpha -h0 4 -scount 4 -maxcount 12
 ```
