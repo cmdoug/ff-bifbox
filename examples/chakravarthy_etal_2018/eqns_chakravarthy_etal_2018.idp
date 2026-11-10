@@ -92,10 +92,6 @@
 // MASS DERIVATIVE OPERATOR
   varf vdM(defu(dum), defu(v))
     = HomBoundaryConditions(dum);
-
-// MASS 2ND DERIVATIVE OPERATOR
-  varf vddM(defu(dum), defu(v))
-    = HomBoundaryConditions(dum);
     
  // FORCING/RESPONSE OPERATORS
   varf vMq(defu(dum), defu(v))

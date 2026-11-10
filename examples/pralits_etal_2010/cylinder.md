@@ -6,11 +6,11 @@ This file can be used with FreeFEM to create a mesh for the cylinder as in [Pral
 ```freefem
 assert(mpisize == 1); // Must be run with 1 processor
 include "settings.idp"
-real n0 = 50;
+real n0 = getARGV("-n0", 50);
 real n1 = 1.0;
-real xmin = -25.0;
-real xmax = 48.0;
-real rmax = 25.0;
+real xmin = getARGV("-xmin", -25.0);
+real xmax = getARGV("-xmax", 48.0);
+real rmax = getARGV("-rmax", 25.0);
 
 string meshout = getARGV("-mo", "cylinder.msh"); // mesh filename
 if(meshout.rfind(".msh") < 0) meshout = meshout + ".msh"; // add extension if not provided
@@ -26,9 +26,9 @@ if(meshout.rfind(".msh") < 0) meshout = meshout + ".msh"; // add extension if no
 //  |                                         |
 //  o------------------2----------------------o
 border C01(t=0, 1){x=xmin; y=rmax*(1-2*t); label=BCinflow;}
-border C02(t=0, 1){x=xmin + (xmax-xmin)*t; y=-rmax; label=BCslip;}
+border C02(t=0, 1){x=xmin + (xmax-xmin)*t; y=-rmax; label=BClateral;}
 border C03(t=0, 1){x=xmax; y=rmax*(2*t-1); label=BCopen;}
-border C04(t=0, 1){x=xmax + (xmin-xmax)*t; y=rmax; label=BCslip;}
+border C04(t=0, 1){x=xmax + (xmin-xmax)*t; y=rmax; label=BClateral;}
 border C05(t=0, 1){x=-0.5*cos(2*pi*t); y=0.5*sin(2*pi*t); label=BCwall;}
 // Assemble mesh
 mesh Thg = buildmesh(C01(n1*rmax) + C02(n1*(xmax-xmin)) + C03(n1*(xmax-xmin)) + C04(n1*(xmax-xmin)) + C05(n0*pi));

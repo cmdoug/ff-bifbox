@@ -175,12 +175,12 @@ if (mpirank==0){ // Perform mesh adaptation (serially) on processor 0
     else if(fileexts[ii] == "foho") {
       real omega;
       complex[string] alpha1;
-      real[string] alpha2;
+      real[string] alpha2, alpha3;
       complex beta1, gamma12, gamma13;
       real beta22, beta23, gamma22, gamma23;
       complex[int] q1m(XMhg.ndof), q1ma(XMhg.ndof);
       real[int] q2m(XMhg.ndof), q2ma(XMhg.ndof);
-      uvecs(jj++, :) = loadfoho(fileroots[ii], meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+      uvecs(jj++, :) = loadfoho(fileroots[ii], meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, alpha3, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
       if(adaptto == "bd" || adaptto == "bda") {
         uvecs(jj++, :) = q1m.re;
         uvecs(jj++, :) = q1m.im;

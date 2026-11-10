@@ -37,7 +37,7 @@
   int BCopen = 2;
   int BCinflow = 3;
   int BCwall = 4;
-  int BCslip = 5;
+  int BClateral = 5;
 // Define solution monitors to extract: here x and y forces on BCwall
   macro getmonitors(){
     monitors["Fx"] = int1d(Thg, BCwall)(ubgp*N.x - params["1/Re"]*(2.0*dx(ubg )*N.x + (dx(ubgy) + dy(ubg))*N.y));

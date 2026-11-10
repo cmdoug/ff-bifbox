@@ -6,13 +6,13 @@ This script computes the normal form at a non-degenerate cusp point.
 The normal form is written for the real amplitude $`A`$ as:
 
 $$
-\frac{dA}{dt} + \alpha_1 \cdot \delta\lambda + \alpha_2 \cdot \delta\lambda A + \beta A^3 = 0
+\frac{dA}{dt} + \left(\vec{\alpha}_1 \cdot \Delta\vec{\lambda}\right) + \left(\vec{\alpha}_2 \cdot \Delta\vec{\lambda}\right) A + \beta A^3 = 0
 $$
 
 where:
-- $`\alpha_1,\alpha_2`$ are the coefficients for the terms from parameter changes,
-- $`\delta\lambda`$ are the parameter increments,
-- $`\beta`$ is the coefficient for the term from harmonic interactions.
+- $`\vec{\alpha}_1,\vec{\alpha}_2`$ are vectors containing the parameter sensitivity coefficients,
+- $`\Delta\vec{\lambda}`$ is a vector containing the parameter increments,
+- $`\beta`$ is the scalar cubic coefficient.
 
 #### RESIDUAL EVALUATION IN MINIMALLY AUGMENTED FORMULATION
 We can directly compute the residual using the varf `vR()`.
@@ -358,8 +358,7 @@ real eps = getARGV("-eps", 1e-7);
 real eps2 = getARGV("-eps2", 1e-7);
 real TGV = getARGV("-tgv", -1);
 string sneslinesearchtype = getARGV("-snes_linesearch_type", "none");
-real[string] alpha1;
-real[string] alpha2;
+real[string] alpha1, alpha2;
 real beta;
 
 // Load mesh, make FE basis
@@ -372,6 +371,7 @@ if(fileext == "mode" || fileext == "resp" || fileext == "rslv" || fileext == "td
 if(meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
 string meshroot, meshext = parsefilename(meshin, meshroot);
 parsefilename(meshout, meshout); // trim extension from output mesh, if given
+assert(param != "" && param2 != ""); // 2 parameters required!
 Th = readmeshN(workdir + meshin);
 Thg = Th;
 DmeshCreate(Th);
@@ -389,10 +389,10 @@ else if(fileext == "cusp") {
 }
 else if(fileext == "foho") {
   real omega, beta23, gamma22, gamma23;
-  complex[string] alpha2;
+  complex[string] alpha;
   complex beta1, gamma12, gamma13;
   complex[int] q1m, q1ma;
-  ub[] = loadfoho(fileroot, meshin, q1m, q1ma, um[], uma[], sym, omega, alpha2, alpha1, beta1, beta, beta23, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadfoho(fileroot, meshin, q1m, q1ma, um[], uma[], sym, omega, alpha, alpha1, alpha2, beta1, beta, beta23, gamma12, gamma13, gamma22, gamma23);
 }
 else if(fileext == "hopf") {
   real omega;
@@ -596,12 +596,12 @@ real h, ginv;
       qpma *= -2.0;
       MatMultTranspose(H, qpma, qm);
       IFMACRO(cubic)
-      H = vT(XMh, XMh, tgv = 0);
+      H = vT(XMh, XMh, tgv = -10);
       MatMultTranspose(H, qma, temp1);
       qm += temp1;
       ENDIFMACRO
       ChangeNumbering(J, um[], qpm, inverse = true, exchange = true);
-      H = vH(XMh, XMh, tgv = 0);
+      H = vH(XMh, XMh, tgv = -10);
       MatMultTranspose(H, qma, temp1);
       qm -= temp1;
       tempPms = [[temp3, qm]];
@@ -663,94 +663,74 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   local = (qma'*qP);
   mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
   qma /= Mnorm;
+  ChangeNumbering(J, uma[], qma, inverse = true);
   if (normalform){
-    real[int] pP(J.n);
-    real[int,int] qDa(paramnames.n, J.n);
-    Mat qPM(J.n, mpirank == 0 ? 1 : 0), pPM(J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
-    Ja = [[J, qPM], [pPM', 0]]; // make dummy Jacobian
-    set(Ja, sparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full"
-                    + " -prefix_push fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
-                    + " -prefix_push fieldsplit_0_ " + KSPparams + " -prefix_pop", setup = 1);
-    MatMultTranspose(J, qma, pP);
-    matrix tempPms = [[pP]]; // dense array to sparse matrix
-    ChangeOperator(pPM, tempPms, parent = Ja); // send to Mat
-    MatMult(J, qm, qP);
-    tempPms = [[qP]]; // dense array to sparse matrix
-    ChangeOperator(qPM, tempPms, parent = Ja); // send to Mat
-    J = vJ(XMh, XMh, tgv = TGV);
-    ChangeNumbering(J, uma[], qma, inverse = true);
-    // 2nd-order
-    //  A: base modification due to parameter changes
-    if(paramnames[0] != ""){
-      for (int k = 0; k < paramnames.n; ++k){
-        real paramval = getparam(paramnames[k]);
-        updateparam(paramnames[k], paramval + eps);
-        um2[] = vR(0, XMh, tgv = TGV);
-        updateparam(paramnames[k], paramval);
-        um2[] -= R;
+    real[int] Rp(ub[].n);
+    real[int,int] qWNL((wnlsave ? paramnames.n : 0), J.n);
+    //  A: modification due to parameter change
+    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+    J = vH(XMh, XMh, tgv = -10);
+    MatMultTranspose(J, qma, qP);
+    J = vJ(XMh, XMh, tgv = -2);
+    KSPSolveTranspose(J, qP, qma);
+    um3[] = vJ(0, XMh, tgv = -10);
+    um2[] = um[];
+    Rp = vdM(0, XMh, tgv = -10);
+    Mnorm = -J(uma[], Rp);
+    um2[] = vM(0, XMh, tgv = -10);
+    ChangeNumbering(J, Rp, qma, inverse = true);
+    ChangeNumbering(J, um2[], qma);
+    Mnorm += J(Rp, um2[]);
+    for (int k = 0; k < paramnames.n; ++k){
+      real paramval = getparam(paramnames[k]);
+      updateparam(paramnames[k], paramval + eps);
+      um2[] = vJ(0, XMh, tgv = -10);
+      um2[] -= um3[];
+      alpha2[paramnames[k]] = J(uma[], um2[])/eps;
+      um2[] = vR(0, XMh, tgv = TGV);
+      um2[] -= R;
+      alpha1[paramnames[k]] = J(uma[], um2[])/eps;
+      alpha2[paramnames[k]] += alpha1[paramnames[k]]*Mnorm - J(Rp, um2[])/eps;
+      updateparam(paramnames[k], paramval);
+      if(wnlsave){
         um2[] /= -eps;
-        ChangeNumbering(J, um2[], qP); // FreeFEM to PETSc
-        qP.resize(Ja.n);
-        if(mpirank == 0) qP(Ja.n-1) = 0.0;
-        KSPSolve(Ja, qP, qP);
-        if(mpirank == 0) alpha1[paramnames[k]] = -qP(Ja.n-1);
-        broadcast(processor(0), alpha1[paramnames[k]]);
-        qDa(k, :) = qP(0:J.n-1);
+        real[int] Mq = vM(0, XMh, tgv = -10);
+        um2[] += alpha1[paramnames[k]]*Mq;
+        um[] = J^-1*um2[];
+        ChangeNumbering(J, um[], qP);
+        um2[] = vM(0, XMh, tgv = -10);
+        qWNL(k, :) = qP - J(uma[], um2[])*qm;
+        ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       }
     }
-    //  B: base modifications due to quadratic nonlinear interactions
-    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+    //  B: modification due to quadratic self-interaction
     um2[] = -0.5*um[];
     um3[] = vH(0, XMh, tgv = -10);
-    ChangeNumbering(J, um3[], pP); // FreeFEM to PETSc
-    pP.resize(Ja.n);
-    if(mpirank == 0) pP(Ja.n-1) = 0.0;
-    KSPSolve(Ja, pP, pP);
-    pP.resize(J.n);
-    // 3rd-order
-    //  A: base modification due to parameter changes
-    if(paramnames[0] != ""){
-      R = vJ(0, XMh, tgv = -10);
-      for (int k = 0; k < paramnames.n; ++k){
-        ChangeNumbering(J, um2[], qDa(k, :), inverse = true, exchange = true);
-        um3[] = vH(0, XMh, tgv = -10);
-        real paramval = getparam(paramnames[k]);
-        updateparam(paramnames[k], paramval + eps);
-        um2[] = vJ(0, XMh, tgv = -10);
-        updateparam(paramnames[k], paramval);
-        um2[] -= R;
-        um3[] += um2[]/eps;
-        alpha2[paramnames[k]] = J(uma[], um3[]);
-      }
+    beta = J(Rp, um3[]);
+    if(wnlsave){
+      um[] = J^-1*um3[];
+      ChangeNumbering(J, um[], qP);
+      um2[] = vM(0, XMh, tgv = -10);
+      qP -= J(uma[], um2[])*qm;
+      ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
     }
-    //  B: base modification due to quadratic nonlinear interaction
     IFMACRO(cubic)
+    //  C: modification due to cubic self-interaction
     um2[] = um[];
     um3[] = um[]/6.0;
     R = vT(0, XMh, tgv = -10);
+    beta += J(uma[], R);
     ENDIFMACRO
-    //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
-    ChangeNumbering(J, um2[], pP, inverse = true, exchange = true); // FreeFEM to PETSc
-    IFMACRO(cubic)
-    um3[] = vH(0, XMh, tgv = -10);
-    R += um3[];
-    ENDIFMACRO
-    IFMACRO(!cubic)
-    R = vH(0, XMh, tgv = -10);
-    ENDIFMACRO
-    beta = J(uma[], R);
-    if(wnlsave){
+    if(wnlsave && fileout != ""){
       complex[int] val(1);
       XMh<complex>[int] defu(vec)(1);
       XMh<complex> defu(um);
-      if(paramnames[0] != ""){
-        for (int k = 0; k < paramnames.n; ++k){
-          ChangeNumbering(J, um2[], qDa(k, :), inverse = true);
-          vec[0][].re = um2[];
-          savemode(fileout + "_wnl_param" + k, "", fileout + ".cusp", meshout, vec, val, sym, true);
-        }
+      for (int k = 0; k < paramnames.n; ++k){
+        ChangeNumbering(J, um2[], qWNL(k, :), inverse = true);
+        vec[0][].re = um2[];
+        savemode(fileout + "_wnl_param" + k, "", fileout + ".cusp", meshout, vec, val, sym, true);
       }
-      ChangeNumbering(J, um2[], pP, inverse = true);
+      ChangeNumbering(J, um2[], qP, inverse = true);
       vec[0][].re = um2[];
       savemode(fileout + "_wnl_AA", "", fileout + ".cusp", meshout, vec, val, sym, true);
     }
@@ -761,7 +741,6 @@ if (ret > 0) { // Save solution if solver converged and output file is given
       alpha2[paramnames[k]] = 0.0;
     }
     beta = 0.0;
-    ChangeNumbering(J, uma[], qma, inverse = true);
   }
   if(mpirank==0 && adapt) { // Save adapted mesh
     cout << "  Saving adapted mesh '" + meshout + "' in '" + workdir + "'." << endl;

@@ -85,14 +85,14 @@ else if (fileext == "bota") {
   uh(:, 0) = um[];
 }
 else if (fileext == "foho") {
-  real[string] alpha2;
+  real[string] alpha2, alpha3;
   real beta22, beta23, gamma22, gamma23;
   complex[string] alpha;
   complex beta;
   complex gamma12, gamma13;
   real[int] q2m, q2ma;
   complex[int] qma;
-  ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, alpha3, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
   uh(:, 0) = um[];
 }
 else if(fileext == "hoho") {
@@ -223,13 +223,12 @@ complex iomega, iomega2, iomega3;
 include "eqns.idp" // load equations
 
 // Build bordered block matrix from only Mat components
-Mat JHBa, JHB((1+2*Nh)*J.n, (1+2*Nh)*J.n), dwHB((1+2*Nh)*J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
+Mat deflatedJHBa, JHBa, JHB((1+2*Nh)*J.n, (1+2*Nh)*J.n), dwHB((1+2*Nh)*J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
 real[int] RHB;
-if(zerofreq) JHBa = JHB;
-else JHBa = [[JHB, dwHB],[dwHB',0]];
-
+if(zerofreq) JHBa = [[JHB]];
+else JHBa = [[JHB, dwHB], [dwHB', 0]];
 // initialize
-real[int] qHB(JHBa.n), qHB0(JHBa.n);
+real[int] qHB(JHBa.n), qHB0(JHBa.n), fieldlabels(JHB.n);
 real[int, int] qdeflate(JHBa.n, (deflatefilein != ""));
 if(deflatefilein != ""){
   ChangeNumbering(J, ub2[], RHB);
@@ -250,13 +249,12 @@ if(mpirank == 0 && !zerofreq) qHB(JHBa.n-1) = omega;
 if (noiseamp > 0.0) for [i, ai : qHB] ai += noiseamp*randreal1();
 qHB0 = qHB;
 // set up Mat parameters
-real[int] fieldlabels(JHB.n);
 fieldlabels(0: J.n-1) = 1.0;
 blocks = min(blocks, 1+Nh);
 for (int nh = 0; nh < Nh; nh++) fieldlabels((1+2*nh)*J.n:(3+2*nh)*J.n-1) = 1.0 + max(0, blocks + nh - Nh);
 string HBKSPparams = KSPparams;
 if (blocks > 1) HBKSPparams = "-ksp_type gmres -ksp_norm_type unpreconditioned -ksp_pc_side right -pc_type fieldsplit -pc_fieldsplit_type symmetric_multiplicative -fieldsplit_pc_type lu -ksp_gmres_cgs_refinement_type refine_ifneeded";
-if (zerofreq) set(JHBa, sparams = HBKSPparams, fields = fieldlabels);
+if (zerofreq) set(JHB, sparams = HBKSPparams, fields = fieldlabels);
 else {
   set(JHBa, sparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full"
                     + " -prefix_push fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
@@ -265,7 +263,6 @@ else {
 }
 RHB.resize(JHB.n);
 // Function to build residual operator in PETSc numbering
-real dot;
   func real[int] funcRHB(PetscScalar[int]& qPETSc) {
       ChangeNumbering(J, ub[], qPETSc(0:J.n-1), inverse = true, exchange = true);
       for (int nh = 0; nh < Nh; nh++)
@@ -288,7 +285,7 @@ func int funcJHB(PetscScalar[int]& qPETSc) {
     if(mpirank == 0 && !zerofreq) omega = qPETSc(JHBa.n-1); 
     broadcast(processor(0), omega);
     JacobianHB(JHB, J, ub, uh, sym0, omega);
-    if (zerofreq) JHBa = JHB;
+    if (zerofreq) set(JHB, sparams = HBKSPparams, fields = fieldlabels);
     else {
       domegaResidualHB(RHB, J, ub, uh, sym0);
       matrix<PetscScalar> tempPms = [[RHB]];
@@ -299,7 +296,8 @@ func int funcJHB(PetscScalar[int]& qPETSc) {
 
 func real[int] funcshell(PetscScalar[int]& RPETSc) {
     PetscScalar[int] dq(RPETSc.n);
-    KSPSolve(JHBa, RPETSc, dq);
+    if(zerofreq) KSPSolve(JHB, RPETSc, dq);
+    else KSPSolve(JHBa, RPETSc, dq);
     real factor = 1.0;
     for (int deflatej = 0; deflatej < qdeflate.m; deflatej++) {
       PetscScalar[int] qdiff = qHB - qdeflate(:, deflatej);
@@ -312,8 +310,9 @@ func real[int] funcshell(PetscScalar[int]& RPETSc) {
     return dq *= factor;
 }
 
-Mat deflatedJHBa = [[JHBa]];
-set(deflatedJHBa, precon = funcshell, sparams = "-pc_type shell");
+if(zerofreq) deflatedJHBa = [[JHB]];
+else deflatedJHBa = [[JHBa]];
+set(deflatedJHBa, precon = funcshell);
 int ret;
 ndeflate += (deflatefilein != "");
 for (int deflatei = (deflatefilein != ""); deflatei < ndeflate; deflatei++) {

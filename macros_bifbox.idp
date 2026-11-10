@@ -2343,7 +2343,7 @@ macro savehoho(hohofileout, statsfile, meshfile, sym1, sym2, omega1, omega2, alp
   }
 }//EOM
 
-macro savefoho(fohofileout, statsfile, meshfile, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23, saveflag, monitorflag){
+macro savefoho(fohofileout, statsfile, meshfile, sym, omega, alpha1, alpha2, alpha3, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23, saveflag, monitorflag){
   IFMACRO(getmonitors)
     XMhg defu(tempu), defu(ubg), defu(umg), defu(umag), defu(u2mg), defu(u2mag);
     tempu[](restu) = ub[].re;
@@ -2364,7 +2364,7 @@ macro savefoho(fohofileout, statsfile, meshfile, sym, omega, alpha1, alpha2, bet
     if(sym.n > 0) cout << ", sym = " + listsym(sym);
     if(paramnames[0] != ""){
       for (int k = 0; k < paramnames.n; ++k){
-        cout << ", alpha[" + paramnames[k] + "] = [" + alpha1[paramnames[k]] + "; " + alpha2[paramnames[k]] + "]";
+        cout << ", alpha[" + paramnames[k] + "] = [" + alpha1[paramnames[k]] + "; " + alpha2[paramnames[k]] + ", " + alpha3[paramnames[k]] + "]";
       }
     }
     cout << ", beta = [" + beta1 + "; " + beta22 + ", " + beta23 << "], gamma = [" + gamma12 + ", " + gamma13 + "; " + gamma22 + ", " + gamma23 + "]";
@@ -2382,7 +2382,7 @@ macro savefoho(fohofileout, statsfile, meshfile, sym, omega, alpha1, alpha2, bet
       if(sym.n > 0) file << "\t" << listsym(sym);
       if(paramnames[0] != ""){
         for (int k = 0; k < paramnames.n; ++k){
-          file << "\t" << alpha1[paramnames[k]] << "\t" << alpha2[paramnames[k]];
+          file << "\t" << alpha1[paramnames[k]] << "\t" << alpha2[paramnames[k]]<< "\t" << alpha3[paramnames[k]];
         }
       }
       file << "\t" << beta1 << "\t" << beta22 << "\t" << beta23 << "\t" << gamma12 << "\t" << gamma13 << "\t" << gamma22 << "\t" << gamma23;
@@ -2424,7 +2424,7 @@ macro savefoho(fohofileout, statsfile, meshfile, sym, omega, alpha1, alpha2, bet
         if(sym.n > 0) file << "sym\t" << listsym(sym) << endl;
         if(paramnames[0] != ""){
           for (int k = 0; k < paramnames.n; ++k){
-            file << "alpha[" + paramnames[k] + "]\t" << alpha1[paramnames[k]] << "\t" << alpha2[paramnames[k]] << endl;
+            file << "alpha[" + paramnames[k] + "]\t" << alpha1[paramnames[k]] << "\t" << alpha2[paramnames[k]] << "\t" << alpha3[paramnames[k]] << endl;
           }
         }
         file << "beta\t" << beta1 << "\t" << beta22 << "\t" << beta23 << endl;
@@ -3429,7 +3429,7 @@ func real[int] loadhoho(string inputfilename, string meshfilename, complex[int] 
     }
 
 func real[int] loadfoho(string inputfilename, string meshfilename, complex[int] & q1mlocal, complex[int] & q1malocal, real[int] & q2mlocal, real[int] & q2malocal,
-                        real[int] & sym, real & omega, complex[string] & alpha1, real[string] & alpha2, complex & beta1, real & beta22, real & beta23, complex & gamma12, complex & gamma13, real & gamma22, real & gamma23) {
+                        real[int] & sym, real & omega, complex[string] & alpha1, real[string] & alpha2, real[string] & alpha3, complex & beta1, real & beta22, real & beta23, complex & gamma12, complex & gamma13, real & gamma22, real & gamma23) {
       XMhg defu(ubg), defu(u2mg), defu(u2mag);
       XMhg<complex> defu(u1mg), defu(u1mag);
       if (mpirank == 0) cout << "  Loading '" + inputfilename + ".foho' on '" + meshfilename + "' from '" + workdir + "'." << endl;
@@ -3439,7 +3439,7 @@ func real[int] loadfoho(string inputfilename, string meshfilename, complex[int] 
       if (sym.n > 0) file >> dummy >> symstr;
       if(paramnames[0] != ""){
         for (int k = 0; k < paramnames.n; ++k){
-          file >> dummy >> alpha1[paramnames[k]] >> alpha2[paramnames[k]];
+          file >> dummy >> alpha1[paramnames[k]] >> alpha2[paramnames[k]] >> alpha3[paramnames[k]];
         }
       }
       file >> dummy >> beta1 >> beta22 >> beta23;
@@ -3460,7 +3460,7 @@ func real[int] loadfoho(string inputfilename, string meshfilename, complex[int] 
         if(sym.n > 0) cout << ", sym = " + listsym(sym);
         if(paramnames[0] != ""){
           for (int k = 0; k < paramnames.n; ++k){
-            cout << ", alpha[" + paramnames[k] + "] = [" + alpha1[paramnames[k]] + "; " + alpha2[paramnames[k]] + "]";
+            cout << ", alpha[" + paramnames[k] + "] = [" + alpha1[paramnames[k]] + "; " + alpha2[paramnames[k]] + ", " + alpha3[paramnames[k]] + "]";
           }
         }
         cout << ", beta = [" + beta1 + "; " + beta22 + ", " + beta23 + "], gamma = [" + gamma12 + ", " + gamma13 + "; " + gamma22 + ", " + gamma23 + "]";

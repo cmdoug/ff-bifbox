@@ -1,18 +1,18 @@
 # bautcompute.md
 Author: Chris Douglas ([@cmdoug](https://github.com/cmdoug)) [christopher.douglas@duke.edu](mailto:christopher.douglas@duke.edu)
 
-This script computes the normal form at a Bautin (generalized Hopf) point.
+This script locates Bautin points and computes the (degenerate) normal form at a non-degenerate Bautin (generalized Hopf) point.
 
 The normal form is written for the complex amplitude $Z = A \exp(\mathrm{i} \omega t)$ as:
 
 $$
-\frac{dA}{dt} + \alpha \cdot \delta\lambda A + \beta A |A|^2 = 0
+\frac{dA}{dt} + \left(\vec{\alpha}\cdot\Delta\vec{\lambda}\right) A + \beta A |A|^2 = 0
 $$
 
 where:
-- $\alpha$ is the coefficient for the term from parameter changes,
-- $\delta\lambda$ are the parameter increments,
-- $\beta_i$ are the coefficients for the term from harmonic interactions.
+- $`\vec{\alpha}`$ is a vector containing the parameter sensitivity coefficients,
+- $`\Delta\vec{\lambda}`$ is a vector containing the parameter increments,
+- $`\beta`$ is the scalar Landau constant, which satisfies $`\Re(\beta) = 0`$ at the Bautin point.
 
 #### RESIDUAL EVALUATION IN MINIMALLY AUGMENTED FORMULATION
 We can directly compute the residual using the varf `vR()`.
@@ -115,7 +115,7 @@ $$
 v = \mathcal{L}_{\omega}^{-H}\mathcal{M}q_0g^\ast\qquad{}\text{and}\qquad{}g^\ast = \frac{1}{q_0^H\mathcal{M}^H\mathcal{L}_{\omega}^{-H}\mathcal{M}q_0}
 $$
 
-At $g^\ast = 0$, we have $\mathcal{L}_{\omega}^Hv = 0$ and $q_0^H\mathcal{M}^Hv = 1$, so $v^H\mathcal{L}_{\omega} = 0$ and $v^H\mathcal{M}q_0 = 1$.
+At $`g^\ast = 0`$, we have $`\mathcal{L}_{\omega}^Hv = 0`$ and $`q_0^H\mathcal{M}^Hv = 1`$, so $`v^H\mathcal{L}_{\omega} = 0`$ and $`v^H\mathcal{M}q_0 = 1`$.
 
 Finally, the augmented Bautin residual can be computed directly:
 
@@ -172,7 +172,7 @@ q_0^H\mathcal{M}^H & 0
 \end{equation}
 $$
 
-We now left-multiply Eq. (4) by $\begin{bmatrix}v^H & g\end{bmatrix}$, finding due to Eq. (2) that:
+We now left-multiply Eq. (4) by $`\begin{bmatrix}v^H & g\end{bmatrix}`$, finding due to Eq. (2) that:
 
 $$
 \frac{\partial g}{\partial z} = v^H\frac{\partial \mathcal{L}_{\omega}}{\partial z}w
@@ -422,6 +422,7 @@ string basefileroot, basefileext = parsefilename(basefilein, basefileroot);
 if(meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
 string meshroot, meshext = parsefilename(meshin, meshroot);
 parsefilename(meshout, meshout); // trim extension from output mesh, if given
+assert(param != "" && param2 != ""); // 2 parameters required!
 Th = readmeshN(workdir + meshin);
 Thg = Th;
 DmeshCreate(Th);
@@ -439,11 +440,11 @@ else if(fileext == "bota") {
   ub[].re = loadbota(fileroot, meshin, um[].re, uma[].re, alpha1, alpha2, beta1, beta2, beta3, beta4);
 }
 else if (fileext == "foho") {
-  real[string] alpha2;
+  real[string] alpha2, alpha3;
   real beta22, beta23, gamma22, gamma23;
   complex gamma12, gamma13;
   real[int] q2m, q2ma;
-  ub[].re = loadfoho(fileroot, meshin, um[], uma[], q2m, q2ma, sym1, omega, alpha, alpha2, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  ub[].re = loadfoho(fileroot, meshin, um[], uma[], q2m, q2ma, sym1, omega, alpha, alpha2, alpha3, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
 }
 else if(fileext == "hoho") {
   real omegaN;
@@ -523,11 +524,11 @@ else if(basefileext == "foho") {
   real omega;
   complex[string] alpha1;
   complex beta1, gamma12, gamma13;
-  real[string] alpha2;
+  real[string] alpha2, alpha3;
   real beta22, beta23, gamma22, gamma23;
   complex[int] q1m, q1ma;
   real[int] q2m, q2ma;
-  ub[].re = loadfoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  ub[].re = loadfoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, alpha3, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
 }
 else if(basefileext == "hoho") {
   real[int] sym2(sym.n);
@@ -757,7 +758,6 @@ ENDIFMACRO
       R -= h*um2[];
       R /= -s;
       ChangeNumbering(J, R, F);
-      sym = 0;
       R = vR(0, XMh, tgv = TGV);
       PetscScalar[int] Ra;
       ChangeNumbering(J, R, Ra); // FreeFEM to PETSc
@@ -776,7 +776,6 @@ ENDIFMACRO
       omega = zerofreq ? 0.0 : paramvals(1-zerofreq);
       broadcast(processor(2-zerofreq), paramvals);
       updateparam(param, paramvals(0) + eps);
-      sym = 0;
       um2[] = vR(0, XMh, tgv = TGV);
       um2[] -= R;
       um2[] /= eps;
@@ -855,14 +854,14 @@ ENDIFMACRO
       // + <v, dH/dz(w,qAAs)>
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       ChangeNumbering(J, um2[], qAAs, inverse = true, exchange = true);
+      sym = sym1;
       ik.im = sym1;
       iomega = 1i*omega;
       ik2.im = 0.0;
       iomega2 = 0.0;
       ik3.im = 0.0;
       iomega3 = 0.0;
-      sym = 0;
-      H = vT(XMh, XMh, tgv = 0);
+      H = vT(XMh, XMh, tgv = -10);
       MatMultHermitianTranspose(H, qma, temp3);
       temp3 /= conj(s);
       IFMACRO(quartic)
@@ -873,20 +872,20 @@ ENDIFMACRO
       iomega2 = iomega;
       ik3.im = -ik.im;
       iomega3 = -iomega;
-      H = vQ(XMh, XMh, tgv = 0);
+      H = vQ(XMh, XMh, tgv = -10);
       MatMultHermitianTranspose(H, qma, temp2);
       temp3 += 0.5/conj(s)*temp2;
       ENDIFMACRO
       // + 1/2*<xhat, dHdz(w,w)>
       ik3.im = 0.0;
       iomega3 = 0.0;
-      H = vT(XMh, XMh, tgv = 0);
+      H = vT(XMh, XMh, tgv = -10);
       MatMultHermitianTranspose(H, xhat, temp2);
       temp3 += 0.5*temp2;
       // + <yhat, dHdz(w,w*)>
       ik2.im = -ik.im;
       iomega2 = -iomega;
-      H = vT(XMh, XMh, tgv = 0);
+      H = vT(XMh, XMh, tgv = -10);
       MatMultHermitianTranspose(H, yhat, temp2);
       temp3 += temp2;
       // + <v, dH/dz(qAA,w*)>
@@ -896,7 +895,7 @@ ENDIFMACRO
       ChangeNumbering(J, um2[], qAA, inverse = true, exchange = true);
       ik2.im = 2.0*sym1;
       iomega2 = 2i*omega;
-      H = vT(XMh, XMh, tgv = 0);
+      H = vT(XMh, XMh, tgv = -10);
       MatMultHermitianTranspose(H, qma, temp2);
       temp3 += temp2/conj(s);
       ENDIFMACRO
@@ -906,33 +905,33 @@ ENDIFMACRO
       iomega = 1i*omega;
       ik2.im = 0.0;
       iomega2 = 0.0;
-      H = vH(XMh, XMh, tgv = 0);
+      H = vH(XMh, XMh, tgv = -10);
       MatMultHermitianTranspose(H, qma, temp2);
       temp3 += temp2;
       // - h*<v, dM/dz(w)>
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-      H = vdM(XMh, XMh, tgv = 0);
+      H = vdM(XMh, XMh, tgv = -10);
       MatMultHermitianTranspose(H, qma, temp2);
       temp3 -= conj(h/s)*temp2;
       // + <xhat, dL2w/dz(qAA)>
       ChangeNumbering(J, um[], qAA, inverse = true, exchange = true);
       ik.im = 2.0*sym1;
       iomega = 2i*omega;
-      H = vH(XMh, XMh, tgv = 0);
+      H = vH(XMh, XMh, tgv = -10);
       MatMultHermitianTranspose(H, xhat, temp2); 
       temp3 += temp2;
       // + <yhat, dJ/dz(qAAs)>
       ChangeNumbering(J, um[], qAAs, inverse = true, exchange = true);
       ik.im = 0.0;
       iomega = 0.0;
-      H = vH(XMh, XMh, tgv = 0);
+      H = vH(XMh, XMh, tgv = -10);
       MatMultHermitianTranspose(H, yhat, temp2); 
       temp3 += temp2;
       // + <vhat, dLw/dz(w)>
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       ik.im = sym1;
       iomega = 1i*omega;
-      H = vH(XMh, XMh, tgv = 0);
+      H = vH(XMh, XMh, tgv = -10);
       MatMultHermitianTranspose(H, vhat, temp2);
       temp3 += temp2;
       MatMultHermitianTranspose(H, qma, temp); // compute (dL/dq*w)'*v
@@ -1183,125 +1182,107 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   qma /= Mnorm;
   ChangeNumbering(J, uma[], qma, inverse = true);
   if (normalform){
-    complex[int,int] qDa(paramnames.n, J.n);
-    // 2nd-order
-    //  A: base modification due to parameter changes
-    ik = 0.0;
-    iomega = 0.0;
+    complex[int] Rp(ub[].n);
+    complex[int,int] qWNL((wnlsave ? paramnames.n : 0), J.n);
+    //  A: fundamental modification due to parameter change
+    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
+    sym = sym1;
+    ik.im = sym1;
+    iomega = 1i*omega;
+    J = vH(XMh, XMh, tgv = -10);
+    MatMultHermitianTranspose(J, qma, qP);
     sym = 0;
+    ik.im = 0;
+    iomega = 0;
     J = vJ(XMh, XMh, tgv = TGV);
-    if(paramnames[0] != ""){
-      for (int k = 0; k < paramnames.n; ++k){
-        real paramval = getparam(paramnames[k]);
-        updateparam(paramnames[k], paramval + eps);
-        um[] = vR(0, XMh, tgv = TGV);
-        updateparam(paramnames[k], paramval);
-        um[] -= R;
-        um[] /= -eps;
-        ChangeNumbering(J, um[], qP);
+    KSPSolveHermitianTranspose(J, qP, qma);
+    ChangeNumbering(J, Rp, qma, inverse = true);
+    sym = sym1;
+    ik.im = sym1;
+    iomega = 1i*omega;
+    um3[] = vJ(0, XMh, tgv = -10);
+    for (int k = 0; k < paramnames.n; ++k){
+      real paramval = getparam(paramnames[k]);
+      updateparam(paramnames[k], paramval + eps);
+      um2[] = vJ(0, XMh, tgv = -10);
+      um2[] -= um3[];
+      alpha[paramnames[k]] = J(uma[], um2[])/eps;
+      um2[] = vR(0, XMh, tgv = TGV);
+      um2[] -= R;
+      alpha[paramnames[k]] -= J(Rp, um2[])/eps;
+      updateparam(paramnames[k], paramval);
+      if(wnlsave){
+        ChangeNumbering(J, um2[], qP);
+        qP /= -eps;
         KSPSolve(J, qP, qP);
-        qDa(k, :) = qP;
+        qWNL(k, :) = qP;
       }
     }
-    //  B: base modification due to quadratic nonlinear interaction
-    ik.im = sym1;
-    ik2.im = -sym1;
-    iomega = 1i*omega;
-    iomega2 = -iomega;
-    ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
-    um2[] = conj(um[]);
-    um3[] = vH(0, XMh, tgv = -10);
-    um3[].re *= -1.0; // -2.0/2.0
-    um3[].im = 0.0;
-    ChangeNumbering(J, um3[], qP);
-    KSPSolve(J, qP, qP);
-    //  C: harmonic generation due to quadratic nonlinear interaction
+    //  C: harmonic forcing due to quadratic self-interaction
+    sym = 2*sym1;
     ik2.im = sym1;
     iomega2 = iomega;
     um2[] = -0.5*um[];
-    sym = 2*sym1;
     um3[] = vH(0, XMh, tgv = -10);
-    ChangeNumbering(J, um3[], F);
-    ik.im = 2*sym1;
-    iomega = 2i*omega;
-    J = vJ(XMh, XMh, tgv = TGV);
-    KSPSolve(J, F, F);
-    // 3rd-order
-    //  A: fundamental modification due to parameter change and quadratic interaction of fundamental with 2nd order modification A.
-    sym = sym1;
-    ik.im = sym1;
-    ik2 = 0.0;
-    iomega = 1i*omega;
-    iomega2 = 0.0;
-    if(paramnames[0] != ""){
-      R = vJ(0, XMh, tgv = -10);
-      for (int k = 0; k < paramnames.n; ++k){
-        ChangeNumbering(J, um2[], qDa(k, :), inverse = true, exchange = true);
-        um3[] = vH(0, XMh, tgv = -10);
-        real paramval = getparam(paramnames[k]);
-        updateparam(paramnames[k], paramval + eps);
-        um2[] = vJ(0, XMh, tgv = -10);
-        updateparam(paramnames[k], paramval);
-        um2[] -= R;
-        um3[] += um2[]/eps;
-        alpha[paramnames[k]] = J(uma[], um3[]);
-      }
-    }
-    IFMACRO(cubic)
-    //  B: fundamental modification due to cubic self-interaction of fundamental
-    ik2.im = sym1;
-    ik3.im = -sym1;
-    iomega2 = iomega;
-    iomega3 = -iomega;
-    um2[] = 0.5*um[];
-    um3[] = conj(um[]);
-    R = vT(0, XMh, tgv = -10);
-    ENDIFMACRO
-    //  C: fundamental modification due to quadratic interaction of fundamental with 2nd order modification B
-    ik2 = 0.0;
-    iomega2 = 0.0;
-    ChangeNumbering(J, um2[], qP, inverse = true, exchange = true);
-    IFMACRO(cubic)
+    ChangeNumbering(J, um3[], qma);
+    //  B: fundamental modification due to quadratic interaction with conjugate
+    sym = 0;
+    ik2.im = -sym1;
+    iomega2 = -iomega;
+    um2[] = conj(um[]);
     um3[] = vH(0, XMh, tgv = -10);
-    R += um3[];
-    ENDIFMACRO
-    IFMACRO(!cubic)
-    R = vH(0, XMh, tgv = -10);
-    ENDIFMACRO
-    //  D: fundamental modification due to quadratic interaction of fundamental with 2nd order modification C
-    ik.im = -sym1;
-    ik2.im = 2*sym1;
-    iomega = -iomega;
-    iomega2 = 2i*omega;
-    um[] = conj(um[]);
-    ChangeNumbering(J, um2[], F, inverse = true, exchange = true);
-    um3[] = vH(0, XMh, tgv = -10);
-    R += um3[];
-    beta = J(uma[], R);
     if(wnlsave){
+      ChangeNumbering(J, um3[], qP);
+      qP *= -1.0;
+      KSPSolve(J, qP, qP);
+    }
+    if(zerofreq) beta = 0.0;
+    else {
+      beta = -J(Rp, um3[]);
+      //  C: fundamental modification due to quadratic interaction with harmonic
+      sym = 2*sym1;
+      ik.im = 2*sym1;
+      iomega = 2i*omega;
+      J = vJ(XMh, XMh, tgv = TGV);
+      KSPSolve(J, qma, qma);
+      ChangeNumbering(J, um[], qma, inverse = true, exchange = true);
+      sym = sym1;
+      Rp = vH(0, XMh, tgv = -10);
+      IFMACRO(cubic)
+      //  D: fundamental modification due to cubic self-interaction
+      ik.im = sym1;
+      ik2.im = sym1;
+      ik3.im = -sym1;
+      iomega = 1i*omega;
+      iomega2 = iomega;
+      iomega3 = -iomega;
+      um3[] = 0.5*um2[];
+      um2[] = conj(um2[]);
+      um[] = um2[];
+      Rp += vT(0, XMh, tgv = -10);
+      ENDIFMACRO
+      beta += J(uma[], Rp);
+      beta = 1i*imag(beta);
+    }
+    if(wnlsave && fileout != ""){
       complex[int] val(1);
       XMh<complex>[int] defu(vec)(1);
       sym = 0;
       val = 0.0;
-      if(paramnames[0] != ""){
-        for (int k = 0; k < paramnames.n; ++k){
-          ChangeNumbering(J, vec[0][], qDa(k, :), inverse = true);
-          savemode(fileout + "_wnl_param" + k, "", fileout + ".baut", meshout, vec, val, sym, true);
-        }
+      for (int k = 0; k < paramnames.n; ++k){
+        ChangeNumbering(J, vec[0][], qWNL(k, :), inverse = true);
+        savemode(fileout + "_wnl_param" + k, "", fileout + ".hopf", meshout, vec, val, sym, true);
       }
       ChangeNumbering(J, vec[0][], qP, inverse = true);
-      savemode(fileout + "_wnl_AAs", "", fileout + ".baut", meshout, vec, val, sym, true);
-      ChangeNumbering(J, vec[0][], F, inverse = true);
+      savemode(fileout + "_wnl_AAs", "", fileout + ".hopf", meshout, vec, val, sym, true);
+      ChangeNumbering(J, vec[0][], qma, inverse = true);
       val = 2i*omega;
       sym = 2*sym1;
-      savemode(fileout + "_wnl_AA", "", fileout + ".baut", meshout, vec, val, sym, true);
+      savemode(fileout + "_wnl_AA", "", fileout + ".hopf", meshout, vec, val, sym, true);
     }
-  } else {
-    if(paramnames[0] != ""){
-      for (int k = 0; k < paramnames.n; ++k){
-        alpha[paramnames[k]] = 0.0;
-      }
-    }
+  }
+  else {
+    for (int k = 0; k < paramnames.n; ++k) alpha[paramnames[k]] = 0.0;
     beta = 0.0;
   }
   if(mpirank==0 && adapt) { // Save adapted mesh

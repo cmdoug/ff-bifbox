@@ -6,13 +6,13 @@ This script computes the normal form at a non-degenerate fold point.
 The normal form is written for the real amplitude $A$ as:
 
 $$
-\frac{dA}{dt} + \alpha \cdot \delta\lambda + \beta A^2 = 0
+\frac{dA}{dt} + \left(\vec{\alpha} \cdot \Delta\vec{\lambda}\right) + \beta A^2 = 0
 $$
 
 where:
-- $\alpha$ is the coefficient for the term from parameter changes,
-- $\delta\lambda$ are the parameter increments,
-- $\beta$ is the coefficient for the term from harmonic interactions.
+- $`\vec{\alpha}`$ is a vector containing the parameter sensitivity coefficients,
+- $`\Delta\vec{\lambda}`$ is a vector containing the parameter increments,
+- $`\beta`$ is the scalar quadratic coefficient.
 
 ## EXAMPLE USAGE:
 ### Initialize with fold guess from base file, solve on same mesh
@@ -68,6 +68,7 @@ if(fileext == "mode" || fileext == "resp" || fileext == "rslv" || fileext == "td
 if(meshin == "") meshin = readmeshname(workdir + filein); // get mesh file
 string meshroot, meshext = parsefilename(meshin, meshroot);
 parsefilename(meshout, meshout); // trim extension from output mesh, if given
+assert(param != ""); // parameter required!
 Th = readmeshN(workdir + meshin);
 Thg = Th;
 DmeshCreate(Th);
@@ -87,10 +88,11 @@ else if(fileext == "cusp") {
 }
 else if(fileext == "foho") {
   real omega, beta23, gamma22, gamma23;
+  real[string] alpha3;
   complex[string] alpha1;
   complex beta1, gamma12, gamma13;
   complex[int] q1m, q1ma;
-  ub[] = loadfoho(fileroot, meshin, q1m, q1ma, um[], uma[], sym, omega, alpha1, alpha, beta1, beta, beta23, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadfoho(fileroot, meshin, q1m, q1ma, um[], uma[], sym, omega, alpha1, alpha, alpha3, beta1, beta, beta23, gamma12, gamma13, gamma22, gamma23);
 }
 else if(fileext == "hopf") {
   real omega;
@@ -309,28 +311,23 @@ if (ret > 0) { // Save solution if solver converged and output file is given
   qma /= Mnorm;
   ChangeNumbering(J, uma[], qma, inverse = true);
   if (normalform){
-    // 2nd-order
     //  A: base modification due to parameter changes
-    if(paramnames[0] != ""){
-      for (int k = 0; k < paramnames.n; ++k){
-        paramval = getparam(paramnames[k]);
-        updateparam(paramnames[k], paramval + eps);
-        um2[] = vR(0, XMh, tgv = TGV);
-        updateparam(paramnames[k], paramval);
-        um2[] -= R;
-        alpha[paramnames[k]] = J(uma[], um2[])/eps;
-      }
+    for (int k = 0; k < paramnames.n; ++k){
+      paramval = getparam(paramnames[k]);
+      updateparam(paramnames[k], paramval + eps);
+      um2[] = vR(0, XMh, tgv = TGV);
+      um2[] -= R;
+      alpha[paramnames[k]] = J(uma[], um2[])/eps;
+      updateparam(paramnames[k], paramval);
     }
-    //  B: base modification due to quadratic nonlinear interaction
+    //  B: base modification due to quadratic interaction
     ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
     um2[] = um[];
     um3[] = vH(0, XMh, tgv = -10);
     beta = 0.5*J(uma[], um3[]);
   }
   else {
-    for (int k = 0; k < paramnames.n; ++k){
-      alpha[paramnames[k]] = 0.0;
-    }
+    for (int k = 0; k < paramnames.n; ++k) alpha[paramnames[k]] = 0.0;
     beta = 0.0;
   }
   if(mpirank==0 && adapt) { // Save adapted mesh

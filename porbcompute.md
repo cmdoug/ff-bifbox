@@ -81,14 +81,14 @@ else if (fileext == "bota") {
   uh(:, 0) = um[];
 }
 else if (fileext == "foho") {
-  real[string] alpha2;
+  real[string] alpha2, alpha3;
   real beta22, beta23, gamma22, gamma23;
   complex[string] alpha;
   complex beta;
   complex gamma12, gamma13;
   real[int] q2m, q2ma;
   complex[int] qma;
-  ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, alpha3, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
   uh(:, 0) = um[];
 }
 else if(fileext == "hoho") {
@@ -166,11 +166,11 @@ else if(basefileext == "foho") {
   real omega;
   complex[string] alpha1;
   complex beta1, gamma12, gamma13;
-  real[string] alpha2;
+  real[string] alpha2, alpha3;
   real beta22, beta23, gamma22, gamma23;
   complex[int] q1m, q1ma;
   real[int] q2m, q2ma;
-  ub[] = loadfoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadfoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, alpha3, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
 }
 else if(basefileext == "hoho") {
   real[int] sym2(sym.n);
@@ -277,9 +277,9 @@ complex iomega, iomega2, iomega3;
 include "eqns.idp" // load equations
 // Build bordered block matrix from only Mat components
 Mat JHBa, JHB((1+2*Nh)*J.n, (1+2*Nh)*J.n), dwHB((1+2*Nh)*J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
-real[int] RHB;
-if(zerofreq) JHBa = JHB;
-else JHBa = [[JHB, dwHB],[dwHB',0]];
+real[int] RHB, fieldlabels(JHB.n);
+if(zerofreq) JHBa = [[JHB]];
+else JHBa = [[JHB, dwHB], [dwHB', 0]];
 // Function to build residual operator in PETSc numbering
   func real[int] funcRHB(PetscScalar[int]& qPETSc) {
       ChangeNumbering(J, ub[], qPETSc(0:J.n-1), inverse = true, exchange = true);
@@ -302,8 +302,7 @@ func int funcJHB(PetscScalar[int]& qPETSc) {
     if(mpirank == 0 && !zerofreq) omega = qPETSc(JHBa.n-1); 
     broadcast(processor(0), omega);
     JacobianHB(JHB, J, ub, uh, sym0, omega);
-    if (zerofreq) JHBa = JHB;
-    else {
+    if (!zerofreq) {
       domegaResidualHB(RHB, J, ub, uh, sym0);
       matrix<PetscScalar> tempPms = [[RHB]];
       ChangeOperator(dwHB, tempPms, parent = JHBa); // send to Mat
@@ -311,13 +310,12 @@ func int funcJHB(PetscScalar[int]& qPETSc) {
     return 0;
 }
 // set up Mat parameters
-real[int] fieldlabels(JHB.n);
-fieldlabels(0: J.n-1) = 1.0;
+fieldlabels(0:J.n-1) = 1.0;
 blocks = min(blocks, 1+Nh);
 for (int nh = 0; nh < Nh; nh++) fieldlabels((1+2*nh)*J.n:(3+2*nh)*J.n-1) = 1.0 + max(0, blocks + nh - Nh);
 string HBKSPparams = KSPparams;
 if (blocks > 1) HBKSPparams = "-ksp_type gmres -ksp_norm_type unpreconditioned -ksp_pc_side right -pc_type fieldsplit -pc_fieldsplit_type symmetric_multiplicative -fieldsplit_pc_type lu -ksp_gmres_cgs_refinement_type refine_ifneeded";
-if (zerofreq) set(JHBa, sparams = HBKSPparams, fields = fieldlabels);
+if (zerofreq) set(JHB, sparams = HBKSPparams, fields = fieldlabels);
 else {
   set(JHBa, sparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type schur -pc_fieldsplit_schur_precondition full"
                     + " -prefix_push fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
@@ -336,7 +334,9 @@ RHB.resize(JHB.n);
 if(mpirank == 0 && !zerofreq) qHB(JHBa.n-1) = omega;
 int ret;
 // solve nonlinear problem with SNES
-SNESSolve(JHBa, funcJHB, funcRHB, qHB, reason = ret,
+if(zerofreq) SNESSolve(JHB, funcJHB, funcRHB, qHB, reason = ret,
+          sparams = "-snes_linesearch_type " + sneslinesearchtype + " -snes_monitor -snes_converged_reason -options_left no");
+else SNESSolve(JHBa, funcJHB, funcRHB, qHB, reason = ret,
           sparams = "-snes_linesearch_type " + sneslinesearchtype + " -snes_monitor -snes_converged_reason -options_left no");
 if(ret > 0) { // Save solution if solver converged and output file is given
   if(mpirank==0 && adapt) { // Save adapted mesh

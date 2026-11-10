@@ -383,12 +383,12 @@ if (mpirank==0){
     XMhg<complex> defu(u1mg), defu(u1mag);
     real omega;
     complex[string] alpha1;
-    real[string] alpha2;
+    real[string] alpha2, alpha3;
     complex beta1, gamma12, gamma13;
     real beta22, beta23, gamma22, gamma23;
     complex[int] q1m, q1ma;
     real[int] q2m, q2ma;
-    ubg[] = loadfoho(fileroot, meshin, u1mg[], u1mag[], u2mg[], u2mag[], sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+    ubg[] = loadfoho(fileroot, meshin, u1mg[], u1mag[], u2mg[], u2mag[], sym, omega, alpha1, alpha2, alpha3, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
     cout << "  Saving '" + fileout + "_foho_[base,dirmode1,adjmode1,dirmode2,adjmode2].vtu' in '" + workdir + "'." << endl;
     real[int] qpv = ubg[], q2mpv = u2mg[], q2mapv = u2mag[];
     complex[int] q1mpv = u1mg[], q1mapv = u1mag[];

@@ -102,14 +102,14 @@ if(count == 0) {
     uh(:, 0) = um[];
   }
   else if(fileext == "foho") {
-    real[string] alpha2;
+    real[string] alpha2, alpha3;
     real beta22, beta23, gamma22, gamma23;
     complex[string] alpha;
     complex beta;
     complex gamma12, gamma13;
     real[int] q2m, q2ma;
     complex[int] qma;
-    ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+    ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, alpha3, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
     uh(:, 0) = um[];
   }
   else if(fileext == "hoho") {
@@ -153,12 +153,13 @@ if(meshout != "")  adapt = true;  // if output meshfile is given, adapt mesh
 meshout = meshin; // if no adaptation
 // Build bordered block matrix from only Mat components
 Mat JHBa, JHB((1+2*Nh)*J.n, (1+2*Nh)*J.n), dwHB((1+2*Nh)*J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
-if(zerofreq) JHBa = JHB;
-else JHBa = [[JHB, dwHB],[dwHB', 0]];
-Mat JlPMa(JHBa.n, mpirank == 0 ? 1 : 0), yqPMa(JHBa.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
-Mat JHBaa = [[JHBa, JlPMa],[yqPMa', -1.0]]; // make dummy Jacobian
+if(zerofreq) JHBa = [[JHB]];
+else JHBa = [[JHB, dwHB], [dwHB', 0]];
+Mat JHBaa, JlPMa(JHBa.n, mpirank == 0 ? 1 : 0), yqPMa(JHBa.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
+if(zerofreq) JHBaa = [[JHB, JlPMa], [yqPMa', -1.0]]; // make dummy Jacobian
+else JHBaa = [[JHBa, JlPMa], [yqPMa', -1.0]]; // make dummy Jacobian
 
-real[int] RHB(JHB.n), yqP(JHBa.n), yqP0(JHBa.n);
+real[int] RHB(JHB.n), yqP(JHBa.n), yqP0(JHBa.n), fieldlabels(JHB.n);
 int ret, it = 0;
 real f, kappa, cosalpha, res, delta, maxdelta;
 // FUNCTIONS
@@ -194,7 +195,7 @@ real f, kappa, cosalpha, res, delta, maxdelta;
         yqP /= eps;
         if (mpirank == 0 && !zerofreq) yqP(JHBa.n-1) = 0.0;
       }
-      if (zerofreq) JHBa = JHB;
+      if (zerofreq) set(JHB, prefix = "fieldsplit_0_", fields = fieldlabels, parent = JHBaa);
       else {
         domegaResidualHB(RHB, J, ub, uh, sym0);
         matrix<PetscScalar> tempPms = [[RHB]];
@@ -203,7 +204,8 @@ real f, kappa, cosalpha, res, delta, maxdelta;
       if (contorder > 0){
         matrix<PetscScalar> tempPms = [[yqP]]; // dense array to sparse matrix
         ChangeOperator(JlPMa, tempPms, parent = JHBaa); // send to Mat
-        KSPSolve(JHBa, yqP, yqP); // compute tangent vector in PETSc numbering
+        if(zerofreq) KSPSolve(JHB, yqP, yqP); // compute tangent vector in PETSc numbering
+        else KSPSolve(JHBa, yqP, yqP); // compute tangent vector in PETSc numbering
         tempPms = [[yqP]]; // dense array to sparse matrix
         ChangeOperator(yqPMa, tempPms, parent = JHBaa); // send to Mat
       }
@@ -212,7 +214,6 @@ real f, kappa, cosalpha, res, delta, maxdelta;
   
   ConvergenceCheck(param + " = " + paramvals(1-zerofreq) + ",\tomega = " + (zerofreq ? 0.0 : paramvals(0)));
 // set up Mat parameters
-real[int] fieldlabels(JHB.n);
 fieldlabels = 1.0;
 blocks = min(blocks, 1+Nh);
 for (int nh = 0; nh < Nh; nh++) fieldlabels((1+2*nh)*J.n:(3+2*nh)*J.n-1) = 1.0 + max(0, blocks + nh - Nh);
@@ -224,8 +225,7 @@ string ssparams = "-ksp_type preonly -pc_type fieldsplit -pc_fieldsplit_type sch
                 + " -prefix_push fieldsplit_0_fieldsplit_1_ -ksp_type preonly -pc_type redundant -redundant_pc_type lu -prefix_pop"
                 + " -prefix_push fieldsplit_0_fieldsplit_0_ ")) + HBKSPparams + " -prefix_pop";
 set(JHBaa, sparams = ssparams, setup = 1);
-if (zerofreq) set(JHBa, prefix = "fieldsplit_0_", fields = fieldlabels);
-else {
+if (!zerofreq){
   set(JHBa, prefix = "fieldsplit_0_", setup = 1, parent = JHBaa);
   set(JHB, prefix = "fieldsplit_0_fieldsplit_0_", fields = fieldlabels, parent = JHBa);
 }
@@ -402,15 +402,15 @@ while (!stopflag){
       Mat Adapt1((1+2*Nh)*J.n, (1+2*Nh)*J.n), Adapt2((1+2*Nh)*J.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
       JHB = Adapt1;
       dwHB = Adapt2;
-      if(zerofreq) JHBa = JHB;
-      else JHBa = [[JHB, dwHB],[dwHB', 0]];
+      if(zerofreq) JHBa = [[JHB]];
+      else JHBa = [[JHB, dwHB], [dwHB', 0]];
       Mat Adapt3(JHBa.n, mpirank == 0 ? 1 : 0), Adapt4(JHBa.n, mpirank == 0 ? 1 : 0); // Initialize Mat objects for bordered matrix
       JlPMa = Adapt3;
       yqPMa = Adapt4;
-      JHBaa = [[JHBa, JlPMa],[yqPMa', -1.0]]; // make dummy Jacobian
+      if(zerofreq) JHBaa = [[JHB, JlPMa], [yqPMa', -1.0]]; // make dummy Jacobian
+      else JHBaa = [[JHBa, JlPMa], [yqPMa', -1.0]]; // make dummy Jacobian
       set(JHBaa, sparams = ssparams, setup = 1);
-      if (zerofreq) set(JHBa, prefix = "fieldsplit_0_", fields = fieldlabels, parent = JHBaa);
-      else {
+      if (!zerofreq) {
         set(JHBa, prefix = "fieldsplit_0_", parent = JHBaa, setup = 1);
         set(JHB, prefix = "fieldsplit_0_fieldsplit_0_", fields = fieldlabels, parent = JHBa);
       }
