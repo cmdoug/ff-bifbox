@@ -81,14 +81,14 @@ else if (fileext == "bota") {
   uh(:, 0) = um[];
 }
 else if (fileext == "foho") {
-  real[string] alpha2;
+  real[string] alpha2, alpha3;
   real beta22, beta23, gamma22, gamma23;
   complex[string] alpha;
   complex beta;
   complex gamma12, gamma13;
   real[int] q2m, q2ma;
   complex[int] qma;
-  ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, alpha3, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
   uh(:, 0) = um[];
 }
 else if(fileext == "hoho") {
@@ -166,11 +166,11 @@ else if(basefileext == "foho") {
   real omega;
   complex[string] alpha1;
   complex beta1, gamma12, gamma13;
-  real[string] alpha2;
+  real[string] alpha2, alpha3;
   real beta22, beta23, gamma22, gamma23;
   complex[int] q1m, q1ma;
   real[int] q2m, q2ma;
-  ub[] = loadfoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadfoho(basefileroot, meshin, q1m, q1ma, q2m, q2ma, sym, omega, alpha1, alpha2, alpha3, beta1, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
 }
 else if(basefileext == "hoho") {
   real[int] sym2(sym.n);

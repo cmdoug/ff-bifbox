@@ -24,7 +24,7 @@ include "macros_bifbox.idp"
 string meshin = getARGV("-mi", ""); // input meshfile with extension
 string meshout = getARGV("-mo", "");
 string filein = getARGV("-fi", "");
-string fileout = getARGV("-fo", filein);
+string fileout = getARGV("-fo", "");
 int contorder = getARGV("-contorder", 1);
 bool normalform = getARGV("-nf", 1);
 int count = getARGV("-count", 0);
@@ -62,7 +62,8 @@ if(count > 0) {
   fileroot = fileroot(0:fileroot.rfind("_" + count)-1); // get file root
   meshroot = meshroot(0:meshroot.rfind("_" + count)-1); // get file root
 }
-assert(fileext == "fold" || fileext == "cusp" || fileext == "foho" || fileext == "bota");
+assert(fileext == "fold" || fileext == "cusp" || fileext == "foho" || fileext == "bota"); // invalid filename!
+assert(param != "" && param2 != ""); // 2 parameters required!
 Th = readmeshN(workdir + meshin);
 Thg = Th;
 DmeshCreate(Th);
@@ -84,10 +85,11 @@ if (count == 0){
   }
   else if(fileext == "foho") {
     real omega, gamma22, gamma23, beta23;
+    real[string] alpha3;
     complex[string] alpha1;
     complex beta1, gamma12, gamma13;
     complex[int] q1m, q1ma;
-    ub[] = loadfoho(fileroot, meshin, q1m, q1ma, um[], uma[], sym, omega, alpha1, alpha, beta1, beta, beta23, gamma12, gamma13, gamma22, gamma23);
+    ub[] = loadfoho(fileroot, meshin, q1m, q1ma, um[], uma[], sym, omega, alpha1, alpha, alpha3, beta1, beta, beta23, gamma12, gamma13, gamma22, gamma23);
   }
   savefold(filein, (savecount > 0 ? fileout : ""), meshin, alpha, beta, false, false);
 }
@@ -146,7 +148,7 @@ real f, kappa, cosalpha, res, delta, maxdelta, alpha0, beta0;
       broadcast(processor(0), paramvals);
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       ChangeNumbering(J, uma[], qma, inverse = true);
-      J = vH(XMh, XMh, tgv = 0);
+      J = vH(XMh, XMh, tgv = -10);
       MatMultTranspose(J, qma, qm);
       matrix<PetscScalar> tempPms = [[qm]];
       ChangeOperator(gqPM, tempPms, parent = Ja); // send to Mat
@@ -378,41 +380,38 @@ while (!stopflag){
     mpiAllReduce(local, Mnorm, mpiCommWorld, mpiSUM);
     qma /= Mnorm;
     ChangeNumbering(J, uma[], qma, inverse = true);
+    string savefile = "";
     if(normalform){
-      // 2nd-order
       //  A: base modification due to parameter changes
-      if(paramnames[0] != ""){
-        for (int k = 0; k < paramnames.n; ++k){
-          real paramval = getparam(paramnames[k]);
-          updateparam(paramnames[k], paramval + eps);
-          um2[] = vR(0, XMh, tgv = TGV);
-          updateparam(paramnames[k], paramval);
-          um2[] -= R;
-          alpha[paramnames[k]] = J(uma[], um2[])/eps;
-        }
+      for (int k = 0; k < paramnames.n; ++k){
+        real paramval = getparam(paramnames[k]);
+        updateparam(paramnames[k], paramval + eps);
+        um2[] = vR(0, XMh, tgv = TGV);
+        um2[] -= R;
+        alpha[paramnames[k]] = J(uma[], um2[])/eps;
+        updateparam(paramnames[k], paramval);
       }
-      //  B: base modification due to quadratic nonlinear interaction
+      //  B: base modification due to quadratic interaction
       ChangeNumbering(J, um[], qm, inverse = true, exchange = true);
       um2[] = um[];
       um3[] = vH(0, XMh, tgv = -10);
       beta = 0.5*J(uma[], um3[]);
+      if (beta*beta0 < 0) {
+        forcesave = true;
+        if(mpirank == 0) {
+          if(alpha0*alpha[param] < 0) cout << "\tBogdanov-Takens bifurcation detected." << endl;
+          else cout << "\tCusp bifurcation detected." << endl;
+        }
+      }
     }
     else {
-      for (int k = 0; k < paramnames.n; ++k){
-        alpha[paramnames[k]] = 0.0;
-      }
+      for (int k = 0; k < paramnames.n; ++k) alpha[paramnames[k]] = 0.0;
       beta = 0.0;
     }
-    if (beta*beta0 < 0) {
-      forcesave = true;
-      if(mpirank == 0) {
-        if(alpha0*alpha[param] < 0) cout << "\tBogdanov-Takens bifurcation detected." << endl;
-        else cout << "\tCusp bifurcation detected." << endl;
-      }
-    }
+    if(fileout != "") savefile = fileout + "_" + count + (forcesave ? "specialpt" : "");
     ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true);
     ChangeNumbering(J, um[], qm, inverse = true);
-    savefold(fileout + "_" + count + (forcesave ? "specialpt" : ""), fileout, meshout, alpha, beta, ((count % savecount == 0) || forcesave || stopflag), true);
+    savefold(savefile, fileout, meshout, alpha, beta, ((count % savecount == 0) || forcesave || stopflag), true);
     if (stopflag) break;
     forcesave = false;
     ChangeNumbering(J, ub[], qa(0:J.n-1), inverse = true, exchange = true);

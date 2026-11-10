@@ -85,14 +85,14 @@ else if (fileext == "bota") {
   uh(:, 0) = um[];
 }
 else if (fileext == "foho") {
-  real[string] alpha2;
+  real[string] alpha2, alpha3;
   real beta22, beta23, gamma22, gamma23;
   complex[string] alpha;
   complex beta;
   complex gamma12, gamma13;
   real[int] q2m, q2ma;
   complex[int] qma;
-  ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
+  ub[] = loadfoho(fileroot, meshin, um[], qma, q2m, q2ma, sym0, omega, alpha, alpha2, alpha3, beta, beta22, beta23, gamma12, gamma13, gamma22, gamma23);
   uh(:, 0) = um[];
 }
 else if(fileext == "hoho") {
